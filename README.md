@@ -1,10 +1,10 @@
-# 🏥 Medify - Sistem za upravljanje ordinacijom
+# Medify - Sistem za upravljanje ordinacijom
 
 
-Medify je **studentski projekat iz Web programiranja 2**, jednostavan sistem za upravljanje ordinacijom. Omogućava upravljanje korisnicima sa različitim ulogama, osnovno zakazivanje termina i evidenciju podataka pacijenata i osoblja.
+Medify je **studentski projekat iz predmeta: Web programiranje 2**, jednostavan sistem za upravljanje ordinacijom. Omogućava upravljanje korisnicima sa različitim ulogama, osnovno zakazivanje termina i evidenciju podataka pacijenata i osoblja.
 
 ---
-## 🛠️ Tehnologije
+## Tehnologije
 
 - **Backend**: Node.js, Express.js
 - **Baza podataka**: MongoDB, Mongoose ODM
@@ -13,7 +13,7 @@ Medify je **studentski projekat iz Web programiranja 2**, jednostavan sistem za 
 
 ---
 
-## 📋 Preduslovi
+## Preduslovi
 
 Prije pokretanja aplikacije potrebno je instalirati:
 
@@ -23,11 +23,11 @@ Prije pokretanja aplikacije potrebno je instalirati:
 
 ---
 
-## ⚙️ Instalacija i pokretanje
+## Instalacija i pokretanje
 
 ### 1. Kloniranje repozitorijuma
 ```bash
-git clone [url-repozitorijuma]
+git clone https://github.com/aleksandarm03/Medify
 cd PROJEKAT
 ```
 
@@ -57,16 +57,16 @@ Aplikacija će biti dostupna na: `http://localhost:3232`
 
 ---
 
-## 📚 API Dokumentacija
+## API Dokumentacija
 
-### 🔍 Testni endpoint
+### Testni endpoint
 ```
 GET /test
 ```
 **Opis**: Testira da li je API funkcionalan  
 **Odgovor**: "Test API!"
 
-### 👥 Korisnici
+### Korisnici
 ```
 GET /users
 ```
@@ -75,7 +75,7 @@ GET /users
 
 ---
 
-## 🗂️ Struktura projekta
+## Struktura projekta
 
 ```
 PROJEKAT/
@@ -87,7 +87,7 @@ PROJEKAT/
     └── user.js         # Mongoose model za korisnike
 ```
 
-## 🔮 Buduće funkcionalnosti
+## Buduće funkcionalnosti
 
 - [ ] **Autentifikacija i autorizacija**
   - JWT tokeni
