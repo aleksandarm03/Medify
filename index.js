@@ -16,6 +16,13 @@ app.get('/users',async (req,res)=>{
     res.send(await UserModel.find());
 });
 
+app.get('/',(req,res)=>{    
+    res.type('text/plain').send(`Medify
+Medify je jednostavna aplikacija za upravljanje medicinskim podacima.
+Trenutno pruža API za upravljanje korisnicima i služi kao početna baza za dalji razvoj zdravstvenih funkcionalnosti.`);
+
+});
+
 
 app.get('/test',(req,res)=>{
     res.send("Test API!")
