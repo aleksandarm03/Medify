@@ -1,10 +1,12 @@
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 
 const UserSchema = new mongoose.Schema({
     // Zajednička polja za sve korisnike
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     passwordHash: { type: String, required: true },
+    passwordSalt: { type: String, required: true },
     homeAddress: { type: String, required: true },
     phoneNumber: { type: String, required: true },
     gender: { type: String, enum: ["male", "female"], required: true },
@@ -27,4 +29,32 @@ const UserSchema = new mongoose.Schema({
     insuranceCompany: { type: String }
 });
 
-module.exports = mongoose.model("User", UserSchema);
+UserSchema.methods.savePassword=function(password){
+   this.passwordSalt = crypto.randomBytes(16).toString("hex");
+   this.passwordHash = crypto.pbkdf2Sync(password,this.passwordSalt,1000,64,"sha512").toString("hex");
+
+};
+
+UserSchema.methods.validatePassword=function(password){
+   const hash=crypto.pbkdf2Sync(password,this.passwordSalt,1000,64,"sha512").toString("hex");
+   return this.passwordHash===hash;
+}
+
+
+
+
+var UserModel=mongoose.model("User", UserSchema);
+UserModel.register=function(firstName,lastName,password,homeAddress,phoneNumber,gender,role)
+{
+    var user=new UserModel({
+        firstName:firstName,
+        lastName:lastName,
+        homeAddress:homeAddress,
+        phoneNumber:phoneNumber,    
+        gender:gender,
+        role:role
+    });
+    user.savePassword(password);
+    user.save();        
+}
+module.exports = UserModel;

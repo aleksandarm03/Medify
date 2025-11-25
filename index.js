@@ -1,20 +1,14 @@
 const express=require('express');
 const config=require('./config');
 const mongoose=require('mongoose');
+const AuthRouter=require('./routes/auth');
 
 const db=mongoose.connect(config.MongoConnection);
 
-//MODELS
-const UserModel = require('./models/user');
 
 const app=express();
-
-
-
-app.get('/users',async (req,res)=>{
-
-    res.send(await UserModel.find());
-});
+app.use(express.json());
+app.use('/auth', AuthRouter);
 
 app.get('/',(req,res)=>{    
     res.type('text/plain').send(`Medify
