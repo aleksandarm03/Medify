@@ -1,13 +1,13 @@
 # Medify - Sistem za upravljanje ordinacijom
 
-
-Medify je **studentski projekat iz predmeta: Web programiranje 2**, jednostavan sistem za upravljanje ordinacijom. Omogućava upravljanje korisnicima sa različitim ulogama, osnovno zakazivanje termina i evidenciju podataka pacijenata i osoblja.
+Medify je **studentski projekat iz predmeta Web programiranje 2** — RESTful API backend za upravljanje ordinacijom. Projekt je struktuisan da podrži više uloga (admin, doctor, nurse, patient) i sadrži osnovne funkcionalnosti za upravljanje korisnicima.
 
 ---
+
 ## Tehnologije
 
-- **Backend**: Node.js, Express.js
-- **Baza podataka**: MongoDB, Mongoose ODM
+- **Backend**: Node.js (v18+), Express 5
+- **Baza podataka**: MongoDB, Mongoose
 - **Arhitektura**: RESTful API
 - **Pakovanje**: npm
 
@@ -15,97 +15,97 @@ Medify je **studentski projekat iz predmeta: Web programiranje 2**, jednostavan 
 
 ## Preduslovi
 
-Prije pokretanja aplikacije potrebno je instalirati:
+Pre pokretanja aplikacije instalirajte:
 
-- [Node.js](https://nodejs.org/) (verzija 14+)
-- [MongoDB](https://www.mongodb.com/) (lokalna ili cloud verzija)
-- npm (dolazi sa Node.js)
+- [Node.js](https://nodejs.org/) (preporučeno v18+ zbog Express 5)
+- [MongoDB](https://www.mongodb.com/) (lokalna ili cloud instanca)
 
 ---
 
 ## Instalacija i pokretanje
 
-### 1. Kloniranje repozitorijuma
-```bash
+1. Klonirajte repozitorijum i uđite u folder:
+
+```powershell
 git clone https://github.com/aleksandarm03/Medify
-cd PROJEKAT
+cd Medify
 ```
 
-### 2. Instalacija dependencies
-```bash
+2. Instalirajte zavisnosti:
+
+```powershell
 npm install
 ```
 
-### 3. Konfiguracija
-Proverite da li su postavke u `config.js` pravilne:
-```javascript
-module.exports = {
-    PORT: 3232,
-    MongoConnection: "mongodb://localhost:27017/Medify"
-};
+3. Proverite `config.js` i podesite `PORT` i `MongoConnection` (npr. `mongodb://localhost:27017/Medify`).
+
+4. Pokrenite MongoDB (lokalno ili koristite cloud konekciju).
+
+5. Pokrenite aplikaciju:
+
+```powershell
+node .\index.js
 ```
 
-### 4. Pokretanje MongoDB-a
-Uverite se da je MongoDB pokrenuto na vašem sistemu.
-
-### 5. Pokretanje aplikacije
-```bash
-node index.js
-```
-
-Aplikacija će biti dostupna na: `http://localhost:3232`
+Server će biti dostupan na `http://localhost:<PORT>`.
 
 ---
 
-## API Dokumentacija
+## API Dokumentacija (trenutno implementirano)
 
 ### Testni endpoint
-```
-GET /test
-```
-**Opis**: Testira da li je API funkcionalan  
-**Odgovor**: "Test API!"
 
-### Korisnici
-```
-GET /users
-```
-**Opis**: Dohvata sve korisnike iz baze podataka  
-**Odgovor**: Lista svih korisnika u JSON formatu
+GET /test
+
+- Opis: Testira da li je API funkcionalan
+- Odgovor: HTTP 200, telo: `"Test API!"`
+
+### Autentifikacija i korisnici (rute su pod `/auth`)
+
+POST /auth/register
+
+- Opis: Registruje novog korisnika (koristi `services/userService.register`)
+- Telo: JSON sa poljima `firstName`, `lastName`, `password`, `homeAddress`, `phoneNumber`, `gender`, `role`
+- Odgovor: Kreirani korisnik ili odgovarajuća greška
+
+GET /auth/users
+
+- Opis: Dohvata sve korisnike iz baze
+- Odgovor: Lista korisnika u JSON formatu
+
+Napomena: `express.json()` middleware je uključen za parsiranje JSON tela.
 
 ---
 
-## Struktura projekta
+## Model korisnika
+
+Model se nalazi u `models/user.js` i sadrži podršku za hash-ovanje lozinke putem Node-ovog `crypto` modula (PBKDF2). Polja uključuju opšta polja (ime, prezime, adresa, telefon, pol, datum rođenja, uloga) i dodatna polja specifična za lekare i pacijente.
+
+---
+
+## Struktura projekta (aktuelna)
 
 ```
-PROJEKAT/
-├── config.js          # Konfiguracija aplikacije
-├── index.js            # Glavni server fajl
-├── package.json        # npm dependencies i skripte
-├── README.md           # Dokumentacija
-└── model/
-    └── user.js         # Mongoose model za korisnike
+Medify/
+├── config.js
+├── index.js
+├── package.json
+├── README.md
+├── models/
+│   └── user.js
+├── routes/
+│   └── auth.js
+└── services/
+    └── userService.js
 ```
 
-## Buduće funkcionalnosti
+---
 
-- [ ] **Autentifikacija i autorizacija**
-  - JWT tokeni
-  - Middleware za role-based pristup
-  
-- [ ] **Zakazivanje termina**
-  - Kalendar dostupnosti
-  - Automatska notifikacija
-  
-- [ ] **Medicinski kartoni**
-  - Istorija pregleda
-  - Dijagnoze i terapije
-  
-- [ ] **Dashboard**
-  - Statistike i izveštaji
-  - Grafički prikaz podataka
-  
-- [ ] **Notifikacije**
-  - Email notifikacije
-  - SMS podsetniki
+## Napomene i budući koraci
+
+- Trenutno su implementirane osnovne rute za registraciju i dohvatanje korisnika. Sledeći koraci su: autentifikacija (JWT), autorizacija (role-based middleware), kompletiranje validacije ulaznih podataka i dodavanje funkcionalnosti za zakazivanje termina i medicinske kartone.
+
+- Paket `crypto` iz npm-a NIJE potreban jer Node.js ima ugrađeni `crypto` modul — koristite ugrađeni modul (`require('crypto')`) umesto spoljnog paketa.
+
+Ako želiš, mogu: ažurirati `package.json` da ukloni eventualne neželjene dependency-je, dodati primer zahteva za registraciju (`curl` / Postman), ili implementirati osnovnu autentifikaciju (JWT). Samo reci šta želiš sledeće.
 
