@@ -11,8 +11,8 @@ router.get('/users',async (req,res)=>{
 
 
 router.post('/register',async (req,res)=>{
-    const user=await userService.register(req.body);      
-    res.send(user);
+    var user=await userService.register(req.body);      
+    res.send("User registered successfully!");
 
 });
 
