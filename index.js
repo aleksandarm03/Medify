@@ -5,7 +5,7 @@ const mongoose=require('mongoose');
 const db=mongoose.connect(config.MongoConnection);
 
 //MODELS
-const UserModel = require('./model/user');
+const UserModel = require('./models/user');
 
 const app=express();
 
