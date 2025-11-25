@@ -2,6 +2,9 @@
   "dependencies": {
     "crypto": "^1.0.1",
     "express": "^5.1.0",
-    "mongoose": "^8.20.0"
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.20.0",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0"
   }
 }

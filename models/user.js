@@ -1,8 +1,11 @@
 const mongoose = require("mongoose");
 const crypto = require("crypto");
+const jwt=require("jsonwebtoken");
+const config=require("../config");
 
 const UserSchema = new mongoose.Schema({
     // Zajednička polja za sve korisnike
+    JMBG: { type: String, required: true,unique:true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     passwordHash: { type: String, required: true },
@@ -41,12 +44,22 @@ UserSchema.methods.validatePassword=function(password){
 }
 
 
+UserSchema.methods.generateJwt = function()
+{
+    var expire = new Date() + 7
+
+    return jwt.sign({
+        _id: this._id,
+        _expire: expire
+    },config.secret)
+}
 
 
 var UserModel=mongoose.model("User", UserSchema);
-UserModel.register=function(firstName,lastName,password,homeAddress,phoneNumber,gender,role)
+UserModel.register=function(JMBG,firstName,lastName,password,homeAddress,phoneNumber,gender,role)
 {
     var user=new UserModel({
+        JMBG:JMBG,
         firstName:firstName,
         lastName:lastName,
         homeAddress:homeAddress,

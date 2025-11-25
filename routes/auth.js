@@ -1,5 +1,6 @@
 const router=require('express').Router();
 const userService=require('../services/userService');
+const passport=require('../routes/config');
 
 const UserModel = require('../models/user');
 
@@ -12,7 +13,15 @@ router.get('/users',async (req,res)=>{
 router.post('/register',async (req,res)=>{
     const user=await userService.register(req.body);      
     res.send(user);
-   
+
 });
+
+
+router.post("/login",
+    passport.authenticate("local", {session:false}),
+    async function(req, res){
+    
+    res.send(req.user.generateJwt())
+})
 
 module.exports=router;
