@@ -1,27 +1,32 @@
 const router=require('express').Router();
 const userService=require('../services/userService');
 const passport=require('../routes/config');
-
 const UserModel = require('../models/user');
-
-router.get('/users',async (req,res)=>{
-
-    res.send(await UserModel.find());
-});
 
 
 router.post('/register',async (req,res)=>{
     var user=await userService.register(req.body);      
-    res.send("User registered successfully!");
-
+       if (user) {
+            return res.status(201).send(user);
+        } else {
+            return res.status(400).send("Registration failed.");
+        }
 });
 
 
 router.post("/login",
     passport.authenticate("local", {session:false}),
     async function(req, res){
-    
     res.send(req.user.generateJwt())
 })
+
+router.get('/users', passport.authenticate("jwt",{session:false}),
+passport.authorizeAdmin(),
+    async function (req,res) {
+        var users=await userService.findAllUsers()
+        res.send(users);
+    }
+)
+
 
 module.exports=router;

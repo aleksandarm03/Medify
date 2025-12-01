@@ -56,7 +56,7 @@ UserSchema.methods.generateJwt = function()
 
 
 var UserModel=mongoose.model("User", UserSchema);
-UserModel.register=function(JMBG,firstName,lastName,password,homeAddress,phoneNumber,gender,role)
+UserModel.register=async function(JMBG,firstName,lastName,password,homeAddress,phoneNumber,gender,role)
 {
     var user=new UserModel({
         JMBG:JMBG,
@@ -68,6 +68,7 @@ UserModel.register=function(JMBG,firstName,lastName,password,homeAddress,phoneNu
         role:role
     });
     user.savePassword(password);
-    user.save();        
+    var savedUser=await user.save();    
+    return savedUser;    
 }
 module.exports = UserModel;
