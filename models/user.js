@@ -17,6 +17,7 @@ const UserSchema = new mongoose.Schema({
     role: { type: String, enum: ["admin", "doctor", "nurse", "patient"], required: true },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
+    appointments:[{type:mongoose.Types.ObjectId,ref:"Appointment"}],
 
     // Polja specifična za doktore
     specialization: { type: String },  //npr. kardiolog, ORL, dermatolog

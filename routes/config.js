@@ -47,8 +47,8 @@ passport.use(new passportJWT.Strategy(JWTOptions,async function (payload,done) {
 
 
 
-passport.authorizeAdmin=()=>(req,res,next)=>{
-    if(req.user.role==="admin")
+passport.authorizeRoles=(...roles)=>(req,res,next)=>{
+    if(req.user &&  roles.indexOf(req.user.role)!=-1)
         next()
     else res.status(403).send({message:"Forbidden"});
 }

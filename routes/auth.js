@@ -21,7 +21,7 @@ router.post("/login",
 })
 
 router.get('/users', passport.authenticate("jwt",{session:false}),
-passport.authorizeAdmin(),
+passport.authorizeRoles("admin"),
     async function (req,res) {
         var users=await userService.findAllUsers()
         res.send(users);
