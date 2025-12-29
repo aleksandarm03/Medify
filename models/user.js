@@ -47,11 +47,13 @@ UserSchema.methods.validatePassword=function(password){
 
 UserSchema.methods.generateJwt = function()
 {
-    var expire = new Date() + 7
+    // Token važi 7 dana
+    var expire = new Date();
+    expire.setDate(expire.getDate() + 7);
 
     return jwt.sign({
         _id: this._id,
-        _expire: expire
+        exp: Math.floor(expire.getTime() / 1000) // JWT standard za expiration
     },config.secret)
 }
 

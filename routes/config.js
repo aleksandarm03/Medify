@@ -9,22 +9,26 @@ var localOptions = {
 }
 
 passport.use(new LocalStrategy(localOptions, async function(JMBG, password, done){
-    var user = await UserModel.findOne({JMBG:JMBG})
-    if (!user)
-    {
-        done(null, null, {message:"Credentials not valid!"})
-    }
-    else
-    {
-        var success = user.validatePassword(password)
-        if (success)
+    try {
+        var user = await UserModel.findOne({JMBG:JMBG})
+        if (!user)
         {
-            done(null, user)
+            return done(null, null, {message:"Credentials not valid!"})
         }
         else
         {
-            done(null, null, {message:"Credentials not valid!"})
+            var success = user.validatePassword(password)
+            if (success)
+            {
+                return done(null, user)
+            }
+            else
+            {
+                return done(null, null, {message:"Credentials not valid!"})
+            }
         }
+    } catch (error) {
+        return done(error, null)
     }
 }))
 
@@ -35,14 +39,17 @@ var JWTOptions = {
 }
 
 passport.use(new passportJWT.Strategy(JWTOptions,async function (payload,done) {
-    var user=await UserModel.findById(payload._id)
-    if(!user)
-    {
-        done(null, null, {message:"Token not valid!"})
+    try {
+        var user=await UserModel.findById(payload._id)
+        if(!user)
+        {
+            return done(null, null, {message:"Token not valid!"})
+        }
+        else 
+            return done(null,user);
+    } catch (error) {
+        return done(error, null)
     }
-    else 
-        done(null,user);
-
 }))
 
 
