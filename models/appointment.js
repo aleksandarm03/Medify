@@ -10,6 +10,12 @@ var AppointmentSchema=mongoose.Schema({
     updatedAt:{type:Date,default:Date.now}
 })
 
+// Middleware za automatsko ažuriranje updatedAt
+AppointmentSchema.pre('save', function(next) {
+    this.updatedAt = new Date();
+    next();
+});
+
 var AppointmentModel=mongoose.model("Appointment",AppointmentSchema);
 AppointmentModel.makeAppointment=async function(doctor,patient,appointmentDate,reason) {
     var appointment=new AppointmentModel({
