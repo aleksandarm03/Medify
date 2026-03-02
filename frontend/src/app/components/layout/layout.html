@@ -1,0 +1,39 @@
+<div class="layout-container">
+  <nav class="navbar">
+    <div class="nav-brand">
+      <a routerLink="/dashboard">Medify</a>
+    </div>
+    <div class="nav-links">
+      <a routerLink="/dashboard" routerLinkActive="active">Početna</a>
+      
+      <a *ngIf="authService.hasRole('patient')" routerLink="/appointments" routerLinkActive="active">Moji termini</a>
+      <a *ngIf="authService.hasRole('patient')" routerLink="/doctors" routerLinkActive="active">Pretraga doktora</a>
+      <a *ngIf="authService.hasRole('patient')" routerLink="/medical-records" routerLinkActive="active">Medicinski kartoni</a>
+      <a *ngIf="authService.hasRole('patient')" routerLink="/prescriptions" routerLinkActive="active">Recepti</a>
+      
+      <a *ngIf="authService.hasRole('doctor')" routerLink="/appointments" routerLinkActive="active">Termini</a>
+      <a *ngIf="authService.hasRole('doctor')" routerLink="/medical-records" routerLinkActive="active">Medicinski kartoni</a>
+      <a *ngIf="authService.hasRole('doctor')" routerLink="/prescriptions" routerLinkActive="active">Recepti</a>
+      <a *ngIf="authService.hasRole('doctor')" routerLink="/availability" routerLinkActive="active">Dostupnost</a>
+      
+      <a *ngIf="authService.hasRole('nurse')" routerLink="/appointments" routerLinkActive="active">Termini</a>
+      <a *ngIf="authService.hasRole('nurse')" routerLink="/medical-records" routerLinkActive="active">Medicinski kartoni</a>
+      
+      <a *ngIf="authService.hasRole('admin')" routerLink="/users" routerLinkActive="active">Korisnici</a>
+      
+      <div class="user-menu">
+        <span class="user-name">{{ getCurrentUser()?.firstName }} {{ getCurrentUser()?.lastName }}</span>
+        <span class="user-role">({{ getCurrentUser()?.role }})</span>
+        <button (click)="logout()" class="btn-logout">Odjavi se</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
+
+
+
+

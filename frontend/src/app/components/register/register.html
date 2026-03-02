@@ -1,0 +1,149 @@
+<div class="register-container">
+  <div class="register-card">
+    <h1>Medify</h1>
+    <h2>Registracija</h2>
+    
+    <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="jmbg">JMBG *</label>
+          <input type="text" id="jmbg" name="jmbg" [(ngModel)]="formData.JMBG" required />
+        </div>
+
+        <div class="form-group">
+          <label for="role">Uloga *</label>
+          <select id="role" name="role" [(ngModel)]="formData.role" required>
+            <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firstName">Ime *</label>
+          <input type="text" id="firstName" name="firstName" [(ngModel)]="formData.firstName" required />
+        </div>
+
+        <div class="form-group">
+          <label for="lastName">Prezime *</label>
+          <input type="text" id="lastName" name="lastName" [(ngModel)]="formData.lastName" required />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="password">Lozinka *</label>
+          <input type="password" id="password" name="password" [(ngModel)]="formData.password" required />
+        </div>
+
+        <div class="form-group">
+          <label for="gender">Pol *</label>
+          <select id="gender" name="gender" [(ngModel)]="formData.gender" required>
+            <option *ngFor="let g of genders" [value]="g">{{ g === 'male' ? 'Muški' : 'Ženski' }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="homeAddress">Adresa *</label>
+        <input type="text" id="homeAddress" name="homeAddress" [(ngModel)]="formData.homeAddress" required />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="phoneNumber">Telefon *</label>
+          <input type="text" id="phoneNumber" name="phoneNumber" [(ngModel)]="formData.phoneNumber" required />
+        </div>
+
+        <div class="form-group">
+          <label for="dateOfBirth">Datum rođenja</label>
+          <input type="date" id="dateOfBirth" name="dateOfBirth" [(ngModel)]="formData.dateOfBirth" />
+        </div>
+      </div>
+
+      <!-- Doctor fields -->
+      <div *ngIf="isDoctor" class="role-specific-fields">
+        <h3>Informacije o doktoru</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="specialization">Specijalizacija</label>
+            <input type="text" id="specialization" name="specialization" [(ngModel)]="formData.specialization" />
+          </div>
+
+          <div class="form-group">
+            <label for="licenseNumber">Broj licence</label>
+            <input type="text" id="licenseNumber" name="licenseNumber" [(ngModel)]="formData.licenseNumber" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="yearsOfExperience">Godine iskustva</label>
+            <input type="number" id="yearsOfExperience" name="yearsOfExperience" [(ngModel)]="formData.yearsOfExperience" />
+          </div>
+
+          <div class="form-group">
+            <label for="officeNumber">Broj ordinacije</label>
+            <input type="text" id="officeNumber" name="officeNumber" [(ngModel)]="formData.officeNumber" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="shift">Smena</label>
+          <select id="shift" name="shift" [(ngModel)]="formData.shift">
+            <option *ngFor="let shift of shifts" [value]="shift">
+              {{ shift === 'morning' ? 'Jutro' : shift === 'evening' ? 'Veče' : 'Noć' }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Patient fields -->
+      <div *ngIf="isPatient" class="role-specific-fields">
+        <h3>Informacije o pacijentu</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="bloodType">Krvna grupa</label>
+            <select id="bloodType" name="bloodType" [(ngModel)]="formData.bloodType">
+              <option value="">-- Odaberite --</option>
+              <option *ngFor="let bt of bloodTypes" [value]="bt">{{ bt }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="allergies">Alergije (razdvojite zarezom)</label>
+            <input type="text" id="allergies" name="allergies" [(ngModel)]="formData.allergies" placeholder="npr. Penicilin, Prašina" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="insuranceNumber">Broj osiguranja</label>
+            <input type="text" id="insuranceNumber" name="insuranceNumber" [(ngModel)]="formData.insuranceNumber" />
+          </div>
+
+          <div class="form-group">
+            <label for="insuranceCompany">Osiguravajuća kuća</label>
+            <input type="text" id="insuranceCompany" name="insuranceCompany" [(ngModel)]="formData.insuranceCompany" />
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="error" class="error-message">
+        {{ error }}
+      </div>
+
+      <button type="submit" [disabled]="loading" class="btn btn-primary">
+        {{ loading ? 'Registracija...' : 'Registruj se' }}
+      </button>
+    </form>
+
+    <p class="login-link">
+      Već imate nalog? <a routerLink="/login">Prijavite se</a>
+    </p>
+  </div>
+</div>
+
+
+
+

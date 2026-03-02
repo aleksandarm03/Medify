@@ -1,0 +1,44 @@
+<div class="login-container">
+  <div class="login-card">
+    <h1>Medify</h1>
+    <h2>Prijavljivanje</h2>
+    
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+      <div class="form-group">
+        <label for="jmbg">JMBG</label>
+        <input
+          type="text"
+          id="jmbg"
+          name="jmbg"
+          [(ngModel)]="JMBG"
+          required
+          placeholder="Unesite JMBG"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Lozinka</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          [(ngModel)]="password"
+          required
+          placeholder="Unesite lozinku"
+        />
+      </div>
+
+      <div *ngIf="error" class="error-message">
+        {{ error }}
+      </div>
+
+      <button type="submit" [disabled]="loading" class="btn btn-primary">
+        {{ loading ? 'Prijavljivanje...' : 'Prijavi se' }}
+      </button>
+    </form>
+
+    <p class="register-link">
+      Nemate nalog? <a routerLink="/register">Registrujte se</a>
+    </p>
+  </div>
+</div>

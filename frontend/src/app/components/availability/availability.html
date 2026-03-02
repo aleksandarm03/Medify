@@ -1,0 +1,89 @@
+<div class="availability-container">
+  <div class="header">
+    <h1>Dostupnost</h1>
+    <button (click)="showCreateModal = true" class="btn btn-primary">Dodaj dostupnost</button>
+  </div>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <div *ngIf="loading" class="loading">Učitavanje...</div>
+
+  <div *ngIf="!loading && availabilities.length === 0" class="empty-state">
+    <p>Nema postavljenih dostupnosti</p>
+  </div>
+
+  <div class="availabilities-list">
+    <div *ngFor="let availability of availabilities" class="availability-card">
+      <div class="availability-header">
+        <h3>{{ getDayName(availability.dayOfWeek) }}</h3>
+        <button (click)="deleteAvailability(availability._id!)" class="btn btn-danger">Obriši</button>
+      </div>
+      
+      <div class="availability-info">
+        <p><strong>Vreme:</strong> {{ availability.startTime }} - {{ availability.endTime }}</p>
+        <p><strong>Trajanje termina:</strong> {{ availability.appointmentDuration }} minuta</p>
+        <p *ngIf="availability.breakStart && availability.breakEnd">
+          <strong>Pauza:</strong> {{ availability.breakStart }} - {{ availability.breakEnd }}
+        </p>
+        <p><strong>Status:</strong> 
+          <span [class]="availability.isAvailable ? 'status-available' : 'status-unavailable'">
+            {{ availability.isAvailable ? 'Dostupan' : 'Nedostupan' }}
+          </span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Modal -->
+  <div *ngIf="showCreateModal" class="modal-overlay" (click)="showCreateModal = false">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h2>Dodaj dostupnost</h2>
+      <form (ngSubmit)="createAvailability()">
+        <div class="form-group">
+          <label>Dan u nedelji *</label>
+          <select [(ngModel)]="newAvailability.dayOfWeek" name="dayOfWeek" required>
+            <option *ngFor="let day of daysOfWeek" [value]="day.value">{{ day.name }}</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Početno vreme *</label>
+            <input type="time" [(ngModel)]="newAvailability.startTime" name="startTime" required />
+          </div>
+          <div class="form-group">
+            <label>Završno vreme *</label>
+            <input type="time" [(ngModel)]="newAvailability.endTime" name="endTime" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Početak pauze</label>
+            <input type="time" [(ngModel)]="newAvailability.breakStart" name="breakStart" />
+          </div>
+          <div class="form-group">
+            <label>Kraj pauze</label>
+            <input type="time" [(ngModel)]="newAvailability.breakEnd" name="breakEnd" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Trajanje termina (minuti)</label>
+          <input type="number" [(ngModel)]="newAvailability.appointmentDuration" name="appointmentDuration" min="15" step="15" />
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" [(ngModel)]="newAvailability.isAvailable" name="isAvailable" />
+            Dostupan
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" (click)="showCreateModal = false" class="btn btn-secondary">Otkaži</button>
+          <button type="submit" class="btn btn-primary">Dodaj</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+

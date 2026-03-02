@@ -1,0 +1,40 @@
+<div class="users-container">
+  <h1>Korisnici</h1>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <div *ngIf="loading" class="loading">Učitavanje...</div>
+
+  <div *ngIf="!loading && users.length === 0" class="empty-state">
+    <p>Nema korisnika</p>
+  </div>
+
+  <div class="users-table">
+    <table>
+      <thead>
+        <tr>
+          <th>JMBG</th>
+          <th>Ime</th>
+          <th>Prezime</th>
+          <th>Uloga</th>
+          <th>Telefon</th>
+          <th>Adresa</th>
+          <th *ngIf="hasAnySpecialization()">Specijalizacija</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td>{{ user.JMBG }}</td>
+          <td>{{ user.firstName }}</td>
+          <td>{{ user.lastName }}</td>
+          <td><span class="role-badge role-{{ user.role }}">{{ getRoleName(user.role) }}</span></td>
+          <td>{{ user.phoneNumber }}</td>
+          <td>{{ user.homeAddress }}</td>
+          <td *ngIf="hasAnySpecialization()">{{ user.specialization || '-' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+

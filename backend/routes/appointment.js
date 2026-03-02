@@ -3,54 +3,116 @@ const passport = require("./config");
 const AppointmentService = require("../services/appointmentService");
 const UserModel = require("../models/user");
 
-// Kreiranje novog termina (samo doktori)
-router.post("/",
-    passport.authenticate("jwt", { session: false }),
-    passport.authorizeRoles("doctor"),
-    async function (req, res) {
-        try {
-            // Validacija obaveznih polja
-            const { patientId, appointmentDate, reason } = req.body;
-            
-            if (!patientId || !appointmentDate || !reason) {
-                return res.status(400).json({ message: "Sva obavezna polja moraju biti popunjena: patientId, appointmentDate, reason." });
-            }
+/**
+ * Kreiranje novog termina
+ *
+ * - Doktor:
+ *    POST /appointments
+ *    body: { patientId, appointmentDate, reason }
+ *    -> zakazuje termin za pacijenta
+ *
+ * - Pacijent:
+ *    POST /appointments
+ *    body: { doctorId, appointmentDate, reason }
+ *    -> sam sebi zakazuje termin kod doktora
+ *
+ * Termin se odmah kreira sa statusom "scheduled" – nema dodatnog odobravanja.
+ */
+router.post(
+  "/",
+  passport.authenticate("jwt", { session: false }),
+  passport.authorizeRoles("doctor", "patient"),
+  async function (req, res) {
+    try {
+      const { patientId, doctorId, appointmentDate, reason } = req.body;
 
-            // Validacija da je appointmentDate validan datum
-            const appointmentDateObj = new Date(appointmentDate);
-            if (isNaN(appointmentDateObj.getTime())) {
-                return res.status(400).json({ message: "Nevažeći format datuma." });
-            }
+      // Zajednička validacija
+      if (!appointmentDate || !reason) {
+        return res
+          .status(400)
+          .json({ message: "Obavezna polja: appointmentDate, reason." });
+      }
 
-            // Validacija da datum nije u prošlosti
-            if (appointmentDateObj < new Date()) {
-                return res.status(400).json({ message: "Datum termina ne može biti u prošlosti." });
-            }
+      const appointmentDateObj = new Date(appointmentDate);
+      if (isNaN(appointmentDateObj.getTime())) {
+        return res.status(400).json({ message: "Nevažeći format datuma." });
+      }
 
-            // Validacija da je reason dovoljno dugačak
-            if (reason.trim().length < 3) {
-                return res.status(400).json({ message: "Razlog termina mora imati najmanje 3 karaktera." });
-            }
+      if (appointmentDateObj < new Date()) {
+        return res
+          .status(400)
+          .json({ message: "Datum termina ne može biti u prošlosti." });
+      }
 
-            const doctor = req.user;
-            const patient = await UserModel.findById(patientId);
-            
-            if (!patient) {
-                return res.status(404).json({ message: "Pacijent nije pronađen." });
-            }
+      if (reason.trim().length < 3) {
+        return res.status(400).json({
+          message: "Razlog termina mora imati najmanje 3 karaktera.",
+        });
+      }
 
-            // Provera da li je korisnik zaista pacijent
-            if (patient.role !== "patient") {
-                return res.status(400).json({ message: "Korisnik mora biti pacijent." });
-            }
-            
-            const appointment = await AppointmentService.createAppointment(req.body, doctor, patient);
-            return res.status(201).json(appointment);
-        } catch (error) {
-            console.error("Create appointment error:", error);
-            return res.status(500).json({ message: "Greška pri kreiranju termina." });
+      const user = req.user;
+      let doctor;
+      let patient;
+
+      if (user.role === "doctor") {
+        // Doktor zakazuje termin za pacijenta
+        if (!patientId) {
+          return res
+            .status(400)
+            .json({ message: "Obavezno polje: patientId." });
         }
+
+        doctor = user;
+        patient = await UserModel.findById(patientId);
+
+        if (!patient) {
+          return res.status(404).json({ message: "Pacijent nije pronađen." });
+        }
+
+        if (patient.role !== "patient") {
+          return res
+            .status(400)
+            .json({ message: "Korisnik mora biti pacijent." });
+        }
+      } else if (user.role === "patient") {
+        // Pacijent zakazuje termin kod doktora
+        if (!doctorId) {
+          return res
+            .status(400)
+            .json({ message: "Obavezno polje: doctorId." });
+        }
+
+        patient = user;
+        doctor = await UserModel.findById(doctorId);
+
+        if (!doctor) {
+          return res.status(404).json({ message: "Doktor nije pronađen." });
+        }
+
+        if (doctor.role !== "doctor") {
+          return res
+            .status(400)
+            .json({ message: "Korisnik mora biti doktor." });
+        }
+      } else {
+        return res
+          .status(403)
+          .json({ message: "Samo doktori i pacijenti mogu zakazivati termine." });
+      }
+
+      const appointment = await AppointmentService.createAppointment(
+        req.body,
+        doctor,
+        patient
+      );
+      return res.status(201).json(appointment);
+    } catch (error) {
+      console.error("Create appointment error:", error);
+      return res
+        .status(500)
+        .json({ message: "Greška pri kreiranju termina." });
     }
+  }
 );
 
 // Dohvatanje termina za doktora

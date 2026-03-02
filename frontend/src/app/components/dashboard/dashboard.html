@@ -1,0 +1,88 @@
+<div class="dashboard">
+  <h1>Dobrodošli, {{ user?.firstName }} {{ user?.lastName }}!</h1>
+  <p class="subtitle">Uloga: {{ getRoleName(user?.role) }}</p>
+
+  <div class="dashboard-grid">
+    <!-- Patient Dashboard -->
+    <div *ngIf="isPatient()" class="dashboard-cards">
+      <div class="card">
+        <h3>Moji termini</h3>
+        <p>Pregledajte i upravljajte svojim terminima</p>
+        <a routerLink="/appointments" class="card-link">Vidi termine →</a>
+      </div>
+
+      <div class="card">
+        <h3>Pretraga doktora</h3>
+        <p>Pronađite doktora i zakazite termin</p>
+        <a routerLink="/doctors" class="card-link">Pretraži doktore →</a>
+      </div>
+
+      <div class="card">
+        <h3>Medicinski kartoni</h3>
+        <p>Pregledajte svoje medicinske kartone</p>
+        <a routerLink="/medical-records" class="card-link">Vidi kartone →</a>
+      </div>
+
+      <div class="card">
+        <h3>Recepti</h3>
+        <p>Pregledajte svoje recepte</p>
+        <a routerLink="/prescriptions" class="card-link">Vidi recepte →</a>
+      </div>
+    </div>
+
+    <!-- Doctor Dashboard -->
+    <div *ngIf="isDoctor()" class="dashboard-cards">
+      <div class="card">
+        <h3>Termini</h3>
+        <p>Upravljajte svojim terminima</p>
+        <a routerLink="/appointments" class="card-link">Vidi termine →</a>
+      </div>
+
+      <div class="card">
+        <h3>Medicinski kartoni</h3>
+        <p>Kreirajte i ažurirajte medicinske kartone</p>
+        <a routerLink="/medical-records" class="card-link">Vidi kartone →</a>
+      </div>
+
+      <div class="card">
+        <h3>Recepti</h3>
+        <p>Kreirajte i upravljajte receptima</p>
+        <a routerLink="/prescriptions" class="card-link">Vidi recepte →</a>
+      </div>
+
+      <div class="card">
+        <h3>Dostupnost</h3>
+        <p>Postavite svoju dostupnost</p>
+        <a routerLink="/availability" class="card-link">Upravljaj dostupnošću →</a>
+      </div>
+    </div>
+
+    <!-- Nurse Dashboard -->
+    <div *ngIf="isNurse()" class="dashboard-cards">
+      <div class="card">
+        <h3>Termini</h3>
+        <p>Pregledajte termine</p>
+        <a routerLink="/appointments" class="card-link">Vidi termine →</a>
+      </div>
+
+      <div class="card">
+        <h3>Medicinski kartoni</h3>
+        <p>Kreirajte i ažurirajte medicinske kartone</p>
+        <a routerLink="/medical-records" class="card-link">Vidi kartone →</a>
+      </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div *ngIf="isAdmin()" class="dashboard-cards">
+      <div class="card">
+        <h3>Korisnici</h3>
+        <p>Upravljajte korisnicima sistema</p>
+        <a routerLink="/users" class="card-link">Vidi korisnike →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+

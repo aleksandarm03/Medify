@@ -1,0 +1,122 @@
+<div class="medical-records-container">
+  <div class="header">
+    <h1>Medicinski kartoni</h1>
+    <button *ngIf="isDoctor || isNurse" (click)="showCreateModal = true" class="btn btn-primary">Novi karton</button>
+  </div>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <div *ngIf="loading" class="loading">Učitavanje...</div>
+
+  <div *ngIf="!loading && records.length === 0" class="empty-state">
+    <p>Nema medicinskih kartona</p>
+  </div>
+
+  <div class="records-list">
+    <div *ngFor="let record of records" class="record-card">
+      <div class="record-header">
+        <h3>Karton #{{ record._id?.substring(0, 8) }}</h3>
+        <span class="record-date">{{ formatDate(record.visitDate) }}</span>
+      </div>
+      
+      <div class="record-info">
+        <p><strong>Pacijent:</strong> {{ record.patient?.firstName }} {{ record.patient?.lastName }}</p>
+        <p><strong>Doktor:</strong> {{ record.doctor?.firstName }} {{ record.doctor?.lastName }}</p>
+        <p><strong>Dijagnoza:</strong> {{ record.diagnosis }}</p>
+        <p *ngIf="record.symptoms && record.symptoms.length > 0"><strong>Simptomi:</strong> {{ record.symptoms.join(', ') }}</p>
+        <p *ngIf="record.treatment"><strong>Tretman:</strong> {{ record.treatment }}</p>
+        <p *ngIf="record.recommendations"><strong>Preporuke:</strong> {{ record.recommendations }}</p>
+        <div *ngIf="record.vitalSigns" class="vital-signs">
+          <h4>Vitalni znaci:</h4>
+          <div class="vital-signs-grid">
+            <p *ngIf="record.vitalSigns.bloodPressure"><strong>Krvni pritisak:</strong> {{ record.vitalSigns.bloodPressure }}</p>
+            <p *ngIf="record.vitalSigns.heartRate"><strong>Puls:</strong> {{ record.vitalSigns.heartRate }} bpm</p>
+            <p *ngIf="record.vitalSigns.temperature"><strong>Temperatura:</strong> {{ record.vitalSigns.temperature }}°C</p>
+            <p *ngIf="record.vitalSigns.weight"><strong>Težina:</strong> {{ record.vitalSigns.weight }} kg</p>
+            <p *ngIf="record.vitalSigns.height"><strong>Visina:</strong> {{ record.vitalSigns.height }} cm</p>
+          </div>
+        </div>
+        <div *ngIf="record.labResults && record.labResults.length > 0" class="lab-results">
+          <h4>Laboratorijski rezultati:</h4>
+          <div *ngFor="let result of record.labResults" class="lab-result-item">
+            <p><strong>{{ result.testName }}:</strong> {{ result.result }}</p>
+            <p *ngIf="result.normalRange" class="normal-range">Normalni opseg: {{ result.normalRange }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Modal -->
+  <div *ngIf="showCreateModal" class="modal-overlay" (click)="showCreateModal = false">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h2>Kreiraj medicinski karton</h2>
+      <form (ngSubmit)="createRecord()">
+        <div class="form-group">
+          <label>ID Pacijenta *</label>
+          <input type="text" [(ngModel)]="newRecord.patientId" name="patientId" required />
+        </div>
+        <div class="form-group">
+          <label>ID Termina (opciono)</label>
+          <input type="text" [(ngModel)]="newRecord.appointmentId" name="appointmentId" />
+        </div>
+        <div class="form-group">
+          <label>Dijagnoza *</label>
+          <textarea [(ngModel)]="newRecord.diagnosis" name="diagnosis" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Simptomi (razdvojite zarezom)</label>
+          <input type="text" [(ngModel)]="newRecord.symptoms" name="symptoms" />
+        </div>
+        <div class="form-group">
+          <label>Zapisi pregleda</label>
+          <textarea [(ngModel)]="newRecord.examinationNotes" name="examinationNotes"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Tretman</label>
+          <textarea [(ngModel)]="newRecord.treatment" name="treatment"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Preporuke</label>
+          <textarea [(ngModel)]="newRecord.recommendations" name="recommendations"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Krvni pritisak</label>
+            <input type="text" [(ngModel)]="newRecord.bloodPressure" name="bloodPressure" placeholder="120/80" />
+          </div>
+          <div class="form-group">
+            <label>Puls (bpm)</label>
+            <input type="number" [(ngModel)]="newRecord.heartRate" name="heartRate" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Temperatura (°C)</label>
+            <input type="number" step="0.1" [(ngModel)]="newRecord.temperature" name="temperature" />
+          </div>
+          <div class="form-group">
+            <label>Težina (kg)</label>
+            <input type="number" [(ngModel)]="newRecord.weight" name="weight" />
+          </div>
+          <div class="form-group">
+            <label>Visina (cm)</label>
+            <input type="number" [(ngModel)]="newRecord.height" name="height" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Kontrola (datum)</label>
+          <input type="date" [(ngModel)]="newRecord.followUpDate" name="followUpDate" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" (click)="showCreateModal = false" class="btn btn-secondary">Otkaži</button>
+          <button type="submit" class="btn btn-primary">Kreiraj</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+

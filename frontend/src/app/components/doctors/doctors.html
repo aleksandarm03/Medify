@@ -1,0 +1,45 @@
+<div class="doctors-container">
+  <h1>Pretraga doktora</h1>
+
+  <div class="search-section">
+    <div class="search-filters">
+      <div class="form-group">
+        <label>Specijalizacija</label>
+        <input type="text" [(ngModel)]="searchSpecialization" placeholder="npr. kardiolog" />
+      </div>
+      <div class="form-group">
+        <label>Ime ili prezime</label>
+        <input type="text" [(ngModel)]="searchName" placeholder="npr. Marko" />
+      </div>
+      <div class="search-actions">
+        <button (click)="search()" class="btn btn-primary">Pretraži</button>
+        <button (click)="clearSearch()" class="btn btn-secondary">Obriši</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <div *ngIf="loading" class="loading">Učitavanje...</div>
+
+  <div *ngIf="!loading && doctors.length === 0" class="empty-state">
+    <p>Nema doktora</p>
+  </div>
+
+  <div class="doctors-list">
+    <div *ngFor="let doctor of doctors" class="doctor-card">
+      <h3>{{ doctor.firstName }} {{ doctor.lastName }}</h3>
+      <div class="doctor-info">
+        <p *ngIf="doctor.specialization"><strong>Specijalizacija:</strong> {{ doctor.specialization }}</p>
+        <p *ngIf="doctor.yearsOfExperience"><strong>Godine iskustva:</strong> {{ doctor.yearsOfExperience }}</p>
+        <p *ngIf="doctor.officeNumber"><strong>Ordinacija:</strong> {{ doctor.officeNumber }}</p>
+        <p *ngIf="doctor.phoneNumber"><strong>Telefon:</strong> {{ doctor.phoneNumber }}</p>
+      </div>
+      <a [routerLink]="['/doctors', doctor._id]" class="btn btn-primary">Vidi detalje</a>
+    </div>
+  </div>
+</div>
+
+
+
+
