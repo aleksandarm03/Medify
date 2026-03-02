@@ -6,7 +6,7 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class ApiService {
-  private apiUrl = 'http://localhost:3232';
+  private apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 

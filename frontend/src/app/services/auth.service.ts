@@ -23,10 +23,15 @@ export class AuthService {
       tap(response => {
         if (typeof window !== 'undefined') {
           localStorage.setItem(this.tokenKey, response.token);
-          // Decode token to get user ID
+          // Decode token to get osnovne podatke o korisniku iz JWT-a
           try {
             const payload = JSON.parse(atob(response.token.split('.')[1]));
-            const user = { _id: payload._id } as User;
+            const user: User = {
+              _id: payload._id,
+              firstName: payload.firstName,
+              lastName: payload.lastName,
+              role: payload.role
+            } as User;
             localStorage.setItem(this.userKey, JSON.stringify(user));
             this.currentUserSubject.next(user);
           } catch (error) {
@@ -89,15 +94,11 @@ export class AuthService {
   }
 
   hasRole(role: string): boolean {
-    // Note: Role is not stored in JWT token, so this will always return false
-    // In a production app, you'd want to fetch user info or include role in token
     const user = this.getCurrentUser();
     return user?.role === role;
   }
 
   hasAnyRole(roles: string[]): boolean {
-    // Note: Role is not stored in JWT token, so this will always return false
-    // In a production app, you'd want to fetch user info or include role in token
     const user = this.getCurrentUser();
     return user ? roles.includes(user.role || '') : false;
   }

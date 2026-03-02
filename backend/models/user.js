@@ -51,8 +51,12 @@ UserSchema.methods.generateJwt = function()
     var expire = new Date();
     expire.setDate(expire.getDate() + 7);
 
+    // U payload stavljamo osnovne podatke da frontend može da zna ulogu i ime
     return jwt.sign({
         _id: this._id,
+        firstName: this.firstName,
+        lastName: this.lastName,
+        role: this.role,
         exp: Math.floor(expire.getTime() / 1000) // JWT standard za expiration
     },config.secret)
 }

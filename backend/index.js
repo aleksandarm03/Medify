@@ -1,4 +1,5 @@
 const express=require('express');
+const cors = require('cors');
 const config=require('./config');
 const mongoose=require('mongoose');
 const AuthRouter=require('./routes/auth');
@@ -10,6 +11,13 @@ const db=mongoose.connect(config.MongoConnection);
 
 
 const app=express();
+
+app.use(cors({
+    origin: "http://localhost:4200",   // Angular
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(express.json());
 app.use('/auth', AuthRouter);
 app.use('/appointments', AppointmentRouter);
