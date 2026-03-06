@@ -11,7 +11,7 @@ var createAppointment=async function(body,doctor,patient) {
 
 var getAppointmentsByDoctor = async function(doctorId, status = null) {
     const query = { doctor: doctorId };
-    if (status) {
+    if (status && status.trim() !== "") {
         query.status = status;
     }
     return await AppointmentModel.find(query)
@@ -21,7 +21,7 @@ var getAppointmentsByDoctor = async function(doctorId, status = null) {
 
 var getAppointmentsByPatient = async function(patientId, status = null) {
     const query = { patient: patientId };
-    if (status) {
+    if (status && status.trim() !== "") {
         query.status = status;
     }
     return await AppointmentModel.find(query)

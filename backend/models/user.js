@@ -63,19 +63,43 @@ UserSchema.methods.generateJwt = function()
 
 
 var UserModel=mongoose.model("User", UserSchema);
-UserModel.register=async function(JMBG,firstName,lastName,password,homeAddress,phoneNumber,gender,role)
+UserModel.register=async function(body)
 {
     var user=new UserModel({
-        JMBG:JMBG,
-        firstName:firstName,
-        lastName:lastName,
-        homeAddress:homeAddress,
-        phoneNumber:phoneNumber,    
-        gender:gender,
-        role:role
+        JMBG: body.JMBG,
+        firstName: body.firstName,
+        lastName: body.lastName,
+        homeAddress: body.homeAddress,
+        phoneNumber: body.phoneNumber,    
+        gender: body.gender,
+        role: body.role,
+        dateOfBirth: body.dateOfBirth,
+        // Polja za pacijente
+        bloodType: body.bloodType,
+        allergies: body.allergies || [],
+        insuranceNumber: body.insuranceNumber,
+        insuranceCompany: body.insuranceCompany,
+        // Polja za doktore
+        specialization: body.specialization,
+        licenseNumber: body.licenseNumber,
+        yearsOfExperience: body.yearsOfExperience,
+        officeNumber: body.officeNumber,
+        shift: body.shift
     });
-    user.savePassword(password);
-    var savedUser=await user.save();    
+    user.savePassword(body.password);
+    var savedUser=await user.save();
+    
+    // Automatsko kreiranje nedeljne dostupnosti za doktore
+    if (savedUser.role === "doctor" && savedUser.shift) {
+        const DoctorAvailabilityService = require("../services/doctorAvailabilityService");
+        try {
+            await DoctorAvailabilityService.createDefaultAvailability(savedUser._id, savedUser.shift);
+        } catch (error) {
+            console.error("Greška pri kreiranju default dostupnosti:", error);
+            // Ne bacamo grešku - registracija je uspela, dostupnost može ručno da se doda kasnije
+        }
+    }
+    
     return savedUser;    
 }
 module.exports = UserModel;

@@ -112,12 +112,59 @@ var getAvailableTimeSlots = async function(doctorId, date) {
     return slots;
 };
 
+/**
+ * Kreira automatsku nedeljnu dostupnost za doktora prema shift-u
+ * - morning: Pon-Pet 08:00-16:00
+ * - evening: Pon-Pet 16:00-00:00
+ * - night: Pon-Pet 00:00-08:00
+ */
+var createDefaultAvailability = async function(doctorId, shift) {
+    if (!shift) {
+        console.log("Shift nije definisan, preskačem kreiranje dostupnosti");
+        return [];
+    }
+
+    const shiftTimes = {
+        morning: { startTime: "08:00", endTime: "16:00", breakStart: "12:00", breakEnd: "13:00" },
+        evening: { startTime: "16:00", endTime: "00:00", breakStart: null, breakEnd: null },
+        night: { startTime: "00:00", endTime: "08:00", breakStart: null, breakEnd: null }
+    };
+
+    const times = shiftTimes[shift];
+    if (!times) {
+        console.log("Nepoznat shift:", shift);
+        return [];
+    }
+
+    const availabilities = [];
+    // Kreiraj dostupnost za Ponedeljak(1) - Petak(5)
+    for (let day = 1; day <= 5; day++) {
+        const availability = new DoctorAvailabilityModel({
+            doctor: doctorId,
+            dayOfWeek: day,
+            startTime: times.startTime,
+            endTime: times.endTime,
+            isAvailable: true,
+            breakStart: times.breakStart,
+            breakEnd: times.breakEnd,
+            appointmentDuration: 30
+        });
+        
+        const saved = await availability.save();
+        availabilities.push(saved);
+    }
+
+    console.log(`✅ Kreirana automatska dostupnost za doktora ${doctorId}, shift: ${shift} (${availabilities.length} dana)`);
+    return availabilities;
+};
+
 module.exports = {
     setDoctorAvailability,
     getDoctorAvailability,
     updateDoctorAvailability,
     deleteDoctorAvailability,
-    getAvailableTimeSlots
+    getAvailableTimeSlots,
+    createDefaultAvailability
 };
 
 

@@ -95,19 +95,26 @@ router.get("/patient/:patientId",
         try {
             const user = req.user;
             const patientId = req.params.patientId;
-            const status = req.query.status; // Opcioni filter
+            let status = req.query.status; // Opcioni filter
 
             // Provera prava pristupa
             if (user.role === "patient" && user._id.toString() !== patientId) {
                 return res.status(403).json({ message: "Možete videti samo svoje recepte." });
             }
 
-            let prescriptions;
+            // Validacija statusa ako je poslat
             if (status) {
-                prescriptions = await PrescriptionService.getPrescriptionsByPatient(patientId, status);
+                const validStatuses = ["active", "completed", "cancelled"];
+                if (!validStatuses.includes(status)) {
+                    return res.status(400).json({ 
+                        message: "Nevažeći status. Dozvoljeni statusi: active, completed, cancelled" 
+                    });
+                }
             } else {
-                prescriptions = await PrescriptionService.getPrescriptionsByPatient(patientId);
+                status = null; // Eksplicitno postavljamo na null ako nije poslat
             }
+
+            const prescriptions = await PrescriptionService.getPrescriptionsByPatient(patientId, status);
 
             return res.json(prescriptions);
         } catch (error) {

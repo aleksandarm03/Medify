@@ -2,7 +2,7 @@ const UserModel=require('../models/user');
 
 var register=async function(body)
 {
-    var user=await UserModel.register(body.JMBG,body.firstName,body.lastName,body.password,body.homeAddress,body.phoneNumber,body.gender,body.role);  
+    var user=await UserModel.register(body);  
     console.log(user)  
     return user;
 }

@@ -53,6 +53,57 @@ router.post("/:id/availability",
     }
 );
 
+// Automatsko generisanje default dostupnosti za doktora (na osnovu shift-a)
+router.post("/:id/availability/generate-default",
+    passport.authenticate("jwt", { session: false }),
+    passport.authorizeRoles("doctor", "admin"),
+    async function (req, res) {
+        try {
+            const doctorId = req.params.id;
+            const user = req.user;
+
+            // Provera prava pristupa
+            if (user.role !== "admin" && user._id.toString() !== doctorId) {
+                return res.status(403).json({ message: "Možete generisati samo svoju dostupnost." });
+            }
+
+            // Dohvati doktora
+            const doctor = await UserModel.findById(doctorId);
+            if (!doctor) {
+                return res.status(404).json({ message: "Doktor nije pronađen." });
+            }
+
+            if (doctor.role !== "doctor") {
+                return res.status(400).json({ message: "Korisnik mora biti doktor." });
+            }
+
+            if (!doctor.shift) {
+                return res.status(400).json({ message: "Doktor nema definisan shift." });
+            }
+
+            // Proveri da li već postoji dostupnost
+            const existing = await DoctorAvailabilityService.getDoctorAvailability(doctorId);
+            if (existing && existing.length > 0) {
+                return res.status(400).json({ 
+                    message: "Dostupnost već postoji. Koristite PUT za izmenu ili DELETE za brisanje." 
+                });
+            }
+
+            // Generiši default dostupnost
+            const availabilities = await DoctorAvailabilityService.createDefaultAvailability(doctorId, doctor.shift);
+            
+            return res.status(201).json({
+                message: `Kreirana automatska dostupnost za ${doctor.shift} smenu (Pon-Pet)`,
+                count: availabilities.length,
+                availabilities: availabilities
+            });
+        } catch (error) {
+            console.error("Generate default availability error:", error);
+            return res.status(500).json({ message: "Greška pri generisanju dostupnosti." });
+        }
+    }
+);
+
 // Dohvatanje dostupnih termina za doktora na određeni datum (PRE /availability GET)
 router.get("/:id/available-slots",
     passport.authenticate("jwt", { session: false }),

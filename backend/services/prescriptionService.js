@@ -18,7 +18,7 @@ var createPrescription = async function(body, doctor, patient, medicalRecord, ap
 
 var getPrescriptionsByPatient = async function(patientId, status = null) {
     const query = { patient: patientId };
-    if (status) {
+    if (status && status.trim() !== "") {
         query.status = status;
     }
     

@@ -122,7 +122,20 @@ router.get("/doctor",
     async function (req, res) {
         try {
             const doctorId = req.user._id;
-            const status = req.query.status; // Opcioni filter po statusu
+            let status = req.query.status; // Opcioni filter po statusu
+            
+            // Validacija statusa ako je prosleđen
+            if (status) {
+                const validStatuses = ["scheduled", "completed", "canceled"];
+                if (!validStatuses.includes(status)) {
+                    return res.status(400).json({ 
+                        message: "Nevažeći status. Dozvoljene vrednosti: scheduled, completed, canceled." 
+                    });
+                }
+            } else {
+                status = null; // Osiguraj da je null ako nije prosleđen
+            }
+            
             const appointments = await AppointmentService.getAppointmentsByDoctor(doctorId, status);
             return res.json(appointments);
         } catch (error) {
@@ -139,7 +152,20 @@ router.get("/patient",
     async function (req, res) {
         try {
             const patientId = req.user._id;
-            const status = req.query.status; // Opcioni filter po statusu
+            let status = req.query.status; // Opcioni filter po statusu
+            
+            // Validacija statusa ako je prosleđen
+            if (status) {
+                const validStatuses = ["scheduled", "completed", "canceled"];
+                if (!validStatuses.includes(status)) {
+                    return res.status(400).json({ 
+                        message: "Nevažeći status. Dozvoljene vrednosti: scheduled, completed, canceled." 
+                    });
+                }
+            } else {
+                status = null; // Osiguraj da je null ako nije prosleđen
+            }
+            
             const appointments = await AppointmentService.getAppointmentsByPatient(patientId, status);
             return res.json(appointments);
         } catch (error) {
