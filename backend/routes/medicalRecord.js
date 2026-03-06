@@ -89,11 +89,14 @@ router.get("/:id",
 
             // Provera prava pristupa
             const user = req.user;
-            if (user.role !== "admin" && 
-                user.role !== "doctor" && 
-                user.role !== "nurse" &&
-                medicalRecord.patient._id.toString() !== user._id.toString()) {
+            if (user.role === "patient" && medicalRecord.patient._id.toString() !== user._id.toString()) {
                 return res.status(403).json({ message: "Nemate pravo pristupa ovom medicinskom kartona." });
+            }
+            if (user.role === "nurse") {
+                // Medicinska sestra može videti samo kartone svojih doktora
+                // Ovo zahteva da model nurse ima listu doktora, pa za sada dozvoljavamo samo ako joj je doktor dodeljen
+                // U praksi: backend bi trebao da ima mapping koji doktori su dodeljeni medicinstoj sestri
+                return res.status(403).json({ message: "Nemate pristup ovom bolesniku. Kontaktirajte administratora." });
             }
 
             return res.json(medicalRecord);
@@ -166,6 +169,33 @@ router.post("/:id/lab-results",
         } catch (error) {
             console.error("Add lab result error:", error);
             return res.status(500).json({ message: "Greška pri dodavanju laboratorijskog rezultata." });
+        }
+    }
+);
+
+// Brisanje medicinskog kartona
+router.delete("/:id",
+    passport.authenticate("jwt", { session: false }),
+    passport.authorizeRoles("doctor", "admin"),
+    async function (req, res) {
+        try {
+            const medicalRecord = await MedicalRecordService.getMedicalRecordById(req.params.id);
+
+            if (!medicalRecord) {
+                return res.status(404).json({ message: "Medicinski karton nije pronađen." });
+            }
+
+            // Provera prava pristupa (samo doktor koji je krirao ili admin)
+            const user = req.user;
+            if (user.role !== "admin" && medicalRecord.doctor._id.toString() !== user._id.toString()) {
+                return res.status(403).json({ message: "Samo doktor ili admin mogu obrisati medicinski karton." });
+            }
+
+            await MedicalRecordService.deleteMedicalRecord(req.params.id);
+            return res.json({ message: "Medicinski karton je uspešno obrisan." });
+        } catch (error) {
+            console.error("Delete medical record error:", error);
+            return res.status(500).json({ message: "Greška pri brisanju medicinskog kartona." });
         }
     }
 );

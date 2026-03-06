@@ -67,6 +67,27 @@ router.post("/",
     }
 );
 
+// Dohvatanje aktivnih recepata pacijenta (PRE /patient/:patientId)
+router.get("/patient/:patientId/active",
+    passport.authenticate("jwt", { session: false }),
+    async function (req, res) {
+        try {
+            const user = req.user;
+            const patientId = req.params.patientId;
+
+            if (user.role === "patient" && user._id.toString() !== patientId) {
+                return res.status(403).json({ message: "Možete videti samo svoje recepte." });
+            }
+
+            const prescriptions = await PrescriptionService.getActivePrescriptions(patientId);
+            return res.json(prescriptions);
+        } catch (error) {
+            console.error("Get active prescriptions error:", error);
+            return res.status(500).json({ message: "Greška pri dohvatanju aktivnih recepata." });
+        }
+    }
+);
+
 // Dohvatanje recepata pacijenta
 router.get("/patient/:patientId",
     passport.authenticate("jwt", { session: false }),
@@ -92,27 +113,6 @@ router.get("/patient/:patientId",
         } catch (error) {
             console.error("Get prescriptions error:", error);
             return res.status(500).json({ message: "Greška pri dohvatanju recepata." });
-        }
-    }
-);
-
-// Dohvatanje aktivnih recepata pacijenta
-router.get("/patient/:patientId/active",
-    passport.authenticate("jwt", { session: false }),
-    async function (req, res) {
-        try {
-            const user = req.user;
-            const patientId = req.params.patientId;
-
-            if (user.role === "patient" && user._id.toString() !== patientId) {
-                return res.status(403).json({ message: "Možete videti samo svoje recepte." });
-            }
-
-            const prescriptions = await PrescriptionService.getActivePrescriptions(patientId);
-            return res.json(prescriptions);
-        } catch (error) {
-            console.error("Get active prescriptions error:", error);
-            return res.status(500).json({ message: "Greška pri dohvatanju aktivnih recepata." });
         }
     }
 );
@@ -172,6 +172,33 @@ router.put("/:id/status",
         } catch (error) {
             console.error("Update prescription status error:", error);
             return res.status(500).json({ message: "Greška pri ažuriranju statusa recepta." });
+        }
+    }
+);
+
+// Brisanje recepta
+router.delete("/:id",
+    passport.authenticate("jwt", { session: false }),
+    async function (req, res) {
+        try {
+            const prescription = await PrescriptionService.getPrescriptionById(req.params.id);
+
+            if (!prescription) {
+                return res.status(404).json({ message: "Recept nije pronađen." });
+            }
+
+            // Provera prava pristupa (samo doktor ili admin)
+            const user = req.user;
+            if (user.role !== "admin" && prescription.doctor._id.toString() !== user._id.toString()) {
+                return res.status(403).json({ message: "Samo doktor ili admin mogu obrisati recept." });
+            }
+
+            // Dodajemo brisanje u service ako ga implementirate
+            await PrescriptionService.deletePrescription(req.params.id);
+            return res.json({ message: "Recept je uspešno obrisan." });
+        } catch (error) {
+            console.error("Delete prescription error:", error);
+            return res.status(500).json({ message: "Greška pri brisanju recepta." });
         }
     }
 );

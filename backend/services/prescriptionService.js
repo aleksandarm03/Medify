@@ -63,12 +63,17 @@ var getActivePrescriptions = async function(patientId) {
     .sort({ issueDate: -1 });
 };
 
+var deletePrescription = async function(prescriptionId) {
+    return await PrescriptionModel.findByIdAndDelete(prescriptionId);
+};
+
 module.exports = {
     createPrescription,
     getPrescriptionsByPatient,
     getPrescriptionById,
     updatePrescriptionStatus,
-    getActivePrescriptions
+    getActivePrescriptions,
+    deletePrescription
 };
 
 

@@ -51,12 +51,17 @@ var addLabResult = async function(recordId, labResult) {
     );
 };
 
+var deleteMedicalRecord = async function(recordId) {
+    return await MedicalRecordModel.findByIdAndDelete(recordId);
+};
+
 module.exports = {
     createMedicalRecord,
     getMedicalRecordsByPatient,
     getMedicalRecordById,
     updateMedicalRecord,
-    addLabResult
+    addLabResult,
+    deleteMedicalRecord
 };
 
 
