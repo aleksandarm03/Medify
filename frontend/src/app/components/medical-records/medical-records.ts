@@ -155,6 +155,11 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
     this.resetForm();
   }
 
+  markMedicalRecordAsNotNeeded() {
+    this.closeCreateModal();
+    this.router.navigate(['/appointments']);
+  }
+
   loadPatientRecords(patientId: string) {
     this.loading.set(true);
     this.medicalRecordService.getMedicalRecordsByPatient(patientId).pipe(takeUntil(this.destroy$)).subscribe({

@@ -195,22 +195,6 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
     });
   }
 
-  completeWithoutMedicalRecord(id: string) {
-    if (!confirm('Potvrdi završetak termina bez medicinskog zapisa?')) {
-      return;
-    }
-
-    this.appointmentService.updateAppointmentStatus(id, 'completed').pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
-        alert('Termin je označen kao završen bez kreiranja medicinskog zapisa.');
-        this.loadAppointments();
-      },
-      error: (err) => {
-        this.error.set(err.error?.message || 'Greška pri završavanju termina');
-      }
-    });
-  }
-
   deleteAppointment(id: string) {
     if (!confirm('Da li ste sigurni da želite da obrišete ovaj termin?')) {
       return;

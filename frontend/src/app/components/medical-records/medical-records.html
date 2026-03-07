@@ -116,6 +116,7 @@
           <input type="date" [ngModel]="newRecord().followUpDate" (ngModelChange)="updateTextField('followUpDate', $event)" name="followUpDate" />
         </div>
         <div class="modal-actions">
+          <button *ngIf="isPrefilledFromAppointment()" type="button" (click)="markMedicalRecordAsNotNeeded()" class="btn btn-warning">Medicinski zapis nije potreban</button>
           <button type="button" (click)="closeCreateModal()" class="btn btn-secondary">Otkaži</button>
           <button type="submit" class="btn btn-primary">Kreiraj</button>
         </div>
