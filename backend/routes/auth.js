@@ -58,6 +58,15 @@ router.post("/login",
     }
 })
 
+// Endpoint za validaciju tokena
+router.get('/validate-token', 
+    passport.authenticate("jwt", {session: false}),
+    function (req, res) {
+        // Ako je stiglo ovde, znači da je token validan
+        return res.status(200).send();
+    }
+)
+
 router.get('/users', passport.authenticate("jwt",{session:false}),
 passport.authorizeRoles("admin"),
     async function (req,res) {
