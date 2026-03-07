@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -11,10 +12,14 @@ import { AuthService } from '../../services/auth.service';
   styleUrl: './layout.css'
 })
 export class LayoutComponent {
-  constructor(public authService: AuthService) {}
+  constructor(
+    public authService: AuthService,
+    private router: Router
+  ) {}
 
   logout() {
     this.authService.logout();
+    this.router.navigate(['/login'], { replaceUrl: true });
   }
 
   getCurrentUser() {
