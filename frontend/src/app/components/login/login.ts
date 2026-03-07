@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -14,8 +14,8 @@ import { AuthService } from '../../services/auth.service';
 export class LoginComponent {
   JMBG = '';
   password = '';
-  error = '';
-  loading = false;
+  error = signal('');
+  loading = signal(false);
 
   constructor(
     private authService: AuthService,
@@ -24,20 +24,20 @@ export class LoginComponent {
 
   onSubmit() {
     if (!this.JMBG || !this.password) {
-      this.error = 'Molimo unesite JMBG i lozinku';
+      this.error.set('Molimo unesite JMBG i lozinku');
       return;
     }
 
-    this.loading = true;
-    this.error = '';
+    this.loading.set(true);
+    this.error.set('');
 
     this.authService.login({ JMBG: this.JMBG, password: this.password }).subscribe({
       next: () => {
         this.router.navigate(['/dashboard']);
       },
       error: (err) => {
-        this.error = err.error?.message || 'Greška pri prijavljivanju';
-        this.loading = false;
+        this.error.set(err.error?.message || 'Greška pri prijavljivanju');
+        this.loading.set(false);
       }
     });
   }

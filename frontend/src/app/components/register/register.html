@@ -11,7 +11,7 @@
         </div>
 
         <div class="form-group">
-          <label for="role">Uloga *</label>
+          <label for="role">Tip korisnika *</label>
           <select id="role" name="role" [(ngModel)]="formData.role" required>
             <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
           </select>
@@ -37,16 +37,23 @@
         </div>
 
         <div class="form-group">
+          <label for="confirmPassword">Potvrdi lozinku *</label>
+          <input type="password" id="confirmPassword" name="confirmPassword" [(ngModel)]="formData.confirmPassword" required />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
           <label for="gender">Pol *</label>
           <select id="gender" name="gender" [(ngModel)]="formData.gender" required>
             <option *ngFor="let g of genders" [value]="g">{{ g === 'male' ? 'Muški' : 'Ženski' }}</option>
           </select>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label for="homeAddress">Adresa *</label>
-        <input type="text" id="homeAddress" name="homeAddress" [(ngModel)]="formData.homeAddress" required />
+        <div class="form-group">
+          <label for="homeAddress">Adresa *</label>
+          <input type="text" id="homeAddress" name="homeAddress" [(ngModel)]="formData.homeAddress" required />
+        </div>
       </div>
 
       <div class="form-row">
@@ -129,12 +136,12 @@
         </div>
       </div>
 
-      <div *ngIf="error" class="error-message">
-        {{ error }}
+      <div *ngIf="error()" class="error-message">
+        {{ error() }}
       </div>
 
-      <button type="submit" [disabled]="loading" class="btn btn-primary">
-        {{ loading ? 'Registracija...' : 'Registruj se' }}
+      <button type="submit" [disabled]="loading()" class="btn btn-primary">
+        {{ loading() ? 'Registracija...' : 'Registruj se' }}
       </button>
     </form>
 

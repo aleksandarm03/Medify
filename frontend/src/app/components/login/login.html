@@ -28,12 +28,12 @@
         />
       </div>
 
-      <div *ngIf="error" class="error-message">
-        {{ error }}
+      <div *ngIf="error()" class="error-message">
+        {{ error() }}
       </div>
 
-      <button type="submit" [disabled]="loading" class="btn btn-primary">
-        {{ loading ? 'Prijavljivanje...' : 'Prijavi se' }}
+      <button type="submit" [disabled]="loading()" class="btn btn-primary">
+        {{ loading() ? 'Prijavljivanje...' : 'Prijavi se' }}
       </button>
     </form>
 

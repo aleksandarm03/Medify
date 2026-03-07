@@ -9,16 +9,18 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    loadComponent: () => import('./components/login/login').then(m => m.LoginComponent)
+    loadComponent: () => import('./components/login/login').then(m => m.LoginComponent),
+    canActivate: [authGuard(false)] // Dozvoli pristup samo izlogovanim korisnicima
   },
   {
     path: 'register',
-    loadComponent: () => import('./components/register/register').then(m => m.RegisterComponent)
+    loadComponent: () => import('./components/register/register').then(m => m.RegisterComponent),
+    canActivate: [authGuard(false)] // Dozvoli pristup samo izlogovanim korisnicima
   },
   {
     path: '',
     loadComponent: () => import('./components/layout/layout').then(m => m.LayoutComponent),
-    canActivate: [authGuard],
+    canActivate: [authGuard(true)], // Zahteva autentifikaciju
     children: [
       {
         path: 'dashboard',

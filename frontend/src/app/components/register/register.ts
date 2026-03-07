@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -17,6 +17,7 @@ export class RegisterComponent {
     firstName: '',
     lastName: '',
     password: '',
+    confirmPassword: '',
     homeAddress: '',
     phoneNumber: '',
     gender: 'male' as 'male' | 'female',
@@ -35,8 +36,8 @@ export class RegisterComponent {
     insuranceCompany: ''
   };
   
-  error = '';
-  loading = false;
+  error = signal('');
+  loading = signal(false);
   roles = ['patient', 'doctor', 'nurse', 'admin'];
   genders = ['male', 'female'];
   bloodTypes = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
@@ -60,8 +61,8 @@ export class RegisterComponent {
       return;
     }
 
-    this.loading = true;
-    this.error = '';
+    this.loading.set(true);
+    this.error.set('');
 
     const registerData: any = {
       JMBG: this.formData.JMBG,
@@ -96,13 +97,14 @@ export class RegisterComponent {
     }
 
     this.authService.register(registerData).subscribe({
-      next: () => {
-        alert('Registracija uspešna! Molimo prijavite se.');
-        this.router.navigate(['/login']);
+      next: (response) => {
+        console.log('Registracija uspešna! Automatski ulogovani.');
+        this.loading.set(false);
+        this.router.navigate(['/dashboard']);
       },
       error: (err) => {
-        this.error = err.error?.message || 'Greška pri registraciji';
-        this.loading = false;
+        this.error.set(err.error?.message || 'Greška pri registraciji');
+        this.loading.set(false);
       }
     });
   }
@@ -110,12 +112,17 @@ export class RegisterComponent {
   private validateForm(): boolean {
     if (!this.formData.JMBG || !this.formData.firstName || !this.formData.lastName ||
         !this.formData.password || !this.formData.homeAddress || !this.formData.phoneNumber) {
-      this.error = 'Molimo popunite sva obavezna polja';
+      this.error.set('Molimo popunite sva obavezna polja');
       return false;
     }
 
     if (this.formData.password.length < 6) {
-      this.error = 'Lozinka mora imati najmanje 6 karaktera';
+      this.error.set('Lozinka mora imati najmanje 6 karaktera');
+      return false;
+    }
+
+    if (this.formData.password !== this.formData.confirmPassword) {
+      this.error.set('Lozinke se ne poklapaju');
       return false;
     }
 
