@@ -53,6 +53,10 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
           this.isPatient.set(user.role === 'patient');
           // Učitaj termine samo nakon što su role-ovi postavljeni
           this.loadAppointments();
+          // Ako je pacijent, učitaj dostupne doktore
+          if (user.role === 'patient') {
+            this.loadDoctors();
+          }
         }
       });
   }
@@ -60,6 +64,19 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  loadDoctors() {
+    this.doctorService.getAllDoctors()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (doctors) => {
+          this.patients.set(doctors);
+        },
+        error: (err) => {
+          console.error('Greška pri učitavanju doktora:', err);
+        }
+      });
   }
 
   loadAppointments() {
@@ -83,27 +100,50 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
 
   createAppointment() {
     const current = this.newAppointment();
-    if (!current.patientId || !current.appointmentDate || !current.reason) {
+    if (!current.appointmentDate || !current.reason) {
       this.error.set('Molimo popunite sva polja');
       return;
     }
 
+    // Za doktore: trebam patientId, za pacijente: trebam doctorId
+    if (this.isDoctor() && !current.patientId) {
+      this.error.set('Molimo popunite ID pacijenta');
+      return;
+    }
+
+    if (this.isPatient() && !current.patientId) {
+      this.error.set('Molimo izaberite doktora');
+      return;
+    }
+
     this.loading.set(true);
-    this.appointmentService.createAppointment({
-      patientId: current.patientId,
-      appointmentDate: new Date(current.appointmentDate),
-      reason: current.reason
-    }).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
-        this.showCreateModal.set(false);
-        this.newAppointment.set({ patientId: '', appointmentDate: '', reason: '' });
-        this.loadAppointments();
-      },
-      error: (err) => {
-        this.error.set(err.error?.message || 'Greška pri kreiranju termina');
-        this.loading.set(false);
-      }
-    });
+    
+    // Pripremi podatke u zavisnosti od uloge
+    const appointmentData = this.isDoctor()
+      ? {
+          patientId: current.patientId,
+          appointmentDate: new Date(current.appointmentDate),
+          reason: current.reason
+        }
+      : {
+          doctorId: current.patientId, // Za pacijente, patientId polje sadrži doctorId
+          appointmentDate: new Date(current.appointmentDate),
+          reason: current.reason
+        };
+
+    this.appointmentService.createAppointment(appointmentData as any)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.closeCreateModal();
+          this.newAppointment.set({ patientId: '', appointmentDate: '', reason: '' });
+          this.loadAppointments();
+        },
+        error: (err) => {
+          this.error.set(err.error?.message || 'Greška pri kreiranju termina');
+          this.loading.set(false);
+        }
+      });
   }
 
   updateStatus(id: string, status: string) {
@@ -139,6 +179,16 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
     this.updateStatus(id, 'canceled');
   }
 
+  openCreateModal() {
+    this.error.set('');
+    this.showCreateModal.set(true);
+  }
+
+  closeCreateModal() {
+    this.showCreateModal.set(false);
+    this.error.set('');
+  }
+
   getStatusClass(status: string): string {
     const classes: { [key: string]: string } = {
       'scheduled': 'status-scheduled',
@@ -165,6 +215,7 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
 
   updateStatusFilter(value: string) {
     this.statusFilter.set(value);
+    this.error.set('');
     this.loadAppointments();
   }
 

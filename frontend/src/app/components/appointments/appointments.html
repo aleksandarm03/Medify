@@ -1,7 +1,7 @@
 <div class="appointments-container">
   <div class="header">
     <h1>Termini</h1>
-    <button *ngIf="isDoctor()" (click)="showCreateModal.set(true)" class="btn btn-primary">Novi termin</button>
+    <button *ngIf="isDoctor() || isPatient()" (click)="openCreateModal()" class="btn btn-primary">{{ isDoctor() ? 'Novi termin' : 'Zakazi termin' }}</button>
   </div>
 
   <div class="filters">
@@ -13,7 +13,7 @@
     </select>
   </div>
 
-  <div *ngIf="error()" class="error-message">{{ error() }}</div>
+  <div *ngIf="error() && !showCreateModal()" class="error-message">{{ error() }}</div>
 
   <div *ngIf="loading()" class="loading">Učitavanje...</div>
 
@@ -48,13 +48,21 @@
   </div>
 
   <!-- Create Modal -->
-  <div *ngIf="showCreateModal()" class="modal-overlay" (click)="showCreateModal.set(false)">
+  <div *ngIf="showCreateModal()" class="modal-overlay" (click)="closeCreateModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
-      <h2>Kreiraj novi termin</h2>
+      <h2>{{ isDoctor() ? 'Kreiraj novi termin' : 'Zakazi termin' }}</h2>
+      <div *ngIf="error()" class="error-message">{{ error() }}</div>
       <form (ngSubmit)="createAppointment()">
-        <div class="form-group">
+        <div class="form-group" *ngIf="isDoctor()">
           <label>ID Pacijenta</label>
           <input type="text" [value]="newAppointment().patientId" (input)="updatePatientId($any($event).target.value)" name="patientId" required />
+        </div>
+        <div class="form-group" *ngIf="isPatient()">
+          <label>Doktor</label>
+          <select [value]="newAppointment().patientId" (change)="updatePatientId($any($event).target.value)" required>
+            <option value="">Izaberite doktora</option>
+            <option *ngFor="let doctor of patients()" [value]="doctor._id">{{ doctor.firstName }} {{ doctor.lastName }} - {{ doctor.specialization }}</option>
+          </select>
         </div>
         <div class="form-group">
           <label>Datum i vreme</label>
@@ -65,8 +73,8 @@
           <textarea [value]="newAppointment().reason" (input)="updateReason($any($event).target.value)" name="reason" required></textarea>
         </div>
         <div class="modal-actions">
-          <button type="button" (click)="showCreateModal.set(false)" class="btn btn-secondary">Otkaži</button>
-          <button type="submit" class="btn btn-primary">Kreiraj</button>
+          <button type="button" (click)="closeCreateModal()" class="btn btn-secondary">Otkaži</button>
+          <button type="submit" class="btn btn-primary" [disabled]="loading()">{{ loading() ? 'Slučjam...' : (isDoctor() ? 'Kreiraj' : 'Zakazi') }}</button>
         </div>
       </form>
     </div>
