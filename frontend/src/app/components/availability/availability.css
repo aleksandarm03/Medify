@@ -84,6 +84,11 @@
   opacity: 0.9;
 }
 
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .error-message {
   background-color: #fee;
   color: #c33;

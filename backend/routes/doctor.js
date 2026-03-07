@@ -29,6 +29,13 @@ router.post("/:id/availability",
                 return res.status(400).json({ message: "dayOfWeek mora biti između 0 (nedelja) i 6 (subota)." });
             }
 
+            const existingForDay = await DoctorAvailabilityService.getDoctorAvailabilityByDay(doctorId, dayOfWeek);
+            if (existingForDay) {
+                return res.status(409).json({
+                    message: "Za izabrani dan vec postoji dostupnost. Izmenite postojecu ili je obrisite pre dodavanja nove."
+                });
+            }
+
             // Validacija formata vremena
             const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
             if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {

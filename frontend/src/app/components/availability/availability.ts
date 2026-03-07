@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DoctorService } from '../../services/doctor.service';
@@ -13,12 +13,13 @@ import { DoctorAvailability, CreateAvailabilityRequest } from '../../models/doct
   styleUrl: './availability.css'
 })
 export class AvailabilityComponent implements OnInit {
-  availabilities: DoctorAvailability[] = [];
-  loading = false;
-  error = '';
-  showCreateModal = false;
+  availabilities = signal<DoctorAvailability[]>([]);
+  loading = signal(false);
+  pageError = signal('');
+  formError = signal('');
+  showCreateModal = signal(false);
 
-  newAvailability: CreateAvailabilityRequest = {
+  newAvailability = signal<CreateAvailabilityRequest>({
     dayOfWeek: 0,
     startTime: '09:00',
     endTime: '17:00',
@@ -26,7 +27,7 @@ export class AvailabilityComponent implements OnInit {
     breakStart: '',
     breakEnd: '',
     appointmentDuration: 30
-  };
+  });
 
   daysOfWeek = [
     { value: 0, name: 'Nedelja' },
@@ -38,7 +39,7 @@ export class AvailabilityComponent implements OnInit {
     { value: 6, name: 'Subota' }
   ];
 
-  doctorId = '';
+  doctorId = signal('');
 
   constructor(
     private doctorService: DoctorService,
@@ -47,61 +48,103 @@ export class AvailabilityComponent implements OnInit {
 
   ngOnInit() {
     const user = this.authService.getCurrentUser();
-    this.doctorId = user?._id || '';
+    this.doctorId.set(user?._id || '');
+
+    if (!this.doctorId()) {
+      this.pageError.set('Doktor nije pronadjen. Prijavite se ponovo.');
+      return;
+    }
+
     this.loadAvailability();
   }
 
   loadAvailability() {
-    this.loading = true;
-    this.doctorService.getDoctorAvailability(this.doctorId).subscribe({
+    if (!this.doctorId()) {
+      return;
+    }
+
+    this.loading.set(true);
+    this.pageError.set('');
+
+    this.doctorService.getDoctorAvailability(this.doctorId()).subscribe({
       next: (data) => {
-        this.availabilities = data;
-        this.loading = false;
+        this.availabilities.set(data);
+        this.loading.set(false);
       },
       error: (err) => {
-        this.error = err.error?.message || 'Greška pri učitavanju dostupnosti';
-        this.loading = false;
+        this.pageError.set(err.error?.message || 'Greska pri ucitavanju dostupnosti');
+        this.loading.set(false);
       }
     });
   }
 
+  openCreateModal() {
+    this.formError.set('');
+    this.showCreateModal.set(true);
+  }
+
+  closeCreateModal() {
+    this.showCreateModal.set(false);
+    this.formError.set('');
+    this.resetForm();
+  }
+
   createAvailability() {
-    if (!this.newAvailability.startTime || !this.newAvailability.endTime) {
-      this.error = 'Molimo popunite početno i završno vreme';
+    const current = this.newAvailability();
+
+    if (!current.startTime || !current.endTime) {
+      this.formError.set('Molimo popunite pocetno i zavrsno vreme.');
       return;
     }
 
-    this.loading = true;
-    this.doctorService.setDoctorAvailability(this.doctorId, this.newAvailability).subscribe({
+    if (current.startTime >= current.endTime) {
+      this.formError.set('Pocetno vreme mora biti pre zavrsnog vremena.');
+      return;
+    }
+
+    const dayExists = this.availabilities().some(
+      (availability) => availability.dayOfWeek === current.dayOfWeek
+    );
+
+    if (dayExists) {
+      this.formError.set('Za izabrani dan vec postoji dostupnost. Izmenite ili obrisite postojeci unos.');
+      return;
+    }
+
+    this.loading.set(true);
+    this.formError.set('');
+
+    this.doctorService.setDoctorAvailability(this.doctorId(), current).subscribe({
       next: () => {
-        this.showCreateModal = false;
-        this.resetForm();
+        this.closeCreateModal();
         this.loadAvailability();
       },
       error: (err) => {
-        this.error = err.error?.message || 'Greška pri kreiranju dostupnosti';
-        this.loading = false;
+        this.formError.set(err.error?.message || 'Greska pri kreiranju dostupnosti');
+        this.loading.set(false);
       }
     });
   }
 
   deleteAvailability(id: string) {
-    if (!confirm('Da li ste sigurni da želite da obrišete ovu dostupnost?')) {
+    if (!confirm('Da li ste sigurni da zelite da obrisete ovu dostupnost?')) {
       return;
     }
 
+    this.loading.set(true);
     this.doctorService.deleteAvailability(id).subscribe({
       next: () => {
         this.loadAvailability();
       },
       error: (err) => {
-        this.error = err.error?.message || 'Greška pri brisanju dostupnosti';
+        this.pageError.set(err.error?.message || 'Greska pri brisanju dostupnosti');
+        this.loading.set(false);
       }
     });
   }
 
   resetForm() {
-    this.newAvailability = {
+    this.newAvailability.set({
       dayOfWeek: 0,
       startTime: '09:00',
       endTime: '17:00',
@@ -109,7 +152,39 @@ export class AvailabilityComponent implements OnInit {
       breakStart: '',
       breakEnd: '',
       appointmentDuration: 30
-    };
+    });
+  }
+
+  updateDayOfWeek(value: string) {
+    this.newAvailability.update((current) => ({ ...current, dayOfWeek: Number(value) }));
+  }
+
+  updateStartTime(value: string) {
+    this.newAvailability.update((current) => ({ ...current, startTime: value }));
+  }
+
+  updateEndTime(value: string) {
+    this.newAvailability.update((current) => ({ ...current, endTime: value }));
+  }
+
+  updateBreakStart(value: string) {
+    this.newAvailability.update((current) => ({ ...current, breakStart: value }));
+  }
+
+  updateBreakEnd(value: string) {
+    this.newAvailability.update((current) => ({ ...current, breakEnd: value }));
+  }
+
+  updateAppointmentDuration(value: string) {
+    const duration = Number(value);
+    this.newAvailability.update((current) => ({
+      ...current,
+      appointmentDuration: Number.isFinite(duration) && duration > 0 ? duration : 30
+    }));
+  }
+
+  updateIsAvailable(value: boolean) {
+    this.newAvailability.update((current) => ({ ...current, isAvailable: value }));
   }
 
   getDayName(dayOfWeek: number): string {

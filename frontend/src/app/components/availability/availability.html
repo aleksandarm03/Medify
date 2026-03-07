@@ -1,22 +1,22 @@
 <div class="availability-container">
   <div class="header">
     <h1>Dostupnost</h1>
-    <button (click)="showCreateModal = true" class="btn btn-primary">Dodaj dostupnost</button>
+    <button type="button" (click)="openCreateModal()" class="btn btn-primary">Dodaj dostupnost</button>
   </div>
 
-  <div *ngIf="error" class="error-message">{{ error }}</div>
+  <div *ngIf="pageError() && !showCreateModal()" class="error-message">{{ pageError() }}</div>
 
-  <div *ngIf="loading" class="loading">Učitavanje...</div>
+  <div *ngIf="loading()" class="loading">Ucitavanje...</div>
 
-  <div *ngIf="!loading && availabilities.length === 0" class="empty-state">
+  <div *ngIf="!loading() && availabilities().length === 0" class="empty-state">
     <p>Nema postavljenih dostupnosti</p>
   </div>
 
   <div class="availabilities-list">
-    <div *ngFor="let availability of availabilities" class="availability-card">
+    <div *ngFor="let availability of availabilities()" class="availability-card">
       <div class="availability-header">
         <h3>{{ getDayName(availability.dayOfWeek) }}</h3>
-        <button (click)="deleteAvailability(availability._id!)" class="btn btn-danger">Obriši</button>
+        <button type="button" (click)="deleteAvailability(availability._id!)" class="btn btn-danger" [disabled]="loading()">Obrisi</button>
       </div>
       
       <div class="availability-info">
@@ -35,49 +35,52 @@
   </div>
 
   <!-- Create Modal -->
-  <div *ngIf="showCreateModal" class="modal-overlay" (click)="showCreateModal = false">
+  <div *ngIf="showCreateModal()" class="modal-overlay" (click)="closeCreateModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <h2>Dodaj dostupnost</h2>
+
+      <div *ngIf="formError()" class="error-message">{{ formError() }}</div>
+
       <form (ngSubmit)="createAvailability()">
         <div class="form-group">
           <label>Dan u nedelji *</label>
-          <select [(ngModel)]="newAvailability.dayOfWeek" name="dayOfWeek" required>
+          <select [ngModel]="newAvailability().dayOfWeek" (ngModelChange)="updateDayOfWeek($event)" name="dayOfWeek" required>
             <option *ngFor="let day of daysOfWeek" [value]="day.value">{{ day.name }}</option>
           </select>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label>Početno vreme *</label>
-            <input type="time" [(ngModel)]="newAvailability.startTime" name="startTime" required />
+            <input type="time" [ngModel]="newAvailability().startTime" (ngModelChange)="updateStartTime($event)" name="startTime" required />
           </div>
           <div class="form-group">
             <label>Završno vreme *</label>
-            <input type="time" [(ngModel)]="newAvailability.endTime" name="endTime" required />
+            <input type="time" [ngModel]="newAvailability().endTime" (ngModelChange)="updateEndTime($event)" name="endTime" required />
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label>Početak pauze</label>
-            <input type="time" [(ngModel)]="newAvailability.breakStart" name="breakStart" />
+            <input type="time" [ngModel]="newAvailability().breakStart" (ngModelChange)="updateBreakStart($event)" name="breakStart" />
           </div>
           <div class="form-group">
             <label>Kraj pauze</label>
-            <input type="time" [(ngModel)]="newAvailability.breakEnd" name="breakEnd" />
+            <input type="time" [ngModel]="newAvailability().breakEnd" (ngModelChange)="updateBreakEnd($event)" name="breakEnd" />
           </div>
         </div>
         <div class="form-group">
           <label>Trajanje termina (minuti)</label>
-          <input type="number" [(ngModel)]="newAvailability.appointmentDuration" name="appointmentDuration" min="15" step="15" />
+          <input type="number" [ngModel]="newAvailability().appointmentDuration" (ngModelChange)="updateAppointmentDuration($event)" name="appointmentDuration" min="15" step="15" />
         </div>
         <div class="form-group">
           <label>
-            <input type="checkbox" [(ngModel)]="newAvailability.isAvailable" name="isAvailable" />
+            <input type="checkbox" [ngModel]="newAvailability().isAvailable" (ngModelChange)="updateIsAvailable($event)" name="isAvailable" />
             Dostupan
           </label>
         </div>
         <div class="modal-actions">
-          <button type="button" (click)="showCreateModal = false" class="btn btn-secondary">Otkaži</button>
-          <button type="submit" class="btn btn-primary">Dodaj</button>
+          <button type="button" (click)="closeCreateModal()" class="btn btn-secondary">Otkazi</button>
+          <button type="submit" class="btn btn-primary" [disabled]="loading()">{{ loading() ? 'Cuvam...' : 'Dodaj' }}</button>
         </div>
       </form>
     </div>

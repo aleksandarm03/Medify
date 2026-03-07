@@ -17,6 +17,13 @@ var setDoctorAvailability = async function(doctorId, availabilityData) {
     return await availability.save();
 };
 
+var getDoctorAvailabilityByDay = async function(doctorId, dayOfWeek) {
+    return await DoctorAvailabilityModel.findOne({
+        doctor: doctorId,
+        dayOfWeek: dayOfWeek
+    });
+};
+
 var getDoctorAvailability = async function(doctorId) {
     return await DoctorAvailabilityModel.find({ doctor: doctorId })
         .sort({ dayOfWeek: 1 });
@@ -184,6 +191,7 @@ var createDefaultAvailability = async function(doctorId, shift) {
 
 module.exports = {
     setDoctorAvailability,
+    getDoctorAvailabilityByDay,
     getDoctorAvailability,
     updateDoctorAvailability,
     deleteDoctorAvailability,
