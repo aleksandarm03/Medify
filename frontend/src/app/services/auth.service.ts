@@ -120,6 +120,12 @@ export class AuthService {
   }
 
   validateToken(): Observable<boolean> {
+    // Prvo proveri da li token postoji lokalno
+    const token = this.getToken();
+    if (!token) {
+      return of(false);
+    }
+    // Ako postoji token, validiraj ga na serveru
     return this.api.get<void>('/auth/validate-token').pipe(
       map(() => true),
       catchError(() => of(false))

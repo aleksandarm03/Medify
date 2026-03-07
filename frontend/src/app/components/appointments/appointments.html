@@ -1,11 +1,11 @@
 <div class="appointments-container">
   <div class="header">
     <h1>Termini</h1>
-    <button *ngIf="isDoctor" (click)="showCreateModal = true" class="btn btn-primary">Novi termin</button>
+    <button *ngIf="isDoctor()" (click)="showCreateModal.set(true)" class="btn btn-primary">Novi termin</button>
   </div>
 
   <div class="filters">
-    <select [(ngModel)]="statusFilter" (change)="loadAppointments()">
+    <select [value]="statusFilter()" (change)="updateStatusFilter($any($event).target.value)">
       <option value="">Svi statusi</option>
       <option value="scheduled">Zakazani</option>
       <option value="completed">Završeni</option>
@@ -13,16 +13,16 @@
     </select>
   </div>
 
-  <div *ngIf="error" class="error-message">{{ error }}</div>
+  <div *ngIf="error()" class="error-message">{{ error() }}</div>
 
-  <div *ngIf="loading" class="loading">Učitavanje...</div>
+  <div *ngIf="loading()" class="loading">Učitavanje...</div>
 
-  <div *ngIf="!loading && appointments.length === 0" class="empty-state">
+  <div *ngIf="!loading() && appointments().length === 0" class="empty-state">
     <p>Nema termina</p>
   </div>
 
   <div class="appointments-list">
-    <div *ngFor="let appointment of appointments" class="appointment-card">
+    <div *ngFor="let appointment of appointments()" class="appointment-card">
       <div class="appointment-header">
         <h3>Termin #{{ appointment._id?.substring(0, 8) }}</h3>
         <span [class]="'status-badge ' + getStatusClass(appointment.status)">
@@ -32,38 +32,40 @@
       
       <div class="appointment-info">
         <p><strong>Doktor:</strong> {{ appointment.doctor?.firstName }} {{ appointment.doctor?.lastName }}</p>
-        <p><strong>Pacijent:</strong> {{ appointment.patient?.firstName }} {{ appointment.patient?.lastName }}</p>
         <p><strong>Datum:</strong> {{ formatDate(appointment.appointmentDate) }}</p>
         <p><strong>Razlog:</strong> {{ appointment.reason }}</p>
       </div>
 
-      <div class="appointment-actions" *ngIf="isDoctor && appointment.status === 'scheduled'">
+      <div class="appointment-actions" *ngIf="isDoctor() && appointment.status === 'scheduled'">
         <button (click)="updateStatus(appointment._id!, 'completed')" class="btn btn-success">Završi</button>
-        <button (click)="updateStatus(appointment._id!, 'canceled')" class="btn btn-warning">Otkaži</button>
-        <button (click)="deleteAppointment(appointment._id!)" class="btn btn-danger">Obriši</button>
+        <button (click)="cancelAppointmentWithConfirm(appointment._id!)" class="btn btn-warning">Otkaži</button>
+      </div>
+
+      <div class="appointment-actions" *ngIf="isPatient() && appointment.status === 'scheduled'">
+        <button (click)="cancelAppointmentWithConfirm(appointment._id!)" class="btn btn-warning">Otkaži termin</button>
       </div>
     </div>
   </div>
 
   <!-- Create Modal -->
-  <div *ngIf="showCreateModal" class="modal-overlay" (click)="showCreateModal = false">
+  <div *ngIf="showCreateModal()" class="modal-overlay" (click)="showCreateModal.set(false)">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <h2>Kreiraj novi termin</h2>
       <form (ngSubmit)="createAppointment()">
         <div class="form-group">
           <label>ID Pacijenta</label>
-          <input type="text" [(ngModel)]="newAppointment.patientId" name="patientId" required />
+          <input type="text" [value]="newAppointment().patientId" (input)="updatePatientId($any($event).target.value)" name="patientId" required />
         </div>
         <div class="form-group">
           <label>Datum i vreme</label>
-          <input type="datetime-local" [(ngModel)]="newAppointment.appointmentDate" name="appointmentDate" required />
+          <input type="datetime-local" [value]="newAppointment().appointmentDate" (input)="updateAppointmentDate($any($event).target.value)" name="appointmentDate" required />
         </div>
         <div class="form-group">
           <label>Razlog</label>
-          <textarea [(ngModel)]="newAppointment.reason" name="reason" required></textarea>
+          <textarea [value]="newAppointment().reason" (input)="updateReason($any($event).target.value)" name="reason" required></textarea>
         </div>
         <div class="modal-actions">
-          <button type="button" (click)="showCreateModal = false" class="btn btn-secondary">Otkaži</button>
+          <button type="button" (click)="showCreateModal.set(false)" class="btn btn-secondary">Otkaži</button>
           <button type="submit" class="btn btn-primary">Kreiraj</button>
         </div>
       </form>
