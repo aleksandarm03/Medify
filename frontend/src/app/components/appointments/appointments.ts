@@ -1,6 +1,5 @@
 import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AppointmentService } from '../../services/appointment.service';
 import { DoctorService } from '../../services/doctor.service';
@@ -8,23 +7,22 @@ import { AuthService } from '../../services/auth.service';
 import { Appointment } from '../../models/appointment.model';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { AppointmentFormModalComponent } from './appointment-form-modal/appointment-form-modal';
 
 @Component({
   selector: 'app-appointments',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, AppointmentFormModalComponent],
   templateUrl: './appointments.html',
   styleUrl: './appointments.css'
 })
 export class AppointmentsComponent implements OnInit, OnDestroy {
   appointments = signal<Appointment[]>([]);
   loading = signal(false);
-  slotsLoading = signal(false);
-  error = signal('');
+  pageError = signal('');
+  formError = signal('');
   showCreateModal = signal(false);
   statusFilter = signal('');
-  selectedDate = signal('');
-  availableSlots = signal<string[]>([]);
   minDate = signal(new Date().toISOString().split('T')[0]);
 
   newAppointment = signal({
@@ -48,7 +46,8 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.showCreateModal.set(false);
-    this.error.set('');
+    this.pageError.set('');
+    this.formError.set('');
     
     // Subscribe na korisnika i učitaj termine kada se postavi uloga
     this.authService.currentUser$
@@ -87,7 +86,7 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
 
   loadAppointments() {
     this.loading.set(true);
-    this.error.set('');
+    this.pageError.set('');
     const endpoint = this.isDoctor() 
       ? this.appointmentService.getAppointmentsByDoctor(this.statusFilter() || undefined)
       : this.appointmentService.getAppointmentsByPatient(this.statusFilter() || undefined);
@@ -98,37 +97,28 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(err.error?.message || 'Greška pri učitavanju termina');
+        this.pageError.set(err.error?.message || 'Greška pri učitavanju termina');
         this.loading.set(false);
       }
     });
   }
 
   createAppointment() {
+    this.formError.set('');
     const current = this.newAppointment();
     if (!current.appointmentDate || !current.reason) {
-      this.error.set('Molimo popunite sva polja');
+      this.formError.set('Molimo popunite sva polja.');
       return;
     }
 
     // Za doktore: trebam patientId, za pacijente: trebam doctorId
     if (this.isDoctor() && !current.patientId) {
-      this.error.set('Molimo popunite ID pacijenta');
+      this.formError.set('Molimo unesite ID pacijenta.');
       return;
     }
 
     if (this.isPatient() && !current.patientId) {
-      this.error.set('Molimo izaberite doktora');
-      return;
-    }
-
-    if (this.isPatient() && !this.selectedDate()) {
-      this.error.set('Molimo izaberite datum termina');
-      return;
-    }
-
-    if (this.isPatient() && !current.appointmentDate) {
-      this.error.set('Molimo izaberite jedan od slobodnih termina');
+      this.formError.set('Molimo izaberite doktora.');
       return;
     }
 
@@ -156,7 +146,7 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
           this.loadAppointments();
         },
         error: (err) => {
-          this.error.set(err.error?.message || 'Greška pri kreiranju termina');
+          this.formError.set(err.error?.message || 'Greška pri kreiranju termina.');
           this.loading.set(false);
         }
       });
@@ -168,7 +158,7 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
         this.loadAppointments();
       },
       error: (err) => {
-        this.error.set(err.error?.message || 'Greška pri ažuriranju statusa');
+        this.pageError.set(err.error?.message || 'Greška pri ažuriranju statusa');
       }
     });
   }
@@ -176,7 +166,7 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
   completeAndCreateMedicalRecord(appointment: Appointment) {
     const appointmentId = appointment._id;
     if (!appointmentId) {
-      this.error.set('Neispravan termin: nedostaje ID termina.');
+      this.pageError.set('Neispravan termin: nedostaje ID termina.');
       return;
     }
 
@@ -190,7 +180,7 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
         });
       },
       error: (err) => {
-        this.error.set(err.error?.message || 'Greška pri završavanju termina');
+        this.pageError.set(err.error?.message || 'Greška pri završavanju termina');
       }
     });
   }
@@ -205,7 +195,7 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
         this.loadAppointments();
       },
       error: (err) => {
-        this.error.set(err.error?.message || 'Greška pri brisanju termina');
+        this.pageError.set(err.error?.message || 'Greška pri brisanju termina');
       }
     });
   }
@@ -218,18 +208,14 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
   }
 
   openCreateModal() {
-    this.error.set('');
-    this.selectedDate.set('');
-    this.availableSlots.set([]);
+    this.formError.set('');
     this.newAppointment.set({ patientId: '', appointmentDate: '', reason: '' });
     this.showCreateModal.set(true);
   }
 
   closeCreateModal() {
     this.showCreateModal.set(false);
-    this.error.set('');
-    this.selectedDate.set('');
-    this.availableSlots.set([]);
+    this.formError.set('');
   }
 
   getStatusClass(status: string): string {
@@ -258,79 +244,18 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
 
   updateStatusFilter(value: string) {
     this.statusFilter.set(value);
-    this.error.set('');
+    this.pageError.set('');
     this.loadAppointments();
   }
 
   updatePatientId(value: string) {
     const current = this.newAppointment();
     this.newAppointment.set({ ...current, patientId: value });
-
-    if (this.isPatient()) {
-      this.availableSlots.set([]);
-      this.newAppointment.set({ ...this.newAppointment(), appointmentDate: '' });
-      if (this.selectedDate()) {
-        this.loadAvailableSlots();
-      }
-    }
   }
 
   updateAppointmentDate(value: string) {
     const current = this.newAppointment();
     this.newAppointment.set({ ...current, appointmentDate: value });
-  }
-
-  updateSelectedDate(value: string) {
-    this.selectedDate.set(value);
-    const current = this.newAppointment();
-    this.newAppointment.set({ ...current, appointmentDate: '' });
-    this.loadAvailableSlots();
-  }
-
-  updateSelectedSlot(value: string) {
-    const current = this.newAppointment();
-    this.newAppointment.set({ ...current, appointmentDate: value });
-  }
-
-  loadAvailableSlots() {
-    const doctorId = this.newAppointment().patientId;
-    const date = this.selectedDate();
-
-    if (!doctorId || !date) {
-      this.availableSlots.set([]);
-      return;
-    }
-
-    this.slotsLoading.set(true);
-    this.error.set('');
-
-    this.doctorService
-      .getAvailableSlots(doctorId, date)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (data) => {
-          this.availableSlots.set(data.availableSlots || []);
-          this.slotsLoading.set(false);
-        },
-        error: (err) => {
-          this.availableSlots.set([]);
-          this.error.set(err.error?.message || 'Greška pri učitavanju slobodnih termina');
-          this.slotsLoading.set(false);
-        }
-      });
-  }
-
-  formatSlot(slot: string): string {
-    if (!slot) {
-      return '';
-    }
-    return new Date(slot).toLocaleString('sr-RS', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   }
 
   updateReason(value: string) {

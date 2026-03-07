@@ -1,7 +1,7 @@
 <div class="appointments-container">
   <div class="header">
     <h1>Termini</h1>
-    <button *ngIf="isDoctor() || isPatient()" (click)="openCreateModal()" class="btn btn-primary">{{ isDoctor() ? 'Novi termin' : 'Zakazi termin' }}</button>
+    <button *ngIf="isDoctor() || isPatient()" (click)="openCreateModal()" class="btn btn-primary">Novi termin</button>
   </div>
 
   <div class="filters">
@@ -13,7 +13,7 @@
     </select>
   </div>
 
-  <div *ngIf="error() && !showCreateModal()" class="error-message">{{ error() }}</div>
+  <div *ngIf="pageError()" class="error-message">{{ pageError() }}</div>
 
   <div *ngIf="loading()" class="loading">Učitavanje...</div>
 
@@ -47,50 +47,21 @@
     </div>
   </div>
 
-  <!-- Create Modal -->
-  <div *ngIf="showCreateModal()" class="modal-overlay" (click)="closeCreateModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <h2>{{ isDoctor() ? 'Kreiraj novi termin' : 'Zakazi termin' }}</h2>
-      <div *ngIf="error()" class="error-message">{{ error() }}</div>
-      <form (ngSubmit)="createAppointment()">
-        <div class="form-group" *ngIf="isDoctor()">
-          <label>ID Pacijenta</label>
-          <input type="text" [value]="newAppointment().patientId" (input)="updatePatientId($any($event).target.value)" name="patientId" required />
-        </div>
-        <div class="form-group" *ngIf="isPatient()">
-          <label>Doktor</label>
-          <select [value]="newAppointment().patientId" (change)="updatePatientId($any($event).target.value)" required>
-            <option value="">Izaberite doktora</option>
-            <option *ngFor="let doctor of patients()" [value]="doctor._id">{{ doctor.firstName }} {{ doctor.lastName }} - {{ doctor.specialization }}</option>
-          </select>
-        </div>
-        <div class="form-group" *ngIf="isDoctor()">
-          <label>Datum i vreme</label>
-          <input type="datetime-local" [value]="newAppointment().appointmentDate" (input)="updateAppointmentDate($any($event).target.value)" name="appointmentDate" required />
-        </div>
-        <div class="form-group" *ngIf="isPatient()">
-          <label>Datum</label>
-          <input type="date" [value]="selectedDate()" (change)="updateSelectedDate($any($event).target.value)" [min]="minDate()" required />
-        </div>
-        <div class="form-group" *ngIf="isPatient()">
-          <label>Slobodni termini</label>
-          <select [value]="newAppointment().appointmentDate" (change)="updateSelectedSlot($any($event).target.value)" [disabled]="!selectedDate() || slotsLoading()" required>
-            <option value="">{{ slotsLoading() ? 'Učitavanje termina...' : 'Izaberite termin' }}</option>
-            <option *ngFor="let slot of availableSlots()" [value]="slot">{{ formatSlot(slot) }}</option>
-          </select>
-          <small *ngIf="selectedDate() && !slotsLoading() && availableSlots().length === 0">Nema slobodnih termina za izabrani datum. Proverite drugi datum ili dostupnost doktora.</small>
-        </div>
-        <div class="form-group">
-          <label>Razlog</label>
-          <textarea [value]="newAppointment().reason" (input)="updateReason($any($event).target.value)" name="reason" required></textarea>
-        </div>
-        <div class="modal-actions">
-          <button type="button" (click)="closeCreateModal()" class="btn btn-secondary">Otkaži</button>
-          <button type="submit" class="btn btn-primary" [disabled]="loading() || (isPatient() && !newAppointment().appointmentDate)">{{ loading() ? 'Slanje...' : (isDoctor() ? 'Kreiraj' : 'Zakazi') }}</button>
-        </div>
-      </form>
-    </div>
-  </div>
+  <app-appointment-form-modal
+    [isOpen]="showCreateModal()"
+    [isDoctor]="isDoctor()"
+    [isPatient]="isPatient()"
+    [doctors]="patients()"
+    [appointment]="newAppointment()"
+    [minDate]="minDate()"
+    [loading]="loading()"
+    [error]="formError()"
+    (close)="closeCreateModal()"
+    (submitForm)="createAppointment()"
+    (patientIdChange)="updatePatientId($event)"
+    (appointmentDateChange)="updateAppointmentDate($event)"
+    (reasonChange)="updateReason($event)">
+  </app-appointment-form-modal>
 </div>
 
 

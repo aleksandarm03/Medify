@@ -1,119 +1,175 @@
 <div class="prescriptions-container">
   <div class="header">
     <h1>Recepti</h1>
-    <button *ngIf="isDoctor" (click)="showCreateModal = true" class="btn btn-primary">Novi recept</button>
+    <button *ngIf="isDoctor()" (click)="openCreateModal()" class="btn btn-primary">Novi recept</button>
   </div>
 
-  <div *ngIf="error" class="error-message">{{ error }}</div>
+  <div class="filters">
+    <label for="prescription-status">Status</label>
+    <select
+      id="prescription-status"
+      [value]="statusFilter()"
+      (change)="updateStatusFilter($any($event).target.value)">
+      <option value="">Svi</option>
+      <option value="active">Aktivni</option>
+      <option value="completed">Zavrseni</option>
+      <option value="cancelled">Otkazani</option>
+    </select>
+  </div>
 
-  <div *ngIf="loading" class="loading">Učitavanje...</div>
+  <div *ngIf="pageError() && !showCreateModal()" class="error-message">{{ pageError() }}</div>
 
-  <div *ngIf="!loading && prescriptions.length === 0" class="empty-state">
+  <div *ngIf="loading()" class="loading">Ucitavanje...</div>
+
+  <div *ngIf="!loading() && prescriptions().length === 0" class="empty-state">
     <p>Nema recepata</p>
   </div>
 
   <div class="prescriptions-list">
-    <div *ngFor="let prescription of prescriptions" class="prescription-card">
+    <div *ngFor="let prescription of prescriptions()" class="prescription-card">
       <div class="prescription-header">
         <h3>Recept #{{ prescription._id?.substring(0, 8) }}</h3>
         <span [class]="'status-badge ' + getStatusClass(prescription.status)">
           {{ getStatusText(prescription.status) }}
         </span>
       </div>
-      
+
       <div class="prescription-info">
         <p><strong>Pacijent:</strong> {{ prescription.patient?.firstName }} {{ prescription.patient?.lastName }}</p>
         <p><strong>Doktor:</strong> {{ prescription.doctor?.firstName }} {{ prescription.doctor?.lastName }}</p>
         <p><strong>Datum izdavanja:</strong> {{ formatDate(prescription.issueDate) }}</p>
-        <p *ngIf="prescription.validUntil"><strong>Važi do:</strong> {{ formatDate(prescription.validUntil) }}</p>
+        <p *ngIf="prescription.validUntil"><strong>Vazi do:</strong> {{ formatDate(prescription.validUntil) }}</p>
         <p *ngIf="prescription.notes"><strong>Napomene:</strong> {{ prescription.notes }}</p>
-        
+
         <div class="medications">
           <h4>Lekovi:</h4>
           <div *ngFor="let med of prescription.medications" class="medication-item">
             <p><strong>{{ med.name }}</strong></p>
-            <p>Doza: {{ med.dosage }} | Učestalost: {{ med.frequency }} | Trajanje: {{ med.duration }}</p>
+            <p>Doza: {{ med.dosage }} | Ucestalost: {{ med.frequency }} | Trajanje: {{ med.duration }}</p>
             <p *ngIf="med.instructions" class="instructions">Uputstvo: {{ med.instructions }}</p>
           </div>
         </div>
       </div>
 
-      <div class="prescription-actions" *ngIf="isDoctor && prescription.status === 'active'">
-        <button (click)="updateStatus(prescription._id!, 'completed')" class="btn btn-success">Završi</button>
-        <button (click)="updateStatus(prescription._id!, 'cancelled')" class="btn btn-warning">Otkaži</button>
+      <div class="prescription-actions" *ngIf="isDoctor() && prescription.status === 'active'">
+        <button (click)="updateStatus(prescription._id!, 'completed')" class="btn btn-success">Zavrsi</button>
+        <button (click)="updateStatus(prescription._id!, 'cancelled')" class="btn btn-warning">Otkazi</button>
       </div>
     </div>
   </div>
 
-  <!-- Create Modal -->
-  <div *ngIf="showCreateModal" class="modal-overlay" (click)="showCreateModal = false">
+  <div *ngIf="showCreateModal()" class="modal-overlay" (click)="closeCreateModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
-      <h2>Kreiraj recept</h2>
-      <form (ngSubmit)="createPrescription()">
-        <div class="form-group">
-          <label>ID Pacijenta *</label>
-          <input type="text" [(ngModel)]="newPrescription.patientId" name="patientId" required />
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>ID Medicinskog kartona (opciono)</label>
-            <input type="text" [(ngModel)]="newPrescription.medicalRecordId" name="medicalRecordId" />
-          </div>
-          <div class="form-group">
-            <label>ID Termina (opciono)</label>
-            <input type="text" [(ngModel)]="newPrescription.appointmentId" name="appointmentId" />
-          </div>
-        </div>
+      <div class="modal-header-block">
+        <h2>Kreiraj recept</h2>
+        <p class="modal-subtitle">Dodaj osnovne podatke i lekove za pacijenta.</p>
+      </div>
 
-        <div class="medications-section">
-          <h3>Lekovi</h3>
+      <div *ngIf="formError()" class="error-message">{{ formError() }}</div>
+
+      <form (ngSubmit)="createPrescription()">
+        <section class="section-card">
+          <h3>Osnovne informacije</h3>
+
+          <div class="form-group" *ngIf="isDoctor()">
+            <label>Pacijent *</label>
+            <select [ngModel]="newPrescription().patientId" (ngModelChange)="onPatientChange($event)" name="patientId" required>
+              <option value="">Izaberite pacijenta</option>
+              <option *ngFor="let patient of examinedPatients()" [value]="patient._id">{{ formatPatientName(patient) }}</option>
+            </select>
+            <small *ngIf="examinedPatients().length === 0">Nema pregledanih pacijenata za izbor.</small>
+          </div>
+
+          <div class="form-group" *ngIf="!isDoctor()">
+            <label>ID Pacijenta *</label>
+            <input type="text" [ngModel]="newPrescription().patientId" (ngModelChange)="onPatientChange($event)" name="patientId" required />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" *ngIf="isDoctor()">
+              <label>Medicinski karton (opciono)</label>
+              <select [ngModel]="newPrescription().medicalRecordId" (ngModelChange)="onMedicalRecordChange($event)" name="medicalRecordId">
+                <option value="">Bez medicinskog kartona</option>
+                <option *ngFor="let record of filteredMedicalRecords()" [value]="record._id">{{ formatMedicalRecordOption(record) }}</option>
+              </select>
+            </div>
+
+            <div class="form-group" *ngIf="!isDoctor()">
+              <label>ID Medicinskog kartona (opciono)</label>
+              <input type="text" [ngModel]="newPrescription().medicalRecordId" (ngModelChange)="onMedicalRecordChange($event)" name="medicalRecordId" />
+            </div>
+
+            <div class="form-group">
+              <label>ID Termina (opciono)</label>
+              <input type="text" [ngModel]="newPrescription().appointmentId" (ngModelChange)="updateAppointmentId($event)" name="appointmentId" [readonly]="isDoctor() && !!newPrescription().medicalRecordId" />
+            </div>
+          </div>
+        </section>
+
+        <section class="section-card medications-section">
+          <div class="section-title-row">
+            <h3>Lekovi</h3>
+            <span class="section-badge">Obavezno: minimum 1 lek</span>
+          </div>
+
           <div class="add-medication">
             <div class="form-row">
               <div class="form-group">
                 <label>Naziv *</label>
-                <input type="text" [(ngModel)]="newMedication.name" name="medName" />
+                <input type="text" [ngModel]="newMedication().name" (ngModelChange)="updateMedicationField('name', $event)" name="medName" />
               </div>
               <div class="form-group">
                 <label>Doza *</label>
-                <input type="text" [(ngModel)]="newMedication.dosage" name="medDosage" placeholder="500mg" />
+                <input type="text" [ngModel]="newMedication().dosage" (ngModelChange)="updateMedicationField('dosage', $event)" name="medDosage" placeholder="500mg" />
               </div>
             </div>
+
             <div class="form-row">
               <div class="form-group">
-                <label>Učestalost *</label>
-                <input type="text" [(ngModel)]="newMedication.frequency" name="medFrequency" placeholder="2x dnevno" />
+                <label>Ucestalost *</label>
+                <input type="text" [ngModel]="newMedication().frequency" (ngModelChange)="updateMedicationField('frequency', $event)" name="medFrequency" placeholder="2x dnevno" />
               </div>
               <div class="form-group">
                 <label>Trajanje *</label>
-                <input type="text" [(ngModel)]="newMedication.duration" name="medDuration" placeholder="7 dana" />
+                <input type="text" [ngModel]="newMedication().duration" (ngModelChange)="updateMedicationField('duration', $event)" name="medDuration" placeholder="7 dana" />
               </div>
             </div>
+
             <div class="form-group">
               <label>Uputstvo</label>
-              <input type="text" [(ngModel)]="newMedication.instructions" name="medInstructions" placeholder="Uz obrok" />
+              <input type="text" [ngModel]="newMedication().instructions" (ngModelChange)="updateMedicationField('instructions', $event)" name="medInstructions" placeholder="Uz obrok" />
             </div>
-            <button type="button" (click)="addMedication()" class="btn btn-secondary">Dodaj lek</button>
+
+            <button type="button" (click)="addMedication()" class="btn btn-secondary btn-add-medication">Dodaj lek</button>
           </div>
 
-          <div *ngIf="newPrescription.medications.length > 0" class="medications-list">
-            <div *ngFor="let med of newPrescription.medications; let i = index" class="medication-item">
+          <div *ngIf="newPrescription().medications.length > 0" class="medications-list">
+            <div *ngFor="let med of newPrescription().medications; let i = index" class="medication-item">
               <span><strong>{{ med.name }}</strong> - {{ med.dosage }}, {{ med.frequency }}, {{ med.duration }}</span>
-              <button type="button" (click)="removeMedication(i)" class="btn-remove">×</button>
+              <button type="button" (click)="removeMedication(i)" class="btn-remove">x</button>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div class="form-group">
-          <label>Važi do (datum)</label>
-          <input type="date" [(ngModel)]="newPrescription.validUntil" name="validUntil" />
-        </div>
-        <div class="form-group">
-          <label>Napomene</label>
-          <textarea [(ngModel)]="newPrescription.notes" name="notes"></textarea>
-        </div>
+        <section class="section-card">
+          <h3>Dodatno</h3>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Vazi do (datum)</label>
+              <input type="date" [ngModel]="newPrescription().validUntil" (ngModelChange)="updateValidUntil($event)" name="validUntil" />
+            </div>
+
+            <div class="form-group full-width">
+              <label>Napomene</label>
+              <textarea [ngModel]="newPrescription().notes" (ngModelChange)="updateNotes($event)" name="notes" placeholder="Dodatne instrukcije za pacijenta..."></textarea>
+            </div>
+          </div>
+        </section>
+
         <div class="modal-actions">
-          <button type="button" (click)="showCreateModal = false" class="btn btn-secondary">Otkaži</button>
-          <button type="submit" class="btn btn-primary">Kreiraj</button>
+          <button type="button" (click)="closeCreateModal()" class="btn btn-secondary">Otkazi</button>
+          <button type="submit" class="btn btn-primary" [disabled]="loading()">{{ loading() ? 'Kreiram...' : 'Kreiraj' }}</button>
         </div>
       </form>
     </div>

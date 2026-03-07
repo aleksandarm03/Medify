@@ -1,0 +1,61 @@
+<div *ngIf="isOpen" class="modal-overlay" (click)="onOverlayClick()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Novi termin</h2>
+      <p>Unesi podatke termina i sačuvaj.</p>
+    </div>
+
+    <div *ngIf="error" class="form-error">{{ error }}</div>
+
+    <form (ngSubmit)="onSubmit()">
+      <div class="form-group" *ngIf="isDoctor">
+        <label>Pacijent (ID)</label>
+        <input
+          type="text"
+          [value]="appointment.patientId"
+          (input)="onPatientChange($any($event).target.value)"
+          placeholder="Unesite ID pacijenta"
+          required />
+      </div>
+
+      <div class="form-group" *ngIf="isPatient">
+        <label>Doktor</label>
+        <select
+          [value]="appointment.patientId"
+          (change)="onPatientChange($any($event).target.value)"
+          required>
+          <option value="">Izaberite doktora</option>
+          <option *ngFor="let doctor of doctors" [value]="doctor._id">
+            {{ doctor.firstName }} {{ doctor.lastName }} - {{ doctor.specialization }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Datum i vreme</label>
+        <input
+          type="datetime-local"
+          [value]="appointment.appointmentDate"
+          [min]="minDate + 'T00:00'"
+          (input)="onDateChange($any($event).target.value)"
+          required />
+      </div>
+
+      <div class="form-group">
+        <label>Razlog pregleda</label>
+        <textarea
+          [value]="appointment.reason"
+          (input)="onReasonChange($any($event).target.value)"
+          placeholder="Npr. kontrolni pregled, bol u grlu, tumačenje nalaza..."
+          required></textarea>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn-light" (click)="onOverlayClick()">Otkaži</button>
+        <button type="submit" class="btn btn-primary" [disabled]="loading">
+          {{ loading ? 'Čuvanje...' : 'Sačuvaj termin' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

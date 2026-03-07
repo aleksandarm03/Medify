@@ -155,6 +155,24 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
     this.resetForm();
   }
 
+  openCreatePrescription(record: MedicalRecord) {
+    const patientId = record.patient?._id;
+    const medicalRecordId = record._id;
+    if (!patientId || !medicalRecordId) {
+      this.error.set('Nedostaju podaci za kreiranje recepta iz kartona.');
+      return;
+    }
+
+    this.router.navigate(['/prescriptions'], {
+      queryParams: {
+        openCreate: '1',
+        patientId,
+        medicalRecordId,
+        appointmentId: record.appointment?._id || ''
+      }
+    });
+  }
+
   markMedicalRecordAsNotNeeded() {
     this.closeCreateModal();
     this.router.navigate(['/appointments']);

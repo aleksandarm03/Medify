@@ -23,6 +23,7 @@ var getPrescriptionsByPatient = async function(patientId, status = null) {
     }
     
     return await PrescriptionModel.find(query)
+        .populate("patient", "firstName lastName")
         .populate("doctor", "firstName lastName specialization")
         .populate("medicalRecord")
         .populate("appointment")
@@ -59,6 +60,7 @@ var getActivePrescriptions = async function(patientId) {
             { validUntil: null }
         ]
     })
+    .populate("patient", "firstName lastName")
     .populate("doctor", "firstName lastName")
     .sort({ issueDate: -1 });
 };

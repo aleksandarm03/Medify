@@ -42,6 +42,10 @@
             <p *ngIf="result.normalRange" class="normal-range">Normalni opseg: {{ result.normalRange }}</p>
           </div>
         </div>
+
+        <div class="record-actions" *ngIf="isDoctor()">
+          <button type="button" class="btn btn-primary" (click)="openCreatePrescription(record)">Dodaj recept</button>
+        </div>
       </div>
     </div>
   </div>
