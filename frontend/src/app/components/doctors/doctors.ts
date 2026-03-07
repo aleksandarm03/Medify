@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { DoctorService } from '../../services/doctor.service';
 import { Doctor } from '../../models/doctor.model';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-doctors',
@@ -12,12 +14,14 @@ import { Doctor } from '../../models/doctor.model';
   templateUrl: './doctors.html',
   styleUrl: './doctors.css'
 })
-export class DoctorsComponent implements OnInit {
-  doctors: Doctor[] = [];
-  loading = false;
-  error = '';
-  searchSpecialization = '';
-  searchName = '';
+export class DoctorsComponent implements OnInit, OnDestroy {
+  doctors = signal<Doctor[]>([]);
+  loading = signal(false);
+  error = signal('');
+  searchSpecialization = signal('');
+  searchName = signal('');
+
+  private destroy$ = new Subject<void>();
 
   constructor(private doctorService: DoctorService) {}
 
@@ -25,33 +29,38 @@ export class DoctorsComponent implements OnInit {
     this.loadDoctors();
   }
 
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   loadDoctors() {
-    this.loading = true;
-    this.error = '';
+    this.loading.set(true);
+    this.error.set('');
     
-    if (this.searchSpecialization || this.searchName) {
+    if (this.searchSpecialization() || this.searchName()) {
       this.doctorService.searchDoctors(
-        this.searchSpecialization || undefined,
-        this.searchName || undefined
-      ).subscribe({
+        this.searchSpecialization() || undefined,
+        this.searchName() || undefined
+      ).pipe(takeUntil(this.destroy$)).subscribe({
         next: (data) => {
-          this.doctors = data;
-          this.loading = false;
+          this.doctors.set(data);
+          this.loading.set(false);
         },
         error: (err) => {
-          this.error = err.error?.message || 'Greška pri pretrazi doktora';
-          this.loading = false;
+          this.error.set(err.error?.message || 'Greška pri pretrazi doktora');
+          this.loading.set(false);
         }
       });
     } else {
-      this.doctorService.getAllDoctors().subscribe({
+      this.doctorService.getAllDoctors().pipe(takeUntil(this.destroy$)).subscribe({
         next: (data) => {
-          this.doctors = data;
-          this.loading = false;
+          this.doctors.set(data);
+          this.loading.set(false);
         },
         error: (err) => {
-          this.error = err.error?.message || 'Greška pri učitavanju doktora';
-          this.loading = false;
+          this.error.set(err.error?.message || 'Greška pri učitavanju doktora');
+          this.loading.set(false);
         }
       });
     }
@@ -62,9 +71,17 @@ export class DoctorsComponent implements OnInit {
   }
 
   clearSearch() {
-    this.searchSpecialization = '';
-    this.searchName = '';
+    this.searchSpecialization.set('');
+    this.searchName.set('');
     this.loadDoctors();
+  }
+
+  updateSearchSpecialization(value: string) {
+    this.searchSpecialization.set(value);
+  }
+
+  updateSearchName(value: string) {
+    this.searchName.set(value);
   }
 }
 
