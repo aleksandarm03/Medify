@@ -258,10 +258,10 @@ router.get("/:id",
     passport.authenticate("jwt", { session: false }),
     async function (req, res) {
         try {
-            const doctor = await UserModel.findById(req.params.id)
+            const doctor = await UserModel.findOne({ _id: req.params.id, role: "doctor" })
                 .select("firstName lastName specialization yearsOfExperience officeNumber phoneNumber shift licenseNumber");
 
-            if (!doctor || doctor.role !== "doctor") {
+            if (!doctor) {
                 return res.status(404).json({ message: "Doktor nije pronađen." });
             }
 

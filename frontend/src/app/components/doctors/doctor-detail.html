@@ -1,0 +1,70 @@
+<div class="doctor-detail-container">
+  <div class="back-button">
+    <a routerLink="/doctors" class="btn btn-secondary">← Nazad</a>
+  </div>
+
+  <div *ngIf="error()" class="error-message">{{ error() }}</div>
+
+  <div *ngIf="loading()" class="loading">Učitavanje...</div>
+
+  <div *ngIf="doctor() && !loading()" class="doctor-details">
+    <div class="doctor-header">
+      <h1>{{ doctor()!.firstName }} {{ doctor()!.lastName }}</h1>
+      <p class="specialization">{{ doctor()!.specialization }}</p>
+    </div>
+
+    <div class="doctor-info-section">
+      <div class="info-group">
+        <h3>Osnovne informacije</h3>
+        <div class="info-item">
+          <strong>Specijalizacija:</strong>
+          <span>{{ doctor()!.specialization }}</span>
+        </div>
+        <div class="info-item" *ngIf="doctor()!.yearsOfExperience">
+          <strong>Godine iskustva:</strong>
+          <span>{{ doctor()!.yearsOfExperience }}</span>
+        </div>
+        <div class="info-item" *ngIf="doctor()!.officeNumber">
+          <strong>Ordinacija:</strong>
+          <span>{{ doctor()!.officeNumber }}</span>
+        </div>
+        <div class="info-item" *ngIf="doctor()!.phoneNumber">
+          <strong>Telefon:</strong>
+          <span>{{ doctor()!.phoneNumber }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="availability-section" *ngIf="availability().length > 0">
+      <h3>Dostupnost</h3>
+      <div class="availability-list">
+        <div *ngFor="let slot of availability()" class="availability-card" [class.unavailable]="!slot.isAvailable">
+          <div class="day">
+            <strong>{{ getDayName(slot.dayOfWeek) }}</strong>
+          </div>
+          <div class="time-slot">
+            <span *ngIf="slot.isAvailable">
+              {{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}
+              <span *ngIf="slot.breakStart && slot.breakEnd" class="break-info">
+                (Pauza: {{ formatTime(slot.breakStart) }} - {{ formatTime(slot.breakEnd) }})
+              </span>
+            </span>
+            <span *ngIf="!slot.isAvailable" class="unavailable-text">Nedostupan</span>
+          </div>
+          <div class="appointment-duration" *ngIf="slot.isAvailable && slot.appointmentDuration">
+            <small>Trajanje termina: {{ slot.appointmentDuration }} min</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="no-availability" *ngIf="availability().length === 0">
+      <p>Nema dostupnih informacija o rasporedu rada.</p>
+    </div>
+
+    <div class="action-buttons">
+      <a routerLink="/appointments" class="btn btn-primary">Zakazi termin</a>
+      <a routerLink="/doctors" class="btn btn-secondary">Nazad na listu</a>
+    </div>
+  </div>
+</div>
