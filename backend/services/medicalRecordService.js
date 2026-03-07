@@ -62,6 +62,14 @@ var deleteMedicalRecord = async function(recordId) {
     return await MedicalRecordModel.findByIdAndDelete(recordId);
 };
 
+var getAllMedicalRecords = async function() {
+    return await MedicalRecordModel.find()
+        .populate("patient", "firstName lastName JMBG")
+        .populate("doctor", "firstName lastName specialization")
+        .populate("appointment")
+        .sort({ visitDate: -1 });
+};
+
 module.exports = {
     createMedicalRecord,
     getMedicalRecordsByPatient,
@@ -69,7 +77,8 @@ module.exports = {
     getMedicalRecordById,
     updateMedicalRecord,
     addLabResult,
-    deleteMedicalRecord
+    deleteMedicalRecord,
+    getAllMedicalRecords
 };
 
 

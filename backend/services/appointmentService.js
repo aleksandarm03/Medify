@@ -79,6 +79,13 @@ var deleteAppointment = async function(appointmentId) {
     return await AppointmentModel.findByIdAndDelete(appointmentId);
 };
 
+var getAllAppointments = async function() {
+    return await AppointmentModel.find()
+        .populate("doctor", "firstName lastName specialization officeNumber")
+        .populate("patient", "firstName lastName phoneNumber JMBG")
+        .sort({ appointmentDate: -1 });
+};
+
 module.exports = {
     createAppointment,
     getAppointmentsByDoctor,
@@ -86,5 +93,6 @@ module.exports = {
     getAppointmentById,
     updateAppointmentStatus,
     updateAppointment,
-    deleteAppointment
+    deleteAppointment,
+    getAllAppointments
 };

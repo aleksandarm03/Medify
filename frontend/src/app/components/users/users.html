@@ -1,15 +1,15 @@
 <div class="users-container">
   <h1>Korisnici</h1>
 
-  <div *ngIf="error" class="error-message">{{ error }}</div>
+  <div *ngIf="error()" class="error-message">{{ error() }}</div>
 
-  <div *ngIf="loading" class="loading">Učitavanje...</div>
+  <div *ngIf="loading()" class="loading">Učitavanje...</div>
 
-  <div *ngIf="!loading && users.length === 0" class="empty-state">
+  <div *ngIf="!loading() && users().length === 0" class="empty-state">
     <p>Nema korisnika</p>
   </div>
 
-  <div class="users-table">
+  <div class="users-table" *ngIf="users().length > 0">
     <table>
       <thead>
         <tr>
@@ -20,10 +20,11 @@
           <th>Telefon</th>
           <th>Adresa</th>
           <th *ngIf="hasAnySpecialization()">Specijalizacija</th>
+          <th>Akcije</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let user of users">
+        <tr *ngFor="let user of users()">
           <td>{{ user.JMBG }}</td>
           <td>{{ user.firstName }}</td>
           <td>{{ user.lastName }}</td>
@@ -31,9 +32,72 @@
           <td>{{ user.phoneNumber }}</td>
           <td>{{ user.homeAddress }}</td>
           <td *ngIf="hasAnySpecialization()">{{ user.specialization || '-' }}</td>
+          <td class="actions">
+            <button class="btn btn-small btn-primary" (click)="openEditModal(user)">Izmeni</button>
+            <button class="btn btn-small btn-danger" (click)="confirmDelete(user)">Obriši</button>
+          </td>
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <!-- Edit Modal -->
+  <div *ngIf="showEditModal()" class="modal-overlay" (click)="closeEditModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h2>Izmeni korisnika</h2>
+      <form (ngSubmit)="saveUser()">
+        <div class="form-group">
+          <label>Ime *</label>
+          <input type="text" [ngModel]="editForm().firstName" (ngModelChange)="updateFormField('firstName', $event)" name="firstName" required />
+        </div>
+        <div class="form-group">
+          <label>Prezime *</label>
+          <input type="text" [ngModel]="editForm().lastName" (ngModelChange)="updateFormField('lastName', $event)" name="lastName" required />
+        </div>
+        <div class="form-group">
+          <label>Telefon *</label>
+          <input type="text" [ngModel]="editForm().phoneNumber" (ngModelChange)="updateFormField('phoneNumber', $event)" name="phoneNumber" required />
+        </div>
+        <div class="form-group">
+          <label>Adresa *</label>
+          <input type="text" [ngModel]="editForm().homeAddress" (ngModelChange)="updateFormField('homeAddress', $event)" name="homeAddress" required />
+        </div>
+        <div class="form-group" *ngIf="selectedUser()?.role === 'doctor'">
+          <label>Specijalizacija</label>
+          <input type="text" [ngModel]="editForm().specialization" (ngModelChange)="updateFormField('specialization', $event)" name="specialization" />
+        </div>
+        <div class="form-group" *ngIf="selectedUser()?.role === 'doctor'">
+          <label>Kancelarija</label>
+          <input type="text" [ngModel]="editForm().officeNumber" (ngModelChange)="updateFormField('officeNumber', $event)" name="officeNumber" />
+        </div>
+        <div class="form-group" *ngIf="selectedUser()?.role === 'doctor'">
+          <label>Smena</label>
+          <select [ngModel]="editForm().shift" (ngModelChange)="updateFormField('shift', $event)" name="shift">
+            <option value="">Nije određeno</option>
+            <option value="morning">Jutarnja</option>
+            <option value="evening">Večernja</option>
+            <option value="night">Noćna</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" (click)="closeEditModal()" class="btn btn-secondary">Otkaži</button>
+          <button type="submit" class="btn btn-primary">Sačuvaj</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div *ngIf="showDeleteConfirm()" class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal-content delete-confirm" (click)="$event.stopPropagation()">
+      <h2>Potvrda brisanja</h2>
+      <p>Da li ste sigurni da želite da obrišete korisnika <strong>{{ selectedUser()?.firstName }} {{ selectedUser()?.lastName }}</strong>?</p>
+      <p class="warning">Ova akcija je nepovratna!</p>
+      <div class="modal-actions">
+        <button type="button" (click)="cancelDelete()" class="btn btn-secondary">Otkaži</button>
+        <button type="button" (click)="deleteUser()" class="btn btn-danger">Obriši</button>
+      </div>
+    </div>
   </div>
 </div>
 

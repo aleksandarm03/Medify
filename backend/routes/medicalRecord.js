@@ -4,6 +4,21 @@ const MedicalRecordService = require("../services/medicalRecordService");
 const UserModel = require("../models/user");
 const AppointmentModel = require("../models/appointment");
 
+// Dohvatanje svih medicinskih kartona (samo admin)
+router.get("/all",
+    passport.authenticate("jwt", { session: false }),
+    passport.authorizeRoles("admin"),
+    async function (req, res) {
+        try {
+            const records = await MedicalRecordService.getAllMedicalRecords();
+            return res.json(records);
+        } catch (error) {
+            console.error("Get all medical records error:", error);
+            return res.status(500).json({ message: "Greška pri dohvatanju medicinskih kartona." });
+        }
+    }
+);
+
 // Kreiranje medicinskog kartona (samo doktori)
 router.post("/",
     passport.authenticate("jwt", { session: false }),

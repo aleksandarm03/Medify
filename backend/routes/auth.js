@@ -87,5 +87,62 @@ passport.authorizeRoles("admin"),
     }
 )
 
+// Dohvatanje pojedinačnog korisnika
+router.get('/users/:id', passport.authenticate("jwt",{session:false}),
+passport.authorizeRoles("admin"),
+    async function (req,res) {
+        try {
+            const user = await userService.findUserById(req.params.id);
+            if (!user) {
+                return res.status(404).json({ message: "Korisnik nije pronađen." });
+            }
+            const userObj = user.toObject();
+            delete userObj.passwordHash;
+            delete userObj.passwordSalt;
+            return res.json(userObj);
+        } catch (error) {
+            console.error("Get user error:", error);
+            return res.status(500).json({ message: "Greška pri dohvatanju korisnika." });
+        }
+    }
+)
+
+// Ažuriranje korisnika
+router.put('/users/:id', passport.authenticate("jwt",{session:false}),
+passport.authorizeRoles("admin"),
+    async function (req,res) {
+        try {
+            const updatedUser = await userService.updateUser(req.params.id, req.body);
+            if (!updatedUser) {
+                return res.status(404).json({ message: "Korisnik nije pronađen." });
+            }
+            const userObj = updatedUser.toObject();
+            delete userObj.passwordHash;
+            delete userObj.passwordSalt;
+            return res.json(userObj);
+        } catch (error) {
+            console.error("Update user error:", error);
+            return res.status(500).json({ message: "Greška pri ažuriranju korisnika." });
+        }
+    }
+)
+
+// Brisanje korisnika
+router.delete('/users/:id', passport.authenticate("jwt",{session:false}),
+passport.authorizeRoles("admin"),
+    async function (req,res) {
+        try {
+            const deletedUser = await userService.deleteUser(req.params.id);
+            if (!deletedUser) {
+                return res.status(404).json({ message: "Korisnik nije pronađen." });
+            }
+            return res.json({ message: "Korisnik je uspešno obrisan." });
+        } catch (error) {
+            console.error("Delete user error:", error);
+            return res.status(500).json({ message: "Greška pri brisanju korisnika." });
+        }
+    }
+)
+
 
 module.exports=router;

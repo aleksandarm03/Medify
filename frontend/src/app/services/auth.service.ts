@@ -109,6 +109,18 @@ export class AuthService {
     return this.api.get<User[]>('/auth/users');
   }
 
+  getUserById(id: string): Observable<User> {
+    return this.api.get<User>(`/auth/users/${id}`);
+  }
+
+  updateUser(id: string, userData: Partial<User>): Observable<User> {
+    return this.api.put<User>(`/auth/users/${id}`, userData);
+  }
+
+  deleteUser(id: string): Observable<{ message: string }> {
+    return this.api.delete<{ message: string }>(`/auth/users/${id}`);
+  }
+
   hasRole(role: string): boolean {
     const user = this.getCurrentUser();
     return user?.role === role;

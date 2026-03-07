@@ -1,6 +1,6 @@
 <div class="dashboard">
-  <h1>Dobrodošli, {{ user?.firstName }} {{ user?.lastName }}!</h1>
-  <p class="subtitle">Uloga: {{ getRoleName(user?.role) }}</p>
+  <h1>Dobrodošli, {{ user()?.firstName }} {{ user()?.lastName }}!</h1>
+  <p class="subtitle">Uloga: {{ getRoleName(user()?.role) }}</p>
 
   <div class="dashboard-grid">
     <!-- Patient Dashboard -->
@@ -78,6 +78,30 @@
         <h3>Korisnici</h3>
         <p>Upravljajte korisnicima sistema</p>
         <a routerLink="/users" class="card-link">Vidi korisnike →</a>
+      </div>
+
+      <div class="card">
+        <h3>Svi termini</h3>
+        <p>Pregledajte sve termine u sistemu</p>
+        <a routerLink="/admin/appointments" class="card-link">Vidi termine →</a>
+      </div>
+
+      <div class="card">
+        <h3>Svi medicinski kartoni</h3>
+        <p>Pregledajte sve medicinske kartone</p>
+        <a routerLink="/admin/medical-records" class="card-link">Vidi kartone →</a>
+      </div>
+
+      <div class="card">
+        <h3>Svi recepti</h3>
+        <p>Pregledajte sve recepte u sistemu</p>
+        <a routerLink="/admin/prescriptions" class="card-link">Vidi recepte →</a>
+      </div>
+
+      <div class="card">
+        <h3>Dostupnost doktora</h3>
+        <p>Upravljajte dostupnošću doktora</p>
+        <a routerLink="/availability" class="card-link">Upravljaj dostupnošću →</a>
       </div>
     </div>
   </div>

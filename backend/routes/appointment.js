@@ -172,6 +172,21 @@ router.post(
   }
 );
 
+// Dohvatanje svih termina (samo admin)
+router.get("/all",
+    passport.authenticate("jwt", { session: false }),
+    passport.authorizeRoles("admin"),
+    async function (req, res) {
+        try {
+            const appointments = await AppointmentService.getAllAppointments();
+            return res.json(appointments);
+        } catch (error) {
+            console.error("Get all appointments error:", error);
+            return res.status(500).json({ message: "Greška pri dohvatanju termina." });
+        }
+    }
+);
+
 // Dohvatanje termina za doktora
 router.get("/doctor",
     passport.authenticate("jwt", { session: false }),
