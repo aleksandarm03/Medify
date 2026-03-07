@@ -1,19 +1,19 @@
 <div class="medical-records-container">
   <div class="header">
     <h1>Medicinski kartoni</h1>
-    <button *ngIf="isDoctor || isNurse" (click)="showCreateModal = true" class="btn btn-primary">Novi karton</button>
+    <button *ngIf="isDoctor() || isNurse()" (click)="openCreateModalManual()" class="btn btn-primary">Novi karton</button>
   </div>
 
-  <div *ngIf="error" class="error-message">{{ error }}</div>
+  <div *ngIf="error()" class="error-message">{{ error() }}</div>
 
-  <div *ngIf="loading" class="loading">Učitavanje...</div>
+  <div *ngIf="loading()" class="loading">Učitavanje...</div>
 
-  <div *ngIf="!loading && records.length === 0" class="empty-state">
+  <div *ngIf="!loading() && records().length === 0" class="empty-state">
     <p>Nema medicinskih kartona</p>
   </div>
 
   <div class="records-list">
-    <div *ngFor="let record of records" class="record-card">
+    <div *ngFor="let record of records()" class="record-card">
       <div class="record-header">
         <h3>Karton #{{ record._id?.substring(0, 8) }}</h3>
         <span class="record-date">{{ formatDate(record.visitDate) }}</span>
@@ -21,7 +21,6 @@
       
       <div class="record-info">
         <p><strong>Pacijent:</strong> {{ record.patient?.firstName }} {{ record.patient?.lastName }}</p>
-        <p><strong>Doktor:</strong> {{ record.doctor?.firstName }} {{ record.doctor?.lastName }}</p>
         <p><strong>Dijagnoza:</strong> {{ record.diagnosis }}</p>
         <p *ngIf="record.symptoms && record.symptoms.length > 0"><strong>Simptomi:</strong> {{ record.symptoms.join(', ') }}</p>
         <p *ngIf="record.treatment"><strong>Tretman:</strong> {{ record.treatment }}</p>
@@ -48,68 +47,76 @@
   </div>
 
   <!-- Create Modal -->
-  <div *ngIf="showCreateModal" class="modal-overlay" (click)="showCreateModal = false">
+  <div *ngIf="showCreateModal()" class="modal-overlay" (click)="closeCreateModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <h2>Kreiraj medicinski karton</h2>
       <form (ngSubmit)="createRecord()">
+        <div class="form-group" *ngIf="isPrefilledFromAppointment()">
+          <label>Doktor</label>
+          <input type="text" [value]="prefilledDoctorName()" readonly />
+        </div>
+        <div class="form-group" *ngIf="isPrefilledFromAppointment()">
+          <label>Pacijent</label>
+          <input type="text" [value]="prefilledPatientName()" readonly />
+        </div>
         <div class="form-group">
           <label>ID Pacijenta *</label>
-          <input type="text" [(ngModel)]="newRecord.patientId" name="patientId" required />
+          <input type="text" [ngModel]="newRecord().patientId" (ngModelChange)="updateTextField('patientId', $event)" name="patientId" [readonly]="isPrefilledFromAppointment()" required />
         </div>
         <div class="form-group">
           <label>ID Termina (opciono)</label>
-          <input type="text" [(ngModel)]="newRecord.appointmentId" name="appointmentId" />
+          <input type="text" [ngModel]="newRecord().appointmentId" (ngModelChange)="updateTextField('appointmentId', $event)" name="appointmentId" [readonly]="isPrefilledFromAppointment()" />
         </div>
         <div class="form-group">
           <label>Dijagnoza *</label>
-          <textarea [(ngModel)]="newRecord.diagnosis" name="diagnosis" required></textarea>
+          <textarea [ngModel]="newRecord().diagnosis" (ngModelChange)="updateTextField('diagnosis', $event)" name="diagnosis" required></textarea>
         </div>
         <div class="form-group">
           <label>Simptomi (razdvojite zarezom)</label>
-          <input type="text" [(ngModel)]="newRecord.symptoms" name="symptoms" />
+          <input type="text" [ngModel]="newRecord().symptoms" (ngModelChange)="updateTextField('symptoms', $event)" name="symptoms" />
         </div>
         <div class="form-group">
           <label>Zapisi pregleda</label>
-          <textarea [(ngModel)]="newRecord.examinationNotes" name="examinationNotes"></textarea>
+          <textarea [ngModel]="newRecord().examinationNotes" (ngModelChange)="updateTextField('examinationNotes', $event)" name="examinationNotes"></textarea>
         </div>
         <div class="form-group">
           <label>Tretman</label>
-          <textarea [(ngModel)]="newRecord.treatment" name="treatment"></textarea>
+          <textarea [ngModel]="newRecord().treatment" (ngModelChange)="updateTextField('treatment', $event)" name="treatment"></textarea>
         </div>
         <div class="form-group">
           <label>Preporuke</label>
-          <textarea [(ngModel)]="newRecord.recommendations" name="recommendations"></textarea>
+          <textarea [ngModel]="newRecord().recommendations" (ngModelChange)="updateTextField('recommendations', $event)" name="recommendations"></textarea>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label>Krvni pritisak</label>
-            <input type="text" [(ngModel)]="newRecord.bloodPressure" name="bloodPressure" placeholder="120/80" />
+            <input type="text" [ngModel]="newRecord().bloodPressure" (ngModelChange)="updateTextField('bloodPressure', $event)" name="bloodPressure" placeholder="120/80" />
           </div>
           <div class="form-group">
             <label>Puls (bpm)</label>
-            <input type="number" [(ngModel)]="newRecord.heartRate" name="heartRate" />
+            <input type="number" [ngModel]="newRecord().heartRate" (ngModelChange)="updateNumberField('heartRate', $event)" name="heartRate" />
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label>Temperatura (°C)</label>
-            <input type="number" step="0.1" [(ngModel)]="newRecord.temperature" name="temperature" />
+            <input type="number" step="0.1" [ngModel]="newRecord().temperature" (ngModelChange)="updateNumberField('temperature', $event)" name="temperature" />
           </div>
           <div class="form-group">
             <label>Težina (kg)</label>
-            <input type="number" [(ngModel)]="newRecord.weight" name="weight" />
+            <input type="number" [ngModel]="newRecord().weight" (ngModelChange)="updateNumberField('weight', $event)" name="weight" />
           </div>
           <div class="form-group">
             <label>Visina (cm)</label>
-            <input type="number" [(ngModel)]="newRecord.height" name="height" />
+            <input type="number" [ngModel]="newRecord().height" (ngModelChange)="updateNumberField('height', $event)" name="height" />
           </div>
         </div>
         <div class="form-group">
           <label>Kontrola (datum)</label>
-          <input type="date" [(ngModel)]="newRecord.followUpDate" name="followUpDate" />
+          <input type="date" [ngModel]="newRecord().followUpDate" (ngModelChange)="updateTextField('followUpDate', $event)" name="followUpDate" />
         </div>
         <div class="modal-actions">
-          <button type="button" (click)="showCreateModal = false" class="btn btn-secondary">Otkaži</button>
+          <button type="button" (click)="closeCreateModal()" class="btn btn-secondary">Otkaži</button>
           <button type="submit" class="btn btn-primary">Kreiraj</button>
         </div>
       </form>

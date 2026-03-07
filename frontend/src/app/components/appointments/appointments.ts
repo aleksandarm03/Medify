@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AppointmentService } from '../../services/appointment.service';
 import { DoctorService } from '../../services/doctor.service';
 import { AuthService } from '../../services/auth.service';
@@ -41,7 +42,8 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
   constructor(
     private appointmentService: AppointmentService,
     private doctorService: DoctorService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -167,6 +169,44 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.error.set(err.error?.message || 'Greška pri ažuriranju statusa');
+      }
+    });
+  }
+
+  completeAndCreateMedicalRecord(appointment: Appointment) {
+    const appointmentId = appointment._id;
+    if (!appointmentId) {
+      this.error.set('Neispravan termin: nedostaje ID termina.');
+      return;
+    }
+
+    this.appointmentService.updateAppointmentStatus(appointmentId, 'completed').pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.router.navigate(['/medical-records'], {
+          queryParams: {
+            appointmentId,
+            openCreate: '1'
+          }
+        });
+      },
+      error: (err) => {
+        this.error.set(err.error?.message || 'Greška pri završavanju termina');
+      }
+    });
+  }
+
+  completeWithoutMedicalRecord(id: string) {
+    if (!confirm('Potvrdi završetak termina bez medicinskog zapisa?')) {
+      return;
+    }
+
+    this.appointmentService.updateAppointmentStatus(id, 'completed').pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        alert('Termin je označen kao završen bez kreiranja medicinskog zapisa.');
+        this.loadAppointments();
+      },
+      error: (err) => {
+        this.error.set(err.error?.message || 'Greška pri završavanju termina');
       }
     });
   }

@@ -37,7 +37,8 @@
       </div>
 
       <div class="appointment-actions" *ngIf="isDoctor() && appointment.status === 'scheduled'">
-        <button (click)="updateStatus(appointment._id!, 'completed')" class="btn btn-success">Završi</button>
+        <button (click)="completeAndCreateMedicalRecord(appointment)" class="btn btn-success">Završi i napiši medicinski zapis</button>
+        <button (click)="completeWithoutMedicalRecord(appointment._id!)" class="btn btn-secondary">Medicinski zapis nije potreban</button>
         <button (click)="cancelAppointmentWithConfirm(appointment._id!)" class="btn btn-warning">Otkaži</button>
       </div>
 

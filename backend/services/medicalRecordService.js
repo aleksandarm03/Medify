@@ -26,6 +26,13 @@ var getMedicalRecordsByPatient = async function(patientId) {
         .sort({ visitDate: -1 });
 };
 
+var getMedicalRecordsByDoctor = async function(doctorId) {
+    return await MedicalRecordModel.find({ doctor: doctorId })
+        .populate("patient", "firstName lastName JMBG")
+        .populate("appointment")
+        .sort({ visitDate: -1 });
+};
+
 var getMedicalRecordById = async function(recordId) {
     return await MedicalRecordModel.findById(recordId)
         .populate("patient", "firstName lastName JMBG dateOfBirth bloodType allergies")
@@ -58,6 +65,7 @@ var deleteMedicalRecord = async function(recordId) {
 module.exports = {
     createMedicalRecord,
     getMedicalRecordsByPatient,
+    getMedicalRecordsByDoctor,
     getMedicalRecordById,
     updateMedicalRecord,
     addLabResult,

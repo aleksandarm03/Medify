@@ -76,6 +76,28 @@ router.get("/patient/:patientId",
     }
 );
 
+// Dohvatanje svih medicinskih kartona doktora
+router.get("/doctor/:doctorId",
+    passport.authenticate("jwt", { session: false }),
+    async function (req, res) {
+        try {
+            const user = req.user;
+            const doctorId = req.params.doctorId;
+
+            // Doktor vidi samo svoje kartone, admin može bilo kog doktora.
+            if (user.role !== "admin" && user._id.toString() !== doctorId) {
+                return res.status(403).json({ message: "Možete videti samo svoje medicinske kartone." });
+            }
+
+            const medicalRecords = await MedicalRecordService.getMedicalRecordsByDoctor(doctorId);
+            return res.json(medicalRecords);
+        } catch (error) {
+            console.error("Get doctor medical records error:", error);
+            return res.status(500).json({ message: "Greška pri dohvatanju medicinskih kartona doktora." });
+        }
+    }
+);
+
 // Dohvatanje određenog medicinskog kartona
 router.get("/:id",
     passport.authenticate("jwt", { session: false }),

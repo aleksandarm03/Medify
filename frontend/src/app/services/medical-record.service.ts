@@ -17,6 +17,10 @@ export class MedicalRecordService {
     return this.api.get<MedicalRecord[]>(`/medical-records/patient/${patientId}`);
   }
 
+  getMedicalRecordsByDoctor(doctorId: string): Observable<MedicalRecord[]> {
+    return this.api.get<MedicalRecord[]>(`/medical-records/doctor/${doctorId}`);
+  }
+
   getMedicalRecordById(id: string): Observable<MedicalRecord> {
     return this.api.get<MedicalRecord>(`/medical-records/${id}`);
   }
