@@ -70,6 +70,11 @@ export const routes: Routes = [
         path: 'admin/prescriptions',
         loadComponent: () => import('./components/admin/admin-prescriptions/admin-prescriptions').then(m => m.AdminPrescriptionsComponent),
         canActivate: [roleGuard(['admin'])]
+      },
+      {
+        path: 'admin/statistics',
+        loadComponent: () => import('./components/admin/admin-statistics/admin-statistics').then(m => m.AdminStatisticsComponent),
+        canActivate: [roleGuard(['admin'])]
       }
     ]
   }

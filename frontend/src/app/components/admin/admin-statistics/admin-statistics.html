@@ -1,0 +1,72 @@
+<div class="admin-statistics-container">
+  <div class="header">
+    <h1>Statistika termina</h1>
+  </div>
+
+  <div *ngIf="error()" class="error-message">{{ error() }}</div>
+
+  <div *ngIf="loading()" class="loading">Učitavanje...</div>
+
+  <!-- Overall Statistics Cards -->
+  <div *ngIf="!loading()" class="stats-cards">
+    <div class="stat-card">
+      <div class="stat-label">Ukupni termini</div>
+      <div class="stat-value">{{ totalAppointments() }}</div>
+    </div>
+    <div class="stat-card scheduled">
+      <div class="stat-label">Zakazani</div>
+      <div class="stat-value">{{ totalScheduled() }}</div>
+    </div>
+    <div class="stat-card completed">
+      <div class="stat-label">Završeni</div>
+      <div class="stat-value">{{ totalCompleted() }}</div>
+    </div>
+    <div class="stat-card canceled">
+      <div class="stat-label">Otkazani</div>
+      <div class="stat-value">{{ totalCanceled() }}</div>
+    </div>
+  </div>
+
+  <!-- Doctor Statistics Table -->
+  <div class="stats-table" *ngIf="!loading() && doctorStats().length > 0">
+    <h2>Statistika po doktoru</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Doktor</th>
+          <th>Ukupno</th>
+          <th>Zakazani</th>
+          <th>Završeni</th>
+          <th>Otkazani</th>
+          <th>Završenost</th>
+          <th>Otkazivanje</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let stats of doctorStats()">
+          <td class="doctor-name">{{ stats.doctorName }}</td>
+          <td class="total">{{ stats.total }}</td>
+          <td class="scheduled">{{ stats.scheduled }}</td>
+          <td class="completed">{{ stats.completed }}</td>
+          <td class="canceled">{{ stats.canceled }}</td>
+          <td>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="stats.completionRate" [ngClass]="getCompletionClass(stats.completionRate)"></div>
+              <span class="progress-text">{{ stats.completionRate }}%</span>
+            </div>
+          </td>
+          <td>
+            <div class="progress-bar">
+              <div class="progress-fill cancellation" [style.width.%]="stats.cancellationRate" [ngClass]="getCancellationClass(stats.cancellationRate)"></div>
+              <span class="progress-text">{{ stats.cancellationRate }}%</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="!loading() && doctorStats().length === 0" class="empty-state">
+    <p>Nema dostupnih podataka za statistiku</p>
+  </div>
+</div>
