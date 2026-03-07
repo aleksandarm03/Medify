@@ -1,5 +1,6 @@
 const DoctorAvailabilityModel = require("../models/doctorAvailability");
 const AppointmentModel = require("../models/appointment");
+const UserModel = require("../models/user");
 
 var setDoctorAvailability = async function(doctorId, availabilityData) {
     const availability = new DoctorAvailabilityModel({
@@ -35,15 +36,33 @@ var deleteDoctorAvailability = async function(availabilityId) {
 };
 
 var getAvailableTimeSlots = async function(doctorId, date) {
-    const targetDate = new Date(date);
+    // Parse YYYY-MM-DD kao lokalni datum, bez UTC pomeranja dana
+    const [year, month, day] = String(date).split("-").map(Number);
+    const targetDate = new Date(year, (month || 1) - 1, day || 1);
     const dayOfWeek = targetDate.getDay();
     
     // Pronađi dostupnost za taj dan
-    const availability = await DoctorAvailabilityModel.findOne({
+    let availability = await DoctorAvailabilityModel.findOne({
         doctor: doctorId,
         dayOfWeek: dayOfWeek,
         isAvailable: true
     });
+
+    // Fallback: za starije doktore bez dostupnosti pokušaj generisanja po smeni
+    if (!availability) {
+        const existingAvailability = await DoctorAvailabilityModel.find({ doctor: doctorId }).limit(1);
+        if (existingAvailability.length === 0) {
+            const doctor = await UserModel.findById(doctorId).select("shift role");
+            if (doctor && doctor.role === "doctor" && doctor.shift) {
+                await createDefaultAvailability(doctorId, doctor.shift);
+                availability = await DoctorAvailabilityModel.findOne({
+                    doctor: doctorId,
+                    dayOfWeek: dayOfWeek,
+                    isAvailable: true
+                });
+            }
+        }
+    }
     
     if (!availability) {
         return [];
@@ -74,6 +93,11 @@ var getAvailableTimeSlots = async function(doctorId, date) {
     
     const endTime = new Date(targetDate);
     endTime.setHours(endHour, endMin, 0, 0);
+
+    // Podrška za smene koje prelaze preko ponoći (npr. 16:00-00:00)
+    if (endTime <= currentTime) {
+        endTime.setDate(endTime.getDate() + 1);
+    }
     
     const duration = availability.appointmentDuration;
     
@@ -102,7 +126,7 @@ var getAvailableTimeSlots = async function(doctorId, date) {
                    (currentTime >= aptDate && currentTime < new Date(aptDate.getTime() + duration * 60000));
         });
         
-        if (!isBooked && slotEnd <= endTime) {
+        if (!isBooked && slotEnd <= endTime && currentTime > new Date()) {
             slots.push(new Date(currentTime));
         }
         

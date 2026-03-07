@@ -18,9 +18,13 @@ import { takeUntil } from 'rxjs/operators';
 export class AppointmentsComponent implements OnInit, OnDestroy {
   appointments = signal<Appointment[]>([]);
   loading = signal(false);
+  slotsLoading = signal(false);
   error = signal('');
   showCreateModal = signal(false);
   statusFilter = signal('');
+  selectedDate = signal('');
+  availableSlots = signal<string[]>([]);
+  minDate = signal(new Date().toISOString().split('T')[0]);
 
   newAppointment = signal({
     patientId: '',
@@ -116,6 +120,16 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (this.isPatient() && !this.selectedDate()) {
+      this.error.set('Molimo izaberite datum termina');
+      return;
+    }
+
+    if (this.isPatient() && !current.appointmentDate) {
+      this.error.set('Molimo izaberite jedan od slobodnih termina');
+      return;
+    }
+
     this.loading.set(true);
     
     // Pripremi podatke u zavisnosti od uloge
@@ -181,12 +195,17 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
 
   openCreateModal() {
     this.error.set('');
+    this.selectedDate.set('');
+    this.availableSlots.set([]);
+    this.newAppointment.set({ patientId: '', appointmentDate: '', reason: '' });
     this.showCreateModal.set(true);
   }
 
   closeCreateModal() {
     this.showCreateModal.set(false);
     this.error.set('');
+    this.selectedDate.set('');
+    this.availableSlots.set([]);
   }
 
   getStatusClass(status: string): string {
@@ -222,11 +241,72 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
   updatePatientId(value: string) {
     const current = this.newAppointment();
     this.newAppointment.set({ ...current, patientId: value });
+
+    if (this.isPatient()) {
+      this.availableSlots.set([]);
+      this.newAppointment.set({ ...this.newAppointment(), appointmentDate: '' });
+      if (this.selectedDate()) {
+        this.loadAvailableSlots();
+      }
+    }
   }
 
   updateAppointmentDate(value: string) {
     const current = this.newAppointment();
     this.newAppointment.set({ ...current, appointmentDate: value });
+  }
+
+  updateSelectedDate(value: string) {
+    this.selectedDate.set(value);
+    const current = this.newAppointment();
+    this.newAppointment.set({ ...current, appointmentDate: '' });
+    this.loadAvailableSlots();
+  }
+
+  updateSelectedSlot(value: string) {
+    const current = this.newAppointment();
+    this.newAppointment.set({ ...current, appointmentDate: value });
+  }
+
+  loadAvailableSlots() {
+    const doctorId = this.newAppointment().patientId;
+    const date = this.selectedDate();
+
+    if (!doctorId || !date) {
+      this.availableSlots.set([]);
+      return;
+    }
+
+    this.slotsLoading.set(true);
+    this.error.set('');
+
+    this.doctorService
+      .getAvailableSlots(doctorId, date)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.availableSlots.set(data.availableSlots || []);
+          this.slotsLoading.set(false);
+        },
+        error: (err) => {
+          this.availableSlots.set([]);
+          this.error.set(err.error?.message || 'Greška pri učitavanju slobodnih termina');
+          this.slotsLoading.set(false);
+        }
+      });
+  }
+
+  formatSlot(slot: string): string {
+    if (!slot) {
+      return '';
+    }
+    return new Date(slot).toLocaleString('sr-RS', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 
   updateReason(value: string) {

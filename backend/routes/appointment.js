@@ -1,7 +1,20 @@
 const router = require("express").Router();
 const passport = require("./config");
 const AppointmentService = require("../services/appointmentService");
+const DoctorAvailabilityService = require("../services/doctorAvailabilityService");
 const UserModel = require("../models/user");
+
+function pad2(value) {
+    return String(value).padStart(2, "0");
+}
+
+function toLocalDateKey(date) {
+    return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+function toLocalMinuteKey(date) {
+    return `${toLocalDateKey(date)} ${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+}
 
 /**
  * Kreiranje novog termina
@@ -99,6 +112,26 @@ router.post(
           .status(403)
           .json({ message: "Samo doktori i pacijenti mogu zakazivati termine." });
       }
+
+            // Termin mora da bude u okviru dostupnih slotova doktora
+            const dateKey = toLocalDateKey(appointmentDateObj);
+            const availableSlots = await DoctorAvailabilityService.getAvailableTimeSlots(
+                doctor._id,
+                dateKey
+            );
+
+            const requestedSlotKey = toLocalMinuteKey(appointmentDateObj);
+            const isSlotAvailable = availableSlots.some((slot) => {
+                const slotDate = new Date(slot);
+                return toLocalMinuteKey(slotDate) === requestedSlotKey;
+            });
+
+            if (!isSlotAvailable) {
+                return res.status(400).json({
+                    message:
+                        "Izabrani termin nije dostupan. Odaberite neki od slobodnih termina doktora.",
+                });
+            }
 
       const appointment = await AppointmentService.createAppointment(
         req.body,

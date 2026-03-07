@@ -64,9 +64,21 @@
             <option *ngFor="let doctor of patients()" [value]="doctor._id">{{ doctor.firstName }} {{ doctor.lastName }} - {{ doctor.specialization }}</option>
           </select>
         </div>
-        <div class="form-group">
+        <div class="form-group" *ngIf="isDoctor()">
           <label>Datum i vreme</label>
           <input type="datetime-local" [value]="newAppointment().appointmentDate" (input)="updateAppointmentDate($any($event).target.value)" name="appointmentDate" required />
+        </div>
+        <div class="form-group" *ngIf="isPatient()">
+          <label>Datum</label>
+          <input type="date" [value]="selectedDate()" (change)="updateSelectedDate($any($event).target.value)" [min]="minDate()" required />
+        </div>
+        <div class="form-group" *ngIf="isPatient()">
+          <label>Slobodni termini</label>
+          <select [value]="newAppointment().appointmentDate" (change)="updateSelectedSlot($any($event).target.value)" [disabled]="!selectedDate() || slotsLoading()" required>
+            <option value="">{{ slotsLoading() ? 'Učitavanje termina...' : 'Izaberite termin' }}</option>
+            <option *ngFor="let slot of availableSlots()" [value]="slot">{{ formatSlot(slot) }}</option>
+          </select>
+          <small *ngIf="selectedDate() && !slotsLoading() && availableSlots().length === 0">Nema slobodnih termina za izabrani datum. Proverite drugi datum ili dostupnost doktora.</small>
         </div>
         <div class="form-group">
           <label>Razlog</label>
@@ -74,7 +86,7 @@
         </div>
         <div class="modal-actions">
           <button type="button" (click)="closeCreateModal()" class="btn btn-secondary">Otkaži</button>
-          <button type="submit" class="btn btn-primary" [disabled]="loading()">{{ loading() ? 'Slučjam...' : (isDoctor() ? 'Kreiraj' : 'Zakazi') }}</button>
+          <button type="submit" class="btn btn-primary" [disabled]="loading() || (isPatient() && !newAppointment().appointmentDate)">{{ loading() ? 'Slanje...' : (isDoctor() ? 'Kreiraj' : 'Zakazi') }}</button>
         </div>
       </form>
     </div>

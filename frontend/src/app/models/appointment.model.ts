@@ -10,7 +10,8 @@ export interface Appointment {
 }
 
 export interface CreateAppointmentRequest {
-  patientId: string;
+  patientId?: string;
+  doctorId?: string;
   appointmentDate: Date;
   reason: string;
 }

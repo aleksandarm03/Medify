@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
-import { Doctor, DoctorAvailability, CreateAvailabilityRequest, AvailableSlot } from '../models/doctor.model';
+import { Doctor, DoctorAvailability, CreateAvailabilityRequest } from '../models/doctor.model';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -33,8 +33,8 @@ export class DoctorService {
     return this.api.get<DoctorAvailability[]>(`/doctors/${doctorId}/availability`);
   }
 
-  getAvailableSlots(doctorId: string, date: string): Observable<{ date: string; availableSlots: AvailableSlot[] }> {
-    return this.api.get<{ date: string; availableSlots: AvailableSlot[] }>(`/doctors/${doctorId}/available-slots?date=${date}`);
+  getAvailableSlots(doctorId: string, date: string): Observable<{ date: string; availableSlots: string[] }> {
+    return this.api.get<{ date: string; availableSlots: string[] }>(`/doctors/${doctorId}/available-slots?date=${date}`);
   }
 
   updateAvailability(availabilityId: string, data: Partial<CreateAvailabilityRequest>): Observable<DoctorAvailability> {
