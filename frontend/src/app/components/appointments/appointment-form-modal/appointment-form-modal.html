@@ -9,20 +9,20 @@
 
     <form novalidate>
       <div class="form-group" *ngIf="isDoctor">
-        <label>Pacijent (ID)</label>
+        <label>Pacijent (JMBG)</label>
         <input
           type="text"
-          [value]="appointment.patientId"
-          (input)="onPatientChange($any($event).target.value)"
-          placeholder="Unesite ID pacijenta"
+          [value]="appointment.patientJMBG"
+          (input)="onPatientJMBGChange($any($event).target.value)"
+          placeholder="Unesite JMBG pacijenta"
           required />
       </div>
 
       <div class="form-group" *ngIf="isPatient">
         <label>Doktor</label>
         <select
-          [value]="appointment.patientId"
-          (change)="onPatientChange($any($event).target.value)"
+          [value]="appointment.doctorId"
+          (change)="onDoctorChange($any($event).target.value)"
           required>
           <option value="">Izaberite doktora</option>
           <option *ngFor="let doctor of doctors" [value]="doctor._id">
@@ -31,47 +31,32 @@
         </select>
       </div>
 
-      <!-- Za doktore - slobodan unos datuma i vremena -->
-      <div class="form-group" *ngIf="isDoctor">
-        <label>Datum i vreme</label>
+      <div class="form-group">
+        <label>Datum</label>
         <input
-          type="datetime-local"
-          [value]="appointment.appointmentDate"
-          [min]="minDate + 'T00:00'"
+          type="date"
+          [value]="selectedDate()"
+          [min]="minDate"
+          [disabled]="isPatient && !selectedDoctor()"
           (input)="onDateChange($any($event).target.value)"
           required />
+        <small *ngIf="isPatient && !selectedDoctor()" class="form-hint">Prvo izaberite doktora</small>
       </div>
 
-      <!-- Za pacijente - izbor datuma i dostupnih slotova -->
-      <div *ngIf="isPatient">
-        <div class="form-group">
-          <label>Datum</label>
-          <input
-            type="date"
-            [value]="selectedDate()"
-            [min]="minDate"
-            [disabled]="!selectedDoctor()"
-            (input)="onDateChangePatient($any($event).target.value)"
-            required />
-          <small *ngIf="!selectedDoctor()" class="form-hint">Prvo izaberite doktora</small>
-        </div>
+      <div class="form-group" *ngIf="selectedDate() && (isDoctor || selectedDoctor())">
+        <label>Dostupni termini</label>
+        <div *ngIf="loadingSlots()" class="slots-loading">Učitavanje dostupnih termina...</div>
+        <div *ngIf="slotsError()" class="form-error">{{ slotsError() }}</div>
 
-        <!-- Prikaz dostupnih slotova -->
-        <div class="form-group" *ngIf="selectedDate() && selectedDoctor()">
-          <label>Dostupni termini</label>
-          <div *ngIf="loadingSlots()" class="slots-loading">Učitavanje dostupnih termina...</div>
-          <div *ngIf="slotsError()" class="form-error">{{ slotsError() }}</div>
-          
-          <div *ngIf="!loadingSlots() && availableSlots().length > 0" class="time-slots">
-            <button
-              *ngFor="let slot of availableSlots()"
-              type="button"
-              class="time-slot-btn"
-              [class.selected]="selectedTimeSlot() === slot.value"
-              (click)="onTimeSlotSelect(slot.value)">
-              {{ slot.label }}
-            </button>
-          </div>
+        <div *ngIf="!loadingSlots() && availableSlots().length > 0" class="time-slots">
+          <button
+            *ngFor="let slot of availableSlots()"
+            type="button"
+            class="time-slot-btn"
+            [class.selected]="selectedTimeSlot() === slot.value"
+            (click)="onTimeSlotSelect(slot.value)">
+            {{ slot.label }}
+          </button>
         </div>
       </div>
 
@@ -89,7 +74,7 @@
         <button
           type="button"
           class="btn btn-primary"
-          [disabled]="loading || (isPatient && !selectedTimeSlot())"
+          [disabled]="loading || !selectedTimeSlot()"
           (click)="onSubmit()">
           {{ loading ? 'Čuvanje...' : 'Sačuvaj termin' }}
         </button>

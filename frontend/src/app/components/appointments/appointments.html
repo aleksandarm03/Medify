@@ -53,12 +53,14 @@
     [isPatient]="isPatient()"
     [doctors]="patients()"
     [appointment]="newAppointment()"
+    [doctorId]="currentDoctorId()"
     [minDate]="minDate()"
     [loading]="loading()"
     [error]="formError()"
     (close)="closeCreateModal()"
     (submitForm)="createAppointment()"
-    (patientIdChange)="updatePatientId($event)"
+    (doctorIdChange)="updateDoctorId($event)"
+    (patientJMBGChange)="updatePatientJMBG($event)"
     (appointmentDateChange)="updateAppointmentDate($event)"
     (reasonChange)="updateReason($event)">
   </app-appointment-form-modal>

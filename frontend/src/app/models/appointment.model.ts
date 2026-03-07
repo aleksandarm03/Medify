@@ -11,6 +11,7 @@ export interface Appointment {
 
 export interface CreateAppointmentRequest {
   patientId?: string;
+  patientJMBG?: string;
   doctorId?: string;
   appointmentDate: Date;
   reason: string;

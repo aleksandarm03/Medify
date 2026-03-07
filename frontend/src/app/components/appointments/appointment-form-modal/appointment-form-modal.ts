@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, signal, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, signal } from '@angular/core';
 import { DoctorService } from '../../../services/doctor.service';
 
 interface AppointmentDraft {
-  patientId: string;
+  doctorId: string;
+  patientJMBG: string;
   appointmentDate: string;
   reason: string;
 }
@@ -26,21 +27,23 @@ export class AppointmentFormModalComponent implements OnChanges {
   @Input() isPatient = false;
   @Input() doctors: any[] = [];
   @Input() appointment: AppointmentDraft = {
-    patientId: '',
+    doctorId: '',
+    patientJMBG: '',
     appointmentDate: '',
     reason: ''
   };
+  @Input() doctorId = '';
   @Input() minDate = '';
   @Input() loading = false;
   @Input() error = '';
 
   @Output() close = new EventEmitter<void>();
   @Output() submitForm = new EventEmitter<void>();
-  @Output() patientIdChange = new EventEmitter<string>();
+  @Output() doctorIdChange = new EventEmitter<string>();
+  @Output() patientJMBGChange = new EventEmitter<string>();
   @Output() appointmentDateChange = new EventEmitter<string>();
   @Output() reasonChange = new EventEmitter<string>();
 
-  // Za pacijente - dostupni slotovi
   selectedDate = signal('');
   selectedDoctor = signal('');
   selectedTimeSlot = signal('');
@@ -51,9 +54,12 @@ export class AppointmentFormModalComponent implements OnChanges {
   constructor(private doctorService: DoctorService) {}
 
   ngOnChanges(changes: SimpleChanges) {
-    // Resetuj stanje kada se modal zatvori ili otvori
-    if (changes['isOpen'] && !changes['isOpen'].currentValue) {
-      this.resetAvailability();
+    if (changes['isOpen']) {
+      if (!changes['isOpen'].currentValue) {
+        this.resetAvailability();
+      } else {
+        this.selectedDoctor.set(this.appointment.doctorId || '');
+      }
     }
   }
 
@@ -73,32 +79,31 @@ export class AppointmentFormModalComponent implements OnChanges {
     this.submitForm.emit();
   }
 
-  onPatientChange(value: string) {
+  onDoctorChange(value: string) {
     this.selectedDoctor.set(value);
-    this.patientIdChange.emit(value);
-    // Resetuj datum i slotove kada se promeni doktor
+    this.doctorIdChange.emit(value);
     this.selectedDate.set('');
     this.selectedTimeSlot.set('');
     this.availableSlots.set([]);
     this.slotsError.set('');
   }
 
-  onDateChangePatient(value: string) {
-    this.selectedDate.set(value);
-    this.selectedTimeSlot.set('');
-    // Učitaj dostupne slotove za izabrani datum
-    if (this.selectedDoctor() && value) {
-      this.loadAvailableSlots(this.selectedDoctor(), value);
-    }
+  onPatientJMBGChange(value: string) {
+    this.patientJMBGChange.emit(value);
   }
 
   onDateChange(value: string) {
-    this.appointmentDateChange.emit(value);
+    this.selectedDate.set(value);
+    this.selectedTimeSlot.set('');
+
+    const targetDoctorId = this.isDoctor ? this.doctorId : this.selectedDoctor();
+    if (targetDoctorId && value) {
+      this.loadAvailableSlots(targetDoctorId, value);
+    }
   }
 
   onTimeSlotSelect(slot: string) {
     this.selectedTimeSlot.set(slot);
-    // Prosledi originalni ISO slot kako bi backend validacija ostala konzistentna.
     this.appointmentDateChange.emit(slot);
   }
 
@@ -122,7 +127,7 @@ export class AppointmentFormModalComponent implements OnChanges {
             label: `${hours}:${minutes}`
           };
         });
-        
+
         this.availableSlots.set(timeSlots);
         if (timeSlots.length === 0) {
           this.slotsError.set('Nema dostupnih termina za izabrani datum.');

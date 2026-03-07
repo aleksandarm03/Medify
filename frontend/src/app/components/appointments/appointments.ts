@@ -26,7 +26,8 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
   minDate = signal(new Date().toISOString().split('T')[0]);
 
   newAppointment = signal({
-    patientId: '',
+    doctorId: '',
+    patientJMBG: '',
     appointmentDate: '',
     reason: ''
   });
@@ -34,6 +35,7 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
   patients = signal<any[]>([]);
   isDoctor = signal(false);
   isPatient = signal(false);
+  currentDoctorId = signal('');
 
   private destroy$ = new Subject<void>();
 
@@ -56,6 +58,7 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
         if (user) {
           this.isDoctor.set(user.role === 'doctor');
           this.isPatient.set(user.role === 'patient');
+          this.currentDoctorId.set(user.role === 'doctor' ? user._id || '' : '');
           // Učitaj termine samo nakon što su role-ovi postavljeni
           this.loadAppointments();
           // Ako je pacijent, učitaj dostupne doktore
@@ -111,28 +114,26 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Za doktore: trebam patientId, za pacijente: trebam doctorId
-    if (this.isDoctor() && !current.patientId) {
-      this.formError.set('Molimo unesite ID pacijenta.');
+    if (this.isDoctor() && !current.patientJMBG.trim()) {
+      this.formError.set('Molimo unesite JMBG pacijenta.');
       return;
     }
 
-    if (this.isPatient() && !current.patientId) {
+    if (this.isPatient() && !current.doctorId) {
       this.formError.set('Molimo izaberite doktora.');
       return;
     }
 
     this.loading.set(true);
     
-    // Pripremi podatke u zavisnosti od uloge
     const appointmentData = this.isDoctor()
       ? {
-          patientId: current.patientId,
+          patientJMBG: current.patientJMBG.trim(),
           appointmentDate: new Date(current.appointmentDate),
           reason: current.reason
         }
       : {
-          doctorId: current.patientId, // Za pacijente, patientId polje sadrži doctorId
+          doctorId: current.doctorId,
           appointmentDate: new Date(current.appointmentDate),
           reason: current.reason
         };
@@ -145,7 +146,7 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
         next: (created) => {
           console.log('[Appointments] Create success:', created);
           this.closeCreateModal();
-          this.newAppointment.set({ patientId: '', appointmentDate: '', reason: '' });
+          this.newAppointment.set({ doctorId: '', patientJMBG: '', appointmentDate: '', reason: '' });
           this.loadAppointments();
         },
         error: (err) => {
@@ -213,7 +214,7 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
 
   openCreateModal() {
     this.formError.set('');
-    this.newAppointment.set({ patientId: '', appointmentDate: '', reason: '' });
+    this.newAppointment.set({ doctorId: '', patientJMBG: '', appointmentDate: '', reason: '' });
     this.showCreateModal.set(true);
   }
 
@@ -252,9 +253,14 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
     this.loadAppointments();
   }
 
-  updatePatientId(value: string) {
+  updateDoctorId(value: string) {
     const current = this.newAppointment();
-    this.newAppointment.set({ ...current, patientId: value });
+    this.newAppointment.set({ ...current, doctorId: value });
+  }
+
+  updatePatientJMBG(value: string) {
+    const current = this.newAppointment();
+    this.newAppointment.set({ ...current, patientJMBG: value });
   }
 
   updateAppointmentDate(value: string) {

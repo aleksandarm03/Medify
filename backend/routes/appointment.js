@@ -37,11 +37,12 @@ router.post(
   passport.authorizeRoles("doctor", "patient"),
   async function (req, res) {
     try {
-      const { patientId, doctorId, appointmentDate, reason } = req.body;
+      const { patientId, patientJMBG, doctorId, appointmentDate, reason } = req.body;
             console.log("[Appointments API] Create request:", {
                 userId: req.user?._id?.toString(),
                 role: req.user?.role,
                 patientId,
+                patientJMBG,
                 doctorId,
                 appointmentDate,
             });
@@ -75,18 +76,26 @@ router.post(
       let patient;
 
       if (user.role === "doctor") {
-        // Doktor zakazuje termin za pacijenta
-        if (!patientId) {
+        // Doktor zakazuje termin za pacijenta preko JMBG-a (uz fallback na patientId radi kompatibilnosti)
+        const normalizedJMBG = typeof patientJMBG === "string" ? patientJMBG.trim() : "";
+        if (!normalizedJMBG && !patientId) {
           return res
             .status(400)
-            .json({ message: "Obavezno polje: patientId." });
+            .json({ message: "Obavezno polje: patientJMBG." });
         }
 
         doctor = user;
-        patient = await UserModel.findById(patientId);
+        if (normalizedJMBG) {
+          if (!/^\d{13}$/.test(normalizedJMBG)) {
+            return res.status(400).json({ message: "JMBG mora imati tačno 13 cifara." });
+          }
+          patient = await UserModel.findOne({ JMBG: normalizedJMBG });
+        } else {
+          patient = await UserModel.findById(patientId);
+        }
 
         if (!patient) {
-          return res.status(404).json({ message: "Pacijent nije pronađen." });
+          return res.status(404).json({ message: "Pacijent nije pronađen za uneti JMBG." });
         }
 
         if (patient.role !== "patient") {
