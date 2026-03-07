@@ -2,15 +2,117 @@ const DoctorAvailabilityModel = require("../models/doctorAvailability");
 const AppointmentModel = require("../models/appointment");
 const UserModel = require("../models/user");
 
+const TIME_REGEX = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+
+function toMinutes(time) {
+    const [hours, minutes] = String(time).split(":").map(Number);
+    return hours * 60 + minutes;
+}
+
+function normalizeTimeWindow(startTime, endTime) {
+    const start = toMinutes(startTime);
+    let end = toMinutes(endTime);
+    if (end <= start) {
+        end += 24 * 60;
+    }
+    return { start, end };
+}
+
+function normalizeBreakWindow(breakStart, breakEnd, start, end) {
+    let breakStartMin = toMinutes(breakStart);
+    let breakEndMin = toMinutes(breakEnd);
+
+    if (breakEndMin <= breakStartMin) {
+        breakEndMin += 24 * 60;
+    }
+    if (breakStartMin < start) {
+        breakStartMin += 24 * 60;
+        breakEndMin += 24 * 60;
+    }
+
+    return { breakStartMin, breakEndMin };
+}
+
+function validateAvailabilityInput(availabilityData) {
+    const {
+        dayOfWeek,
+        startTime,
+        endTime,
+        breakStart,
+        breakEnd,
+        appointmentDuration,
+    } = availabilityData;
+
+    if (dayOfWeek !== undefined && (dayOfWeek < 0 || dayOfWeek > 6)) {
+        return "dayOfWeek mora biti između 0 (nedelja) i 6 (subota).";
+    }
+
+    if (startTime !== undefined && !TIME_REGEX.test(startTime)) {
+        return "startTime mora biti u formatu HH:MM.";
+    }
+
+    if (endTime !== undefined && !TIME_REGEX.test(endTime)) {
+        return "endTime mora biti u formatu HH:MM.";
+    }
+
+    if ((breakStart && !breakEnd) || (!breakStart && breakEnd)) {
+        return "Ako je uneta pauza, obavezna su i breakStart i breakEnd.";
+    }
+
+    if (breakStart && !TIME_REGEX.test(breakStart)) {
+        return "breakStart mora biti u formatu HH:MM.";
+    }
+
+    if (breakEnd && !TIME_REGEX.test(breakEnd)) {
+        return "breakEnd mora biti u formatu HH:MM.";
+    }
+
+    if (appointmentDuration !== undefined) {
+        const duration = Number(appointmentDuration);
+        if (!Number.isInteger(duration) || duration < 5 || duration > 240) {
+            return "appointmentDuration mora biti ceo broj između 5 i 240 minuta.";
+        }
+    }
+
+    if (startTime && endTime) {
+        const { start, end } = normalizeTimeWindow(startTime, endTime);
+        if (end - start < 5) {
+            return "Vremenski opseg dostupnosti je prekratak.";
+        }
+
+        if (breakStart && breakEnd) {
+            const { breakStartMin, breakEndMin } = normalizeBreakWindow(
+                breakStart,
+                breakEnd,
+                start,
+                end
+            );
+
+            if (breakStartMin < start || breakEndMin > end || breakStartMin >= breakEndMin) {
+                return "Pauza mora biti unutar radnog vremena i breakStart mora biti pre breakEnd.";
+            }
+        }
+    }
+
+    return null;
+}
+
 var setDoctorAvailability = async function(doctorId, availabilityData) {
+    const validationError = validateAvailabilityInput(availabilityData);
+    if (validationError) {
+        const error = new Error(validationError);
+        error.statusCode = 400;
+        throw error;
+    }
+
     const availability = new DoctorAvailabilityModel({
         doctor: doctorId,
         dayOfWeek: availabilityData.dayOfWeek,
         startTime: availabilityData.startTime,
         endTime: availabilityData.endTime,
         isAvailable: availabilityData.isAvailable !== false,
-        breakStart: availabilityData.breakStart,
-        breakEnd: availabilityData.breakEnd,
+        breakStart: availabilityData.breakStart || undefined,
+        breakEnd: availabilityData.breakEnd || undefined,
         appointmentDuration: availabilityData.appointmentDuration || 30
     });
     
@@ -29,8 +131,44 @@ var getDoctorAvailability = async function(doctorId) {
         .sort({ dayOfWeek: 1 });
 };
 
+var getAvailabilityById = async function(availabilityId) {
+    return await DoctorAvailabilityModel.findById(availabilityId);
+};
+
 var updateDoctorAvailability = async function(availabilityId, updateData) {
+    const current = await DoctorAvailabilityModel.findById(availabilityId);
+    if (!current) {
+        return null;
+    }
+
+    const merged = {
+        dayOfWeek: updateData.dayOfWeek !== undefined ? updateData.dayOfWeek : current.dayOfWeek,
+        startTime: updateData.startTime || current.startTime,
+        endTime: updateData.endTime || current.endTime,
+        breakStart: updateData.breakStart !== undefined ? updateData.breakStart : current.breakStart,
+        breakEnd: updateData.breakEnd !== undefined ? updateData.breakEnd : current.breakEnd,
+        appointmentDuration:
+            updateData.appointmentDuration !== undefined
+                ? updateData.appointmentDuration
+                : current.appointmentDuration,
+    };
+
+    const validationError = validateAvailabilityInput(merged);
+    if (validationError) {
+        const error = new Error(validationError);
+        error.statusCode = 400;
+        throw error;
+    }
+
     updateData.updatedAt = new Date();
+
+    if (updateData.breakStart === "") {
+        updateData.breakStart = undefined;
+    }
+    if (updateData.breakEnd === "") {
+        updateData.breakEnd = undefined;
+    }
+
     return await DoctorAvailabilityModel.findByIdAndUpdate(
         availabilityId,
         { $set: updateData },
@@ -193,6 +331,7 @@ module.exports = {
     setDoctorAvailability,
     getDoctorAvailabilityByDay,
     getDoctorAvailability,
+    getAvailabilityById,
     updateDoctorAvailability,
     deleteDoctorAvailability,
     getAvailableTimeSlots,

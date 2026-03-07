@@ -102,6 +102,34 @@ export class AvailabilityComponent implements OnInit {
       return;
     }
 
+    if ((current.breakStart && !current.breakEnd) || (!current.breakStart && current.breakEnd)) {
+      this.formError.set('Za pauzu morate uneti i pocetak i kraj.');
+      return;
+    }
+
+    if (current.breakStart && current.breakEnd) {
+      const start = this.toMinutes(current.startTime);
+      const end = this.toMinutes(current.endTime);
+      const breakStart = this.toMinutes(current.breakStart);
+      const breakEnd = this.toMinutes(current.breakEnd);
+
+      if (breakStart >= breakEnd) {
+        this.formError.set('Pocetak pauze mora biti pre kraja pauze.');
+        return;
+      }
+
+      if (breakStart < start || breakEnd > end) {
+        this.formError.set('Pauza mora biti unutar radnog vremena.');
+        return;
+      }
+    }
+
+    const duration = current.appointmentDuration ?? 30;
+    if (!Number.isInteger(duration) || duration < 5 || duration > 240) {
+      this.formError.set('Trajanje termina mora biti ceo broj izmedju 5 i 240 minuta.');
+      return;
+    }
+
     const dayExists = this.availabilities().some(
       (availability) => availability.dayOfWeek === current.dayOfWeek
     );
@@ -190,6 +218,11 @@ export class AvailabilityComponent implements OnInit {
   getDayName(dayOfWeek: number): string {
     const day = this.daysOfWeek.find(d => d.value === dayOfWeek);
     return day?.name || '';
+  }
+
+  private toMinutes(time: string): number {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
   }
 }
 

@@ -18,8 +18,8 @@ const DoctorAvailabilitySchema = mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
-// Indeks za brže pretraživanje
-DoctorAvailabilitySchema.index({ doctor: 1, dayOfWeek: 1 });
+// Jedna dostupnost po doktoru i danu u nedelji
+DoctorAvailabilitySchema.index({ doctor: 1, dayOfWeek: 1 }, { unique: true });
 
 // Middleware za automatsko ažuriranje updatedAt
 DoctorAvailabilitySchema.pre('save', function(next) {

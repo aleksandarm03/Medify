@@ -7,7 +7,7 @@
 
     <div *ngIf="error" class="form-error">{{ error }}</div>
 
-    <form (ngSubmit)="onSubmit()">
+    <form novalidate>
       <div class="form-group" *ngIf="isDoctor">
         <label>Pacijent (ID)</label>
         <input
@@ -31,7 +31,8 @@
         </select>
       </div>
 
-      <div class="form-group">
+      <!-- Za doktore - slobodan unos datuma i vremena -->
+      <div class="form-group" *ngIf="isDoctor">
         <label>Datum i vreme</label>
         <input
           type="datetime-local"
@@ -39,6 +40,39 @@
           [min]="minDate + 'T00:00'"
           (input)="onDateChange($any($event).target.value)"
           required />
+      </div>
+
+      <!-- Za pacijente - izbor datuma i dostupnih slotova -->
+      <div *ngIf="isPatient">
+        <div class="form-group">
+          <label>Datum</label>
+          <input
+            type="date"
+            [value]="selectedDate()"
+            [min]="minDate"
+            [disabled]="!selectedDoctor()"
+            (input)="onDateChangePatient($any($event).target.value)"
+            required />
+          <small *ngIf="!selectedDoctor()" class="form-hint">Prvo izaberite doktora</small>
+        </div>
+
+        <!-- Prikaz dostupnih slotova -->
+        <div class="form-group" *ngIf="selectedDate() && selectedDoctor()">
+          <label>Dostupni termini</label>
+          <div *ngIf="loadingSlots()" class="slots-loading">Učitavanje dostupnih termina...</div>
+          <div *ngIf="slotsError()" class="form-error">{{ slotsError() }}</div>
+          
+          <div *ngIf="!loadingSlots() && availableSlots().length > 0" class="time-slots">
+            <button
+              *ngFor="let slot of availableSlots()"
+              type="button"
+              class="time-slot-btn"
+              [class.selected]="selectedTimeSlot() === slot.value"
+              (click)="onTimeSlotSelect(slot.value)">
+              {{ slot.label }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -52,7 +86,11 @@
 
       <div class="actions">
         <button type="button" class="btn btn-light" (click)="onOverlayClick()">Otkaži</button>
-        <button type="submit" class="btn btn-primary" [disabled]="loading">
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="loading || (isPatient && !selectedTimeSlot())"
+          (click)="onSubmit()">
           {{ loading ? 'Čuvanje...' : 'Sačuvaj termin' }}
         </button>
       </div>

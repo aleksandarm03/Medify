@@ -29,17 +29,16 @@ router.post("/:id/availability",
                 return res.status(400).json({ message: "dayOfWeek mora biti između 0 (nedelja) i 6 (subota)." });
             }
 
+            const doctor = await UserModel.findById(doctorId).select("role");
+            if (!doctor || doctor.role !== "doctor") {
+                return res.status(400).json({ message: "Dostupnost se može postaviti samo za doktora." });
+            }
+
             const existingForDay = await DoctorAvailabilityService.getDoctorAvailabilityByDay(doctorId, dayOfWeek);
             if (existingForDay) {
                 return res.status(409).json({
                     message: "Za izabrani dan vec postoji dostupnost. Izmenite postojecu ili je obrisite pre dodavanja nove."
                 });
-            }
-
-            // Validacija formata vremena
-            const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-            if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
-                return res.status(400).json({ message: "Vreme mora biti u formatu HH:MM (npr. 09:00)." });
             }
 
             const availability = await DoctorAvailabilityService.setDoctorAvailability(doctorId, {
@@ -55,6 +54,9 @@ router.post("/:id/availability",
             return res.status(201).json(availability);
         } catch (error) {
             console.error("Set doctor availability error:", error);
+            if (error.statusCode) {
+                return res.status(error.statusCode).json({ message: error.message });
+            }
             return res.status(500).json({ message: "Greška pri postavljanju dostupnosti." });
         }
     }
@@ -158,8 +160,15 @@ router.put("/availability/:availabilityId",
     passport.authorizeRoles("doctor", "admin"),
     async function (req, res) {
         try {
-            const availability = await DoctorAvailabilityService.getDoctorAvailability(req.user._id);
-            const availabilityRecord = availability.find(a => a._id.toString() === req.params.availabilityId);
+            const hasStartTime = Object.prototype.hasOwnProperty.call(req.body, "startTime");
+            const hasEndTime = Object.prototype.hasOwnProperty.call(req.body, "endTime");
+            if (hasStartTime !== hasEndTime) {
+                return res.status(400).json({
+                    message: "Prilikom izmene radnog vremena morate poslati i startTime i endTime.",
+                });
+            }
+
+            const availabilityRecord = await DoctorAvailabilityService.getAvailabilityById(req.params.availabilityId);
 
             if (!availabilityRecord) {
                 return res.status(404).json({ message: "Dostupnost nije pronađena." });
@@ -178,6 +187,9 @@ router.put("/availability/:availabilityId",
             return res.json(updatedAvailability);
         } catch (error) {
             console.error("Update doctor availability error:", error);
+            if (error.statusCode) {
+                return res.status(error.statusCode).json({ message: error.message });
+            }
             return res.status(500).json({ message: "Greška pri ažuriranju dostupnosti." });
         }
     }
@@ -189,8 +201,7 @@ router.delete("/availability/:availabilityId",
     passport.authorizeRoles("doctor", "admin"),
     async function (req, res) {
         try {
-            const availability = await DoctorAvailabilityService.getDoctorAvailability(req.user._id);
-            const availabilityRecord = availability.find(a => a._id.toString() === req.params.availabilityId);
+            const availabilityRecord = await DoctorAvailabilityService.getAvailabilityById(req.params.availabilityId);
 
             if (!availabilityRecord) {
                 return res.status(404).json({ message: "Dostupnost nije pronađena." });

@@ -78,6 +78,49 @@
   resize: vertical;
 }
 
+.form-hint {
+  display: block;
+  margin-top: 0.3rem;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.slots-loading {
+  padding: 1rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.time-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.time-slot-btn {
+  padding: 0.6rem 0.8rem;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.time-slot-btn:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.time-slot-btn.selected {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+
 .actions {
   margin-top: 1.4rem;
   display: flex;

@@ -38,6 +38,13 @@ router.post(
   async function (req, res) {
     try {
       const { patientId, doctorId, appointmentDate, reason } = req.body;
+            console.log("[Appointments API] Create request:", {
+                userId: req.user?._id?.toString(),
+                role: req.user?.role,
+                patientId,
+                doctorId,
+                appointmentDate,
+            });
 
       // Zajednička validacija
       if (!appointmentDate || !reason) {
@@ -127,6 +134,11 @@ router.post(
             });
 
             if (!isSlotAvailable) {
+                console.log("[Appointments API] Slot validation failed:", {
+                    doctorId: doctor?._id?.toString(),
+                    requestedSlotKey,
+                    availableSlotCount: availableSlots.length,
+                });
                 return res.status(400).json({
                     message:
                         "Izabrani termin nije dostupan. Odaberite neki od slobodnih termina doktora.",
@@ -138,6 +150,9 @@ router.post(
         doctor,
         patient
       );
+            console.log("[Appointments API] Created:", {
+                appointmentId: appointment?._id?.toString(),
+            });
       return res.status(201).json(appointment);
     } catch (error) {
       console.error("Create appointment error:", error);

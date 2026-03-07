@@ -137,15 +137,19 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
           reason: current.reason
         };
 
+    console.log('[Appointments] Create request payload:', appointmentData);
+
     this.appointmentService.createAppointment(appointmentData as any)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
+        next: (created) => {
+          console.log('[Appointments] Create success:', created);
           this.closeCreateModal();
           this.newAppointment.set({ patientId: '', appointmentDate: '', reason: '' });
           this.loadAppointments();
         },
         error: (err) => {
+          console.error('[Appointments] Create error:', err);
           this.formError.set(err.error?.message || 'Greška pri kreiranju termina.');
           this.loading.set(false);
         }
