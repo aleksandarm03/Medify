@@ -1,0 +1,40 @@
+<div class="admin-medical-records-container">
+  <div class="header">
+    <h1>Svi medicinski kartoni</h1>
+  </div>
+
+  <div *ngIf="error()" class="error-message">{{ error() }}</div>
+
+  <div *ngIf="loading()" class="loading">Učitavanje...</div>
+
+  <div *ngIf="!loading() && records().length === 0" class="empty-state">
+    <p>Nema medicinskih kartona</p>
+  </div>
+
+  <div class="records-table" *ngIf="records().length > 0">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Doktor</th>
+          <th>Pacijent</th>
+          <th>Diagnoza</th>
+          <th>Tretman</th>
+          <th>Napomene</th>
+          <th>Datum</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let record of records()">
+          <td>{{ record._id?.substring(0, 8) }}</td>
+          <td>{{ record.doctor?.firstName }} {{ record.doctor?.lastName }}</td>
+          <td>{{ record.patient?.firstName }} {{ record.patient?.lastName }}</td>
+          <td>{{ truncateText(record.diagnosis) }}</td>
+          <td>{{ truncateText(record.treatment) }}</td>
+          <td>{{ truncateText(record.notes) }}</td>
+          <td>{{ formatDate(record.createdAt) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

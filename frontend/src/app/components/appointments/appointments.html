@@ -31,7 +31,8 @@
       </div>
       
       <div class="appointment-info">
-        <p><strong>Doktor:</strong> {{ appointment.doctor?.firstName }} {{ appointment.doctor?.lastName }}</p>
+        <p *ngIf="isDoctor()"><strong>Pacijent:</strong> {{ appointment.patient?.firstName }} {{ appointment.patient?.lastName }}</p>
+        <p *ngIf="isPatient()"><strong>Doktor:</strong> {{ appointment.doctor?.firstName }} {{ appointment.doctor?.lastName }}</p>
         <p><strong>Datum:</strong> {{ formatDate(appointment.appointmentDate) }}</p>
         <p><strong>Razlog:</strong> {{ appointment.reason }}</p>
       </div>

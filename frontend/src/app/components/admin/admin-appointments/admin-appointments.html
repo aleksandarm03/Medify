@@ -1,0 +1,51 @@
+<div class="admin-appointments-container">
+  <div class="header">
+    <h1>Svi termini</h1>
+  </div>
+
+  <div class="filters">
+    <select [value]="statusFilter()" (change)="updateStatusFilter($any($event).target.value)">
+      <option value="">Svi statusi</option>
+      <option value="scheduled">Zakazani</option>
+      <option value="completed">Završeni</option>
+      <option value="canceled">Otkazani</option>
+    </select>
+  </div>
+
+  <div *ngIf="error()" class="error-message">{{ error() }}</div>
+
+  <div *ngIf="loading()" class="loading">Učitavanje...</div>
+
+  <div *ngIf="!loading() && getFilteredAppointments().length === 0" class="empty-state">
+    <p>Nema termina sa odabranim filterima</p>
+  </div>
+
+  <div class="appointments-table" *ngIf="getFilteredAppointments().length > 0">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Doktor</th>
+          <th>Pacijent</th>
+          <th>Datum</th>
+          <th>Razlog</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let appointment of getFilteredAppointments()">
+          <td>{{ appointment._id?.substring(0, 8) }}</td>
+          <td>{{ appointment.doctor?.firstName }} {{ appointment.doctor?.lastName }}</td>
+          <td>{{ appointment.patient?.firstName }} {{ appointment.patient?.lastName }}</td>
+          <td>{{ formatDate(appointment.appointmentDate) }}</td>
+          <td>{{ appointment.reason }}</td>
+          <td>
+            <span [class]="'status-badge ' + getStatusClass(appointment.status)">
+              {{ getStatusText(appointment.status) }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -32,6 +32,10 @@ export class MedicalRecordService {
   addLabResult(id: string, labResult: { testName: string; result: string; normalRange?: string }): Observable<MedicalRecord> {
     return this.api.post<MedicalRecord>(`/medical-records/${id}/lab-results`, labResult);
   }
+
+  getAllMedicalRecords(): Observable<MedicalRecord[]> {
+    return this.api.get<MedicalRecord[]>('/medical-records/all');
+  }
 }
 
 

@@ -20,6 +20,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   showEditModal = signal(false);
   showDeleteConfirm = signal(false);
   selectedUser = signal<User | null>(null);
+  currentUser = signal<User | null>(null);
   
   editForm = signal<Partial<User>>({});
 
@@ -28,7 +29,13 @@ export class UsersComponent implements OnInit, OnDestroy {
   constructor(private authService: AuthService) {}
 
   ngOnInit() {
-    this.loadUsers();
+    // Učitaj trenutnog korisnika
+    this.authService.currentUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(user => {
+        this.currentUser.set(user || null);
+        this.loadUsers();
+      });
   }
 
   ngOnDestroy() {
@@ -52,6 +59,12 @@ export class UsersComponent implements OnInit, OnDestroy {
           this.loading.set(false);
         }
       });
+  }
+
+  getDisplayedUsers(): User[] {
+    const current = this.currentUser();
+    if (!current) return this.users();
+    return this.users().filter(u => u._id !== current._id);
   }
 
   openEditModal(user: User) {

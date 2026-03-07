@@ -31,6 +31,10 @@ export class PrescriptionService {
   updatePrescriptionStatus(id: string, status: 'active' | 'completed' | 'cancelled'): Observable<Prescription> {
     return this.api.put<Prescription>(`/prescriptions/${id}/status`, { status });
   }
+
+  getAllPrescriptions(): Observable<Prescription[]> {
+    return this.api.get<Prescription[]>('/prescriptions/all');
+  }
 }
 
 

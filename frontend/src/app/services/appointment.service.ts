@@ -38,6 +38,10 @@ export class AppointmentService {
   deleteAppointment(id: string): Observable<{ message: string }> {
     return this.api.delete<{ message: string }>(`/appointments/${id}`);
   }
+
+  getAllAppointments(): Observable<Appointment[]> {
+    return this.api.get<Appointment[]>('/appointments/all');
+  }
 }
 
 

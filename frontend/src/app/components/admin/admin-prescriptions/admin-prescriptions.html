@@ -1,0 +1,40 @@
+<div class="admin-prescriptions-container">
+  <div class="header">
+    <h1>Svi recepti</h1>
+  </div>
+
+  <div *ngIf="error()" class="error-message">{{ error() }}</div>
+
+  <div *ngIf="loading()" class="loading">Učitavanje...</div>
+
+  <div *ngIf="!loading() && prescriptions().length === 0" class="empty-state">
+    <p>Nema recepata</p>
+  </div>
+
+  <div class="prescriptions-table" *ngIf="prescriptions().length > 0">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Doktor</th>
+          <th>Pacijent</th>
+          <th>Lekovi</th>
+          <th>Doziranje</th>
+          <th>Trajanje</th>
+          <th>Datum</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let prescription of prescriptions()">
+          <td>{{ prescription._id?.substring(0, 8) }}</td>
+          <td>{{ prescription.doctor?.firstName }} {{ prescription.doctor?.lastName }}</td>
+          <td>{{ prescription.patient?.firstName }} {{ prescription.patient?.lastName }}</td>
+          <td>{{ truncateText(prescription.medications) }}</td>
+          <td>{{ truncateText(prescription.dosage) }}</td>
+          <td>{{ prescription.duration }}</td>
+          <td>{{ formatDate(prescription.createdAt) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

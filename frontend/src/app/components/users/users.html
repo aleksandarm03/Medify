@@ -5,11 +5,11 @@
 
   <div *ngIf="loading()" class="loading">Učitavanje...</div>
 
-  <div *ngIf="!loading() && users().length === 0" class="empty-state">
+  <div *ngIf="!loading() && getDisplayedUsers().length === 0" class="empty-state">
     <p>Nema korisnika</p>
   </div>
 
-  <div class="users-table" *ngIf="users().length > 0">
+  <div class="users-table" *ngIf="getDisplayedUsers().length > 0">
     <table>
       <thead>
         <tr>
@@ -24,7 +24,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let user of users()">
+        <tr *ngFor="let user of getDisplayedUsers()">
           <td>{{ user.JMBG }}</td>
           <td>{{ user.firstName }}</td>
           <td>{{ user.lastName }}</td>

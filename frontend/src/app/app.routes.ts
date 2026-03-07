@@ -49,11 +49,26 @@ export const routes: Routes = [
       {
         path: 'availability',
         loadComponent: () => import('./components/availability/availability').then(m => m.AvailabilityComponent),
-        canActivate: [roleGuard(['doctor', 'admin'])]
+        canActivate: [roleGuard(['doctor'])]
       },
       {
         path: 'users',
         loadComponent: () => import('./components/users/users').then(m => m.UsersComponent),
+        canActivate: [roleGuard(['admin'])]
+      },
+      {
+        path: 'admin/appointments',
+        loadComponent: () => import('./components/admin/admin-appointments/admin-appointments').then(m => m.AdminAppointmentsComponent),
+        canActivate: [roleGuard(['admin'])]
+      },
+      {
+        path: 'admin/medical-records',
+        loadComponent: () => import('./components/admin/admin-medical-records/admin-medical-records').then(m => m.AdminMedicalRecordsComponent),
+        canActivate: [roleGuard(['admin'])]
+      },
+      {
+        path: 'admin/prescriptions',
+        loadComponent: () => import('./components/admin/admin-prescriptions/admin-prescriptions').then(m => m.AdminPrescriptionsComponent),
         canActivate: [roleGuard(['admin'])]
       }
     ]
