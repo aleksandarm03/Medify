@@ -14,7 +14,8 @@
 
     <div class="nav-content" [class.open]="menuOpen">
       <div class="nav-links">
-        <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">Početna</a>
+        <a *ngIf="!authService.hasRole('admin')" routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">Početna</a>
+        <a *ngIf="authService.hasRole('admin')" routerLink="/admin/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">Početna</a>
       
         <a *ngIf="authService.hasRole('patient')" routerLink="/appointments" routerLinkActive="active" (click)="closeMenu()">Moji termini</a>
         <a *ngIf="authService.hasRole('patient')" routerLink="/doctors" routerLinkActive="active" (click)="closeMenu()">Pretraga doktora</a>
@@ -29,7 +30,11 @@
         <a *ngIf="authService.hasRole('nurse')" routerLink="/appointments" routerLinkActive="active" (click)="closeMenu()">Termini</a>
         <a *ngIf="authService.hasRole('nurse')" routerLink="/medical-records" routerLinkActive="active" (click)="closeMenu()">Medicinski kartoni</a>
       
+        <a *ngIf="authService.hasRole('admin')" routerLink="/admin/appointments" routerLinkActive="active" (click)="closeMenu()">Svi termini</a>
+        <a *ngIf="authService.hasRole('admin')" routerLink="/admin/medical-records" routerLinkActive="active" (click)="closeMenu()">Svi kartoni</a>
+        <a *ngIf="authService.hasRole('admin')" routerLink="/admin/prescriptions" routerLinkActive="active" (click)="closeMenu()">Svi recepti</a>
         <a *ngIf="authService.hasRole('admin')" routerLink="/users" routerLinkActive="active" (click)="closeMenu()">Korisnici</a>
+        <a *ngIf="authService.hasRole('admin')" routerLink="/admin/statistics" routerLinkActive="active" (click)="closeMenu()">Statistike</a>
       </div>
       
       <div class="user-menu">

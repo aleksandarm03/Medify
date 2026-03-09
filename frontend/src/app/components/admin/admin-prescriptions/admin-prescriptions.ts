@@ -56,6 +56,39 @@ export class AdminPrescriptionsComponent implements OnInit, OnDestroy {
     });
   }
 
+  formatMedicationNames(medications: any): string {
+    if (!Array.isArray(medications) || medications.length === 0) {
+      return '-';
+    }
+
+    return medications
+      .map((med) => med?.name)
+      .filter(Boolean)
+      .join(', ') || '-';
+  }
+
+  formatMedicationDosages(medications: any): string {
+    if (!Array.isArray(medications) || medications.length === 0) {
+      return '-';
+    }
+
+    return medications
+      .map((med) => med?.dosage)
+      .filter(Boolean)
+      .join(', ') || '-';
+  }
+
+  formatMedicationDurations(medications: any): string {
+    if (!Array.isArray(medications) || medications.length === 0) {
+      return '-';
+    }
+
+    return medications
+      .map((med) => med?.duration)
+      .filter(Boolean)
+      .join(', ') || '-';
+  }
+
   truncateText(text: string, length: number = 50): string {
     if (!text) return '-';
     return text.length > length ? text.substring(0, length) + '...' : text;

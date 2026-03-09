@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -19,9 +19,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
+    // Ako je korisnik admin, preusmeri na admin dashboard
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser?.role === 'admin') {
+      this.router.navigate(['/admin/dashboard']);
+      return;
+    }
+
     this.refreshDashboard();
   }
 

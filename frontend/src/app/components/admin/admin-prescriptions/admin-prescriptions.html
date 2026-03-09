@@ -29,9 +29,9 @@
           <td>{{ prescription._id?.substring(0, 8) }}</td>
           <td>{{ prescription.doctor?.firstName }} {{ prescription.doctor?.lastName }}</td>
           <td>{{ prescription.patient?.firstName }} {{ prescription.patient?.lastName }}</td>
-          <td>{{ truncateText(prescription.medications) }}</td>
-          <td>{{ truncateText(prescription.dosage) }}</td>
-          <td>{{ prescription.duration }}</td>
+          <td>{{ truncateText(formatMedicationNames(prescription.medications)) }}</td>
+          <td>{{ truncateText(formatMedicationDosages(prescription.medications)) }}</td>
+          <td>{{ truncateText(formatMedicationDurations(prescription.medications)) }}</td>
           <td>{{ formatDate(prescription.createdAt) }}</td>
         </tr>
       </tbody>

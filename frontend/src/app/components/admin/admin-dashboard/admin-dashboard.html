@@ -1,0 +1,227 @@
+<div class="admin-dashboard">
+  <div class="dashboard-header">
+    <h1>Admin Dashboard</h1>
+    <button class="btn-refresh" (click)="loadDashboard()" [disabled]="loading()">
+      {{ loading() ? 'Učitavanje...' : 'Osveži' }}
+    </button>
+  </div>
+
+  <div *ngIf="error()" class="error-message">{{ error() }}</div>
+  <div *ngIf="loading()" class="loading">Učitavanje dashboard-a...</div>
+
+  <div *ngIf="data() && !loading()" class="dashboard-content">
+    <!-- KPI Kartice -->
+    <section class="kpi-section">
+      <div class="kpi-card">
+        <div class="kpi-icon users-icon">👥</div>
+        <div class="kpi-details">
+          <h3>Ukupno korisnika</h3>
+          <p class="kpi-value">{{ data()!.overview.totalUsers }}</p>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon appointments-icon">📅</div>
+        <div class="kpi-details">
+          <h3>Termini danas</h3>
+          <p class="kpi-value">{{ data()!.overview.totalAppointmentsToday }}</p>
+          <span class="kpi-sub">{{ data()!.overview.totalAppointmentsWeek }} ove nedelje</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon pending-icon">⏳</div>
+        <div class="kpi-details">
+          <h3>Zahtevi za odobrenje</h3>
+          <p class="kpi-value">{{ data()!.overview.pendingApprovalsCount }}</p>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon completion-icon">✔️</div>
+        <div class="kpi-details">
+          <h3>Stopa završavanja</h3>
+          <p class="kpi-value">{{ completionRate() }}%</p>
+          <span class="kpi-sub">{{ data()!.appointmentsByStatus.completed }} / {{ totalAppointments() }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Korisnici po ulogama -->
+    <section class="users-section">
+      <div class="section-card">
+        <h2>Korisnici po ulogama</h2>
+        <div class="role-stats">
+          <div class="role-stat">
+            <span class="role-label">Administratori</span>
+            <span class="role-count">{{ data()!.usersByRole.admin }}</span>
+          </div>
+          <div class="role-stat">
+            <span class="role-label">Doktori</span>
+            <span class="role-count">{{ data()!.usersByRole.doctor }}</span>
+          </div>
+          <div class="role-stat">
+            <span class="role-label">Medicinske sestre</span>
+            <span class="role-count">{{ data()!.usersByRole.nurse }}</span>
+          </div>
+          <div class="role-stat">
+            <span class="role-label">Pacijenti</span>
+            <span class="role-count">{{ data()!.usersByRole.patient }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h2>Termini po statusu</h2>
+        <div class="appointment-stats">
+          <div class="appointment-stat scheduled">
+            <span class="stat-label">Zakazani</span>
+            <span class="stat-count">{{ data()!.appointmentsByStatus.scheduled }}</span>
+          </div>
+          <div class="appointment-stat completed">
+            <span class="stat-label">Završeni</span>
+            <span class="stat-count">{{ data()!.appointmentsByStatus.completed }}</span>
+          </div>
+          <div class="appointment-stat canceled">
+            <span class="stat-label">Otkazani</span>
+            <span class="stat-count">{{ data()!.appointmentsByStatus.canceled }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Zahtevi za odobrenje -->
+    <section class="approvals-section" *ngIf="data()!.pendingApprovals.length > 0">
+      <h2>Zahtevi za odobrenje</h2>
+      <div class="approvals-list">
+        <div class="approval-card" *ngFor="let user of data()!.pendingApprovals">
+          <div class="approval-info">
+            <h3>{{ user.firstName }} {{ user.lastName }}</h3>
+            <span class="role-badge" [class]="getRoleBadgeClass(user.role)">
+              {{ getRoleLabel(user.role) }}
+            </span>
+            <p *ngIf="user.specialization" class="specialization">{{ user.specialization }}</p>
+            <span class="approval-date">Registrovan: {{ formatDate(user.createdAt) }}</span>
+          </div>
+          <div class="approval-actions">
+            <button class="btn btn-approve" (click)="approveUser(user._id)">Odobri</button>
+            <button class="btn btn-reject" (click)="rejectUser(user._id)">Odbij</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Top doktori -->
+    <section class="top-doctors-section" *ngIf="data()!.topDoctors.length > 0">
+      <h2>Top doktori po performansama</h2>
+      <div class="doctors-list">
+        <div class="doctor-card" *ngFor="let doctor of data()!.topDoctors">
+          <div class="doctor-info">
+            <h3>{{ doctor.doctorName }}</h3>
+            <p class="doctor-spec">{{ doctor.specialization }}</p>
+          </div>
+          <div class="doctor-stats">
+            <div class="doctor-metric">
+              <span class="metric-label">Ukupno termina</span>
+              <span class="metric-value">{{ doctor.totalAppointments }}</span>
+            </div>
+            <div class="doctor-metric">
+              <span class="metric-label">Završeno</span>
+              <span class="metric-value">{{ doctor.completedAppointments }}</span>
+            </div>
+            <div class="doctor-metric">
+              <span class="metric-label">Stopa</span>
+              <span class="metric-value success">{{ doctor.completionRate.toFixed(1) }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nedavne aktivnosti -->
+    <section class="recent-section">
+      <div class="section-card">
+        <h2>Novi korisnici</h2>
+        <div class="activity-list">
+          <div class="activity-item" *ngFor="let user of data()!.recentUsers">
+            <span class="activity-icon">👤</span>
+            <div class="activity-details">
+              <p class="activity-title">{{ user.firstName }} {{ user.lastName }}</p>
+              <span class="activity-meta">{{ getRoleLabel(user.role) }} • {{ formatDate(user.createdAt) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h2>Najnoviji termini</h2>
+        <div class="activity-list">
+          <div class="activity-item" *ngFor="let appt of data()!.recentAppointments">
+            <span class="activity-icon">📋</span>
+            <div class="activity-details">
+              <p class="activity-title">
+                {{ appt.patient?.firstName }} {{ appt.patient?.lastName }} 
+                → Dr {{ appt.doctor?.lastName }}
+              </p>
+              <span class="activity-meta">{{ formatDateTime(appt.dateTime) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- System Health -->
+    <section class="system-health">
+      <h2>Status sistema</h2>
+      <div class="health-grid">
+        <div class="health-item">
+          <span class="health-label">Medicinski kartoni</span>
+          <span class="health-value">{{ data()!.systemHealth.totalMedicalRecords }}</span>
+        </div>
+        <div class="health-item">
+          <span class="health-label">Recepti</span>
+          <span class="health-value">{{ data()!.systemHealth.totalPrescriptions }}</span>
+        </div>
+        <div class="health-item">
+          <span class="health-label">Dostupnosti</span>
+          <span class="health-value">{{ data()!.systemHealth.totalAvailabilities }}</span>
+        </div>
+        <div class="health-item">
+          <span class="health-label">Aktivni doktori</span>
+          <span class="health-value">{{ data()!.systemHealth.activeDoctors }}</span>
+        </div>
+        <div class="health-item">
+          <span class="health-label">Baza podataka</span>
+          <span class="health-value status-ok">{{ data()!.systemHealth.databaseStatus }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Brzi linkovi -->
+    <section class="quick-links">
+      <h2>Brze akcije</h2>
+      <div class="links-grid">
+        <a routerLink="/users" class="quick-link">
+          <span class="link-icon">👥</span>
+          <span class="link-label">Upravljanje korisnicima</span>
+        </a>
+        <a routerLink="/admin/appointments" class="quick-link">
+          <span class="link-icon">📅</span>
+          <span class="link-label">Svi termini</span>
+        </a>
+        <a routerLink="/admin/medical-records" class="quick-link">
+          <span class="link-icon">📋</span>
+          <span class="link-label">Medicinski kartoni</span>
+        </a>
+        <a routerLink="/admin/prescriptions" class="quick-link">
+          <span class="link-icon">💊</span>
+          <span class="link-label">Recepti</span>
+        </a>
+        <a routerLink="/admin/statistics" class="quick-link">
+          <span class="link-icon">📊</span>
+          <span class="link-label">Statistike</span>
+        </a>
+      </div>
+    </section>
+  </div>
+</div>

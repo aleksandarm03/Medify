@@ -61,6 +61,11 @@ export const routes: Routes = [
         canActivate: [roleGuard(['admin'])]
       },
       {
+        path: 'admin/dashboard',
+        loadComponent: () => import('./components/admin/admin-dashboard/admin-dashboard').then(m => m.AdminDashboardComponent),
+        canActivate: [roleGuard(['admin'])]
+      },
+      {
         path: 'admin/appointments',
         loadComponent: () => import('./components/admin/admin-appointments/admin-appointments').then(m => m.AdminAppointmentsComponent),
         canActivate: [roleGuard(['admin'])]

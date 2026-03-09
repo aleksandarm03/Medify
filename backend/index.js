@@ -8,6 +8,7 @@ const MedicalRecordRouter=require('./routes/medicalRecord');
 const PrescriptionRouter=require('./routes/prescription');
 const DoctorRouter=require('./routes/doctor');
 const ProfileRouter=require('./routes/profile');
+const AdminRouter=require('./routes/admin');
 const db=mongoose.connect(config.MongoConnection);
 
 
@@ -26,6 +27,7 @@ app.use('/medical-records', MedicalRecordRouter);
 app.use('/prescriptions', PrescriptionRouter);
 app.use('/doctors', DoctorRouter);
 app.use('/profile', ProfileRouter);
+app.use('/api/admin', AdminRouter);
 
 
 

@@ -15,6 +15,20 @@ const UserSchema = new mongoose.Schema({
     gender: { type: String, enum: ["male", "female"], required: true },
     dateOfBirth: { type: Date },
     role: { type: String, enum: ["admin", "doctor", "nurse", "patient"], required: true },
+    isApproved: { type: Boolean, default: function() { 
+        // Admin i pacijenti automatski odobreni, doktori i sestre čekaju odobrenje
+        return this.role === 'admin' || this.role === 'patient';
+    }},
+    approvalStatus: { 
+        type: String, 
+        enum: ["pending", "approved", "rejected"], 
+        default: function() {
+            return (this.role === 'admin' || this.role === 'patient') ? 'approved' : 'pending';
+        }
+    },
+    approvedBy: { type: mongoose.Types.ObjectId, ref: "User" },
+    approvedAt: { type: Date },
+    isActive: { type: Boolean, default: true },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
     appointments:[{type:mongoose.Types.ObjectId,ref:"Appointment"}],
