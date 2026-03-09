@@ -30,7 +30,6 @@
         <a *ngIf="authService.hasRole('nurse')" routerLink="/medical-records" routerLinkActive="active" (click)="closeMenu()">Medicinski kartoni</a>
       
         <a *ngIf="authService.hasRole('admin')" routerLink="/users" routerLinkActive="active" (click)="closeMenu()">Korisnici</a>
-        <a routerLink="/profile" routerLinkActive="active" (click)="closeMenu()">Profil</a>
       </div>
       
       <div class="user-menu">

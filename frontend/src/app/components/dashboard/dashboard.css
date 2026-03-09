@@ -4,12 +4,12 @@
 }
 
 .dashboard h1 {
-  color: #333;
+  color: var(--color-text-main);
   margin-bottom: 0.5rem;
 }
 
 .subtitle {
-  color: #666;
+  color: var(--color-text-muted);
   font-size: 1.1rem;
   margin-bottom: 2rem;
 }
@@ -25,7 +25,7 @@
 }
 
 .card {
-  background: white;
+  background: var(--color-bg-surface);
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -38,28 +38,30 @@
 }
 
 .card h3 {
-  color: #667eea;
+  color: var(--color-primary);
   margin-bottom: 0.5rem;
   font-size: 1.5rem;
 }
 
 .card p {
-  color: #666;
+  color: var(--color-text-muted);
   margin-bottom: 1.5rem;
   line-height: 1.6;
 }
 
 .card-link {
   display: inline-block;
-  color: #667eea;
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.3s;
 }
 
 .card-link:hover {
-  color: #5568d3;
+  color: var(--color-primary-strong);
 }
+
+
 
 
 

@@ -9,7 +9,7 @@
 }
 
 h1 {
-  color: #333;
+  color: var(--color-text-main);
   margin-bottom: 0.5rem;
   font-size: 2rem;
 }
@@ -20,17 +20,17 @@ h1 {
 
 .filters select {
   padding: 0.75rem 1rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 1rem;
   cursor: pointer;
-  background-color: white;
+  background-color: var(--color-bg-surface);
   min-width: 200px;
 }
 
 .error-message {
-  background-color: #fee;
-  color: #c33;
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger);
   padding: 1rem;
   border-radius: 6px;
   margin-bottom: 1rem;
@@ -39,17 +39,17 @@ h1 {
 .loading {
   text-align: center;
   padding: 2rem;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .empty-state {
   text-align: center;
   padding: 3rem;
-  color: #999;
+  color: var(--color-text-soft);
 }
 
 .appointments-table {
-  background: white;
+  background: var(--color-bg-surface);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
@@ -62,25 +62,25 @@ table {
 }
 
 thead {
-  background-color: #f5f5f5;
+  background-color: var(--color-bg-app);
 }
 
 th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #333;
-  border-bottom: 2px solid #ddd;
+  color: var(--color-text-main);
+  border-bottom: 2px solid var(--color-border);
 }
 
 td {
   padding: 1rem;
-  border-bottom: 1px solid #eee;
-  color: #666;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
 }
 
 tbody tr:hover {
-  background-color: #f9f9f9;
+  background-color: var(--color-bg-subtle);
 }
 
 .status-badge {
@@ -92,23 +92,23 @@ tbody tr:hover {
 }
 
 .status-scheduled {
-  background-color: #e3f2fd;
-  color: #1976d2;
+  background-color: var(--color-info-soft);
+  color: var(--color-info);
 }
 
 .status-completed {
-  background-color: #e8f5e9;
-  color: #388e3c;
+  background-color: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 .status-canceled {
-  background-color: #ffebee;
-  color: #d32f2f;
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger);
 }
 
 .status-unknown {
-  background-color: #f5f5f5;
-  color: #666;
+  background-color: var(--color-bg-app);
+  color: var(--color-text-muted);
 }
 
 /* Responsive */
@@ -131,3 +131,5 @@ tbody tr:hover {
     min-width: unset;
   }
 }
+
+

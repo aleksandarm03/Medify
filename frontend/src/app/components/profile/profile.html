@@ -1,0 +1,49 @@
+<section class="profile-page">
+  <div class="profile-header">
+    <img class="profile-avatar" [src]="getProfileImage()" [alt]="getRoleLabel()" />
+    <div class="profile-main-info">
+      <h1>{{ currentUser?.firstName }} {{ currentUser?.lastName }}</h1>
+      <p>{{ getRoleLabel() }}</p>
+    </div>
+    <button class="btn-edit" type="button" (click)="toggleEditMode()">
+      {{ editMode ? 'Zatvori izmenu' : 'Izmeni podatke' }}
+    </button>
+  </div>
+
+  <div class="profile-grid">
+    <article class="profile-card">
+      <h2>Osnovni podaci</h2>
+      <div class="profile-row">
+        <span>Ime</span>
+        <strong>{{ currentUser?.firstName || '-' }}</strong>
+      </div>
+      <div class="profile-row">
+        <span>Prezime</span>
+        <strong>{{ currentUser?.lastName || '-' }}</strong>
+      </div>
+      <div class="profile-row">
+        <span>Uloga</span>
+        <strong>{{ getRoleLabel() }}</strong>
+      </div>
+      <div class="profile-row">
+        <span>ID korisnika</span>
+        <strong>{{ currentUser?._id || '-' }}</strong>
+      </div>
+    </article>
+
+    <article class="profile-card profile-note" *ngIf="!editMode">
+      <h2>Sledeci korak</h2>
+      <p>
+        Ova stranica je spremna za prikaz i UX strukturu. U sledecoj iteraciji povezujemo backend endpoint za full profil,
+        pa omogucavamo cuvanje izmena (adresa, telefon, osiguranje, i ostalo po ulozi).
+      </p>
+    </article>
+
+    <article class="profile-card profile-note" *ngIf="editMode">
+      <h2>Izmena podataka</h2>
+      <p>
+        Forma za izmenu je ukljucena kao sledeci korak. Kada potvrdimo API polja, ovde dodajemo validiranu formu i Save akciju.
+      </p>
+    </article>
+  </div>
+</section>

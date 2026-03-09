@@ -3,12 +3,12 @@
   justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-strong) 100%);
   padding: 20px;
 }
 
 .register-card {
-  background: white;
+  background: var(--color-bg-surface);
   padding: 40px;
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
@@ -19,24 +19,24 @@
 
 .register-card h1 {
   text-align: center;
-  color: #667eea;
+  color: var(--color-primary);
   margin-bottom: 10px;
   font-size: 2.5em;
 }
 
 .register-card h2 {
   text-align: center;
-  color: #333;
+  color: var(--color-text-main);
   margin-bottom: 30px;
   font-weight: 400;
 }
 
 .register-card h3 {
-  color: #667eea;
+  color: var(--color-primary);
   margin-top: 20px;
   margin-bottom: 15px;
   font-size: 1.2em;
-  border-bottom: 2px solid #667eea;
+  border-bottom: 2px solid var(--color-primary);
   padding-bottom: 5px;
 }
 
@@ -53,7 +53,7 @@
 .form-group label {
   display: block;
   margin-bottom: 8px;
-  color: #555;
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
@@ -61,7 +61,7 @@
 .form-group select {
   width: 100%;
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 16px;
   transition: border-color 0.3s;
@@ -71,18 +71,18 @@
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--color-primary);
 }
 
 .role-specific-fields {
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border);
 }
 
 .error-message {
-  background-color: #fee;
-  color: #c33;
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger);
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 20px;
@@ -101,12 +101,12 @@
 }
 
 .btn-primary {
-  background-color: #667eea;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-bg-surface);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #5568d3;
+  background-color: var(--color-primary-strong);
 }
 
 .btn-primary:disabled {
@@ -117,11 +117,11 @@
 .login-link {
   text-align: center;
   margin-top: 20px;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .login-link a {
-  color: #667eea;
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
 }
@@ -135,6 +135,8 @@
     grid-template-columns: 1fr;
   }
 }
+
+
 
 
 

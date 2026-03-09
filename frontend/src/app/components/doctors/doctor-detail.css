@@ -16,8 +16,8 @@
 }
 
 .doctor-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-strong) 100%);
+  color: var(--color-bg-surface);
   padding: 30px;
   border-radius: 8px;
   margin-bottom: 30px;
@@ -35,7 +35,7 @@
 }
 
 .doctor-info-section {
-  background: #f9f9f9;
+  background: var(--color-bg-subtle);
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 30px;
@@ -43,8 +43,8 @@
 
 .info-group h3 {
   margin-top: 0;
-  color: #333;
-  border-bottom: 2px solid #667eea;
+  color: var(--color-text-main);
+  border-bottom: 2px solid var(--color-primary);
   padding-bottom: 10px;
 }
 
@@ -52,7 +52,7 @@
   display: flex;
   justify-content: space-between;
   padding: 10px 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .info-item:last-child {
@@ -60,7 +60,7 @@
 }
 
 .info-item strong {
-  color: #667eea;
+  color: var(--color-primary);
   min-width: 150px;
 }
 
@@ -69,8 +69,8 @@
 }
 
 .availability-section h3 {
-  color: #333;
-  border-bottom: 2px solid #667eea;
+  color: var(--color-text-main);
+  border-bottom: 2px solid var(--color-primary);
   padding-bottom: 10px;
   margin-bottom: 20px;
 }
@@ -82,8 +82,8 @@
 }
 
 .availability-card {
-  background: white;
-  border: 2px solid #667eea;
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-primary);
   border-radius: 8px;
   padding: 15px;
   display: flex;
@@ -93,44 +93,44 @@
 
 .availability-card.unavailable {
   border-color: #ccc;
-  background: #f5f5f5;
+  background: var(--color-bg-app);
   opacity: 0.6;
 }
 
 .availability-card .day {
   font-size: 1.1em;
-  color: #667eea;
+  color: var(--color-primary);
   font-weight: bold;
 }
 
 .availability-card .time-slot {
   font-size: 1em;
-  color: #333;
+  color: var(--color-text-main);
 }
 
 .availability-card .unavailable-text {
-  color: #666;
+  color: var(--color-text-muted);
   font-style: italic;
 }
 
 .availability-card .break-info {
   display: block;
   font-size: 0.9em;
-  color: #999;
+  color: var(--color-text-soft);
   margin-top: 5px;
 }
 
 .availability-card .appointment-duration {
-  color: #666;
+  color: var(--color-text-muted);
   font-size: 0.9em;
 }
 
 .no-availability {
-  background: #f9f9f9;
+  background: var(--color-bg-subtle);
   padding: 20px;
   border-radius: 8px;
   text-align: center;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .action-buttons {
@@ -151,19 +151,19 @@
 }
 
 .btn-primary {
-  background-color: #667eea;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-bg-surface);
 }
 
 .btn-primary:hover {
-  background-color: #5568d3;
+  background-color: var(--color-primary-strong);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .btn-secondary {
   background-color: #ccc;
-  color: #333;
+  color: var(--color-text-main);
 }
 
 .btn-secondary:hover {
@@ -175,14 +175,16 @@
   text-align: center;
   padding: 40px;
   font-size: 1.1em;
-  color: #667eea;
+  color: var(--color-primary);
 }
 
 .error-message {
-  background: #fee;
-  border: 2px solid #f44;
-  color: #c00;
+  background: var(--color-danger-soft);
+  border: 2px solid var(--color-danger);
+  color: var(--color-danger);
   padding: 15px;
   border-radius: 4px;
   margin-bottom: 20px;
 }
+
+

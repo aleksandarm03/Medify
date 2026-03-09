@@ -9,20 +9,20 @@
 }
 
 h1 {
-  color: #333;
+  color: var(--color-text-main);
   font-size: 2rem;
   margin-bottom: 0.5rem;
 }
 
 h2 {
-  color: #333;
+  color: var(--color-text-main);
   font-size: 1.3rem;
   margin-bottom: 1rem;
 }
 
 .error-message {
-  background-color: #fee;
-  color: #c33;
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger);
   padding: 1rem;
   border-radius: 6px;
   margin-bottom: 1rem;
@@ -31,14 +31,14 @@ h2 {
 .loading {
   text-align: center;
   padding: 3rem;
-  color: #666;
+  color: var(--color-text-muted);
   font-size: 1.1rem;
 }
 
 .empty-state {
   text-align: center;
   padding: 3rem;
-  color: #999;
+  color: var(--color-text-soft);
 }
 
 /* Stats Cards */
@@ -50,28 +50,28 @@ h2 {
 }
 
 .stat-card {
-  background: white;
+  background: var(--color-bg-surface);
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
-  border-left: 5px solid #2196f3;
+  border-left: 5px solid var(--color-info);
 }
 
 .stat-card.scheduled {
-  border-left-color: #2196f3;
+  border-left-color: var(--color-info);
 }
 
 .stat-card.completed {
-  border-left-color: #4caf50;
+  border-left-color: var(--color-success);
 }
 
 .stat-card.canceled {
-  border-left-color: #f44336;
+  border-left-color: var(--color-danger);
 }
 
 .stat-label {
-  color: #999;
+  color: var(--color-text-soft);
   font-size: 0.9rem;
   font-weight: 500;
   text-transform: uppercase;
@@ -82,12 +82,12 @@ h2 {
 .stat-value {
   font-size: 2.5rem;
   font-weight: bold;
-  color: #333;
+  color: var(--color-text-main);
 }
 
 /* Statistics Table */
 .stats-table {
-  background: white;
+  background: var(--color-bg-surface);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
@@ -99,50 +99,50 @@ table {
 }
 
 thead {
-  background-color: #f5f5f5;
+  background-color: var(--color-bg-app);
 }
 
 th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #333;
-  border-bottom: 2px solid #ddd;
+  color: var(--color-text-main);
+  border-bottom: 2px solid var(--color-border);
   font-size: 0.9rem;
 }
 
 td {
   padding: 1rem;
-  border-bottom: 1px solid #eee;
-  color: #666;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
 }
 
 tbody tr:hover {
-  background-color: #f9f9f9;
+  background-color: var(--color-bg-subtle);
 }
 
 .doctor-name {
   font-weight: 500;
-  color: #333;
+  color: var(--color-text-main);
 }
 
 .total {
   font-weight: 600;
-  color: #333;
+  color: var(--color-text-main);
 }
 
 .scheduled {
-  color: #2196f3;
+  color: var(--color-info);
   font-weight: 500;
 }
 
 .completed {
-  color: #4caf50;
+  color: var(--color-success);
   font-weight: 500;
 }
 
 .canceled {
-  color: #f44336;
+  color: var(--color-danger);
   font-weight: 500;
 }
 
@@ -170,23 +170,23 @@ tbody tr:hover {
 }
 
 .progress-fill.rate-excellent {
-  background: linear-gradient(90deg, #4caf50, #81c784);
+  background: linear-gradient(90deg, var(--color-success), var(--color-success-soft));
 }
 
 .progress-fill.rate-good {
-  background: linear-gradient(90deg, #66bb6a, #81c784);
+  background: linear-gradient(90deg, var(--color-success), var(--color-success-soft));
 }
 
 .progress-fill.rate-fair {
-  background: linear-gradient(90deg, #ffa726, #ffb74d);
+  background: linear-gradient(90deg, var(--color-warning), var(--color-warning-soft));
 }
 
 .progress-fill.rate-poor {
-  background: linear-gradient(90deg, #ef5350, #e57373);
+  background: linear-gradient(90deg, var(--color-danger), var(--color-danger-soft));
 }
 
 .progress-fill.cancellation {
-  background: linear-gradient(90deg, #f44336, #ef9a9a) !important;
+  background: linear-gradient(90deg, var(--color-danger), var(--color-danger-soft)) !important;
 }
 
 .progress-text {
@@ -194,7 +194,7 @@ tbody tr:hover {
   z-index: 1;
   font-size: 0.75rem;
   font-weight: 600;
-  color: white;
+  color: var(--color-bg-surface);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
@@ -252,3 +252,5 @@ tbody tr:hover {
     padding: 0.5rem;
   }
 }
+
+

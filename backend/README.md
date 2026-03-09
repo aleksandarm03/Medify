@@ -42,10 +42,18 @@ npm install
 
 4. Pokrenite MongoDB (lokalno ili koristite cloud konekciju).
 
-5. Pokrenite aplikaciju:
+5. (Opcionalno) Napunite bazu test podacima jednim klikom:
 
 ```powershell
-node .\index.js
+npm run seed:reset
+```
+
+Ova komanda briše postojeće podatke i ponovo puni sve kolekcije (`users`, `doctoravailabilities`, `appointments`, `medicalrecords`, `prescriptions`).
+
+6. Pokrenite aplikaciju:
+
+```powershell
+npm start
 ```
 
 Server će biti dostupan na `http://localhost:<PORT>` (podrazumevano port 3232).

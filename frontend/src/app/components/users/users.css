@@ -4,12 +4,12 @@
 }
 
 h1 {
-  color: #333;
+  color: var(--color-text-main);
   margin-bottom: 2rem;
 }
 
 .users-table {
-  background: white;
+  background: var(--color-bg-surface);
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
@@ -21,25 +21,25 @@ table {
 }
 
 thead {
-  background-color: #f5f5f5;
+  background-color: var(--color-bg-app);
 }
 
 th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #333;
-  border-bottom: 2px solid #ddd;
+  color: var(--color-text-main);
+  border-bottom: 2px solid var(--color-border);
 }
 
 td {
   padding: 1rem;
-  border-bottom: 1px solid #eee;
-  color: #666;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
 }
 
 tbody tr:hover {
-  background-color: #f9f9f9;
+  background-color: var(--color-bg-subtle);
 }
 
 .role-badge {
@@ -51,28 +51,28 @@ tbody tr:hover {
 }
 
 .role-admin {
-  background-color: #ff9800;
-  color: white;
+  background-color: var(--color-warning);
+  color: var(--color-bg-surface);
 }
 
 .role-doctor {
-  background-color: #2196f3;
-  color: white;
+  background-color: var(--color-info);
+  color: var(--color-bg-surface);
 }
 
 .role-nurse {
-  background-color: #9c27b0;
-  color: white;
+  background-color: var(--color-primary-strong);
+  color: var(--color-bg-surface);
 }
 
 .role-patient {
-  background-color: #4caf50;
-  color: white;
+  background-color: var(--color-success);
+  color: var(--color-bg-surface);
 }
 
 .error-message {
-  background-color: #fee;
-  color: #c33;
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger);
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 1rem;
@@ -81,13 +81,13 @@ tbody tr:hover {
 .loading {
   text-align: center;
   padding: 2rem;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .empty-state {
   text-align: center;
   padding: 3rem;
-  color: #999;
+  color: var(--color-text-soft);
 }
 
 /* Modal Styles */
@@ -106,7 +106,7 @@ tbody tr:hover {
 }
 
 .modal-content {
-  background: white;
+  background: var(--color-bg-surface);
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   max-width: 600px;
@@ -129,7 +129,7 @@ tbody tr:hover {
 }
 
 .modal-content h2 {
-  color: #333;
+  color: var(--color-text-main);
   margin-bottom: 1.5rem;
   font-size: 1.5rem;
 }
@@ -142,7 +142,7 @@ tbody tr:hover {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #333;
+  color: var(--color-text-main);
   font-size: 0.95rem;
 }
 
@@ -151,7 +151,7 @@ tbody tr:hover {
 .form-group textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 1rem;
   font-family: inherit;
@@ -162,7 +162,7 @@ tbody tr:hover {
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #2196f3;
+  border-color: var(--color-info);
   box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
 }
 
@@ -172,7 +172,7 @@ tbody tr:hover {
   justify-content: flex-end;
   margin-top: 2rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border);
 }
 
 .btn {
@@ -192,30 +192,30 @@ tbody tr:hover {
 }
 
 .btn-primary {
-  background-color: #2196f3;
-  color: white;
+  background-color: var(--color-info);
+  color: var(--color-bg-surface);
 }
 
 .btn-primary:hover {
-  background-color: #1976d2;
+  background-color: var(--color-info);
 }
 
 .btn-secondary {
-  background-color: #9e9e9e;
-  color: white;
+  background-color: var(--color-text-soft);
+  color: var(--color-bg-surface);
 }
 
 .btn-secondary:hover {
-  background-color: #757575;
+  background-color: var(--color-text-muted);
 }
 
 .btn-danger {
-  background-color: #f44336;
-  color: white;
+  background-color: var(--color-danger);
+  color: var(--color-bg-surface);
 }
 
 .btn-danger:hover {
-  background-color: #da190b;
+  background-color: var(--color-danger);
 }
 
 .btn-small {
@@ -234,13 +234,13 @@ tbody tr:hover {
 }
 
 .delete-confirm p {
-  color: #666;
+  color: var(--color-text-muted);
   line-height: 1.6;
   margin-bottom: 1rem;
 }
 
 .delete-confirm .warning {
-  color: #f44336;
+  color: var(--color-danger);
   font-weight: 600;
   margin-bottom: 1.5rem;
 }
@@ -274,3 +274,5 @@ tbody tr:hover {
     width: 100%;
   }
 }
+
+
