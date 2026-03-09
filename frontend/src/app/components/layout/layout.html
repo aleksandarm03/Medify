@@ -1,30 +1,48 @@
 <div class="layout-container">
   <nav class="navbar">
-    <div class="nav-brand">
-      <a routerLink="/dashboard">Medify</a>
+    <div class="nav-top-row">
+      <div class="nav-brand">
+        <a routerLink="/dashboard" (click)="closeMenu()">Medify</a>
+      </div>
+
+      <button class="menu-toggle" type="button" (click)="toggleMenu()" aria-label="Otvori meni">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
-    <div class="nav-links">
-      <a routerLink="/dashboard" routerLinkActive="active">Početna</a>
+
+    <div class="nav-content" [class.open]="menuOpen">
+      <div class="nav-links">
+        <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">Početna</a>
       
-      <a *ngIf="authService.hasRole('patient')" routerLink="/appointments" routerLinkActive="active">Moji termini</a>
-      <a *ngIf="authService.hasRole('patient')" routerLink="/doctors" routerLinkActive="active">Pretraga doktora</a>
-      <a *ngIf="authService.hasRole('patient')" routerLink="/medical-records" routerLinkActive="active">Medicinski kartoni</a>
-      <a *ngIf="authService.hasRole('patient')" routerLink="/prescriptions" routerLinkActive="active">Recepti</a>
+        <a *ngIf="authService.hasRole('patient')" routerLink="/appointments" routerLinkActive="active" (click)="closeMenu()">Moji termini</a>
+        <a *ngIf="authService.hasRole('patient')" routerLink="/doctors" routerLinkActive="active" (click)="closeMenu()">Pretraga doktora</a>
+        <a *ngIf="authService.hasRole('patient')" routerLink="/medical-records" routerLinkActive="active" (click)="closeMenu()">Medicinski kartoni</a>
+        <a *ngIf="authService.hasRole('patient')" routerLink="/prescriptions" routerLinkActive="active" (click)="closeMenu()">Recepti</a>
       
-      <a *ngIf="authService.hasRole('doctor')" routerLink="/appointments" routerLinkActive="active">Termini</a>
-      <a *ngIf="authService.hasRole('doctor')" routerLink="/medical-records" routerLinkActive="active">Medicinski kartoni</a>
-      <a *ngIf="authService.hasRole('doctor')" routerLink="/prescriptions" routerLinkActive="active">Recepti</a>
-      <a *ngIf="authService.hasRole('doctor')" routerLink="/availability" routerLinkActive="active">Dostupnost</a>
+        <a *ngIf="authService.hasRole('doctor')" routerLink="/appointments" routerLinkActive="active" (click)="closeMenu()">Termini</a>
+        <a *ngIf="authService.hasRole('doctor')" routerLink="/medical-records" routerLinkActive="active" (click)="closeMenu()">Medicinski kartoni</a>
+        <a *ngIf="authService.hasRole('doctor')" routerLink="/prescriptions" routerLinkActive="active" (click)="closeMenu()">Recepti</a>
+        <a *ngIf="authService.hasRole('doctor')" routerLink="/availability" routerLinkActive="active" (click)="closeMenu()">Dostupnost</a>
       
-      <a *ngIf="authService.hasRole('nurse')" routerLink="/appointments" routerLinkActive="active">Termini</a>
-      <a *ngIf="authService.hasRole('nurse')" routerLink="/medical-records" routerLinkActive="active">Medicinski kartoni</a>
+        <a *ngIf="authService.hasRole('nurse')" routerLink="/appointments" routerLinkActive="active" (click)="closeMenu()">Termini</a>
+        <a *ngIf="authService.hasRole('nurse')" routerLink="/medical-records" routerLinkActive="active" (click)="closeMenu()">Medicinski kartoni</a>
       
-      <a *ngIf="authService.hasRole('admin')" routerLink="/users" routerLinkActive="active">Korisnici</a>
+        <a *ngIf="authService.hasRole('admin')" routerLink="/users" routerLinkActive="active" (click)="closeMenu()">Korisnici</a>
+        <a routerLink="/profile" routerLinkActive="active" (click)="closeMenu()">Profil</a>
+      </div>
       
       <div class="user-menu">
-        <span class="user-name">{{ getCurrentUser()?.firstName }} {{ getCurrentUser()?.lastName }}</span>
-        <span class="user-role">({{ getCurrentUser()?.role }})</span>
-        <button (click)="logout()" class="btn-logout">Odjavi se</button>
+        <img class="user-avatar" [src]="getProfileImage()" [alt]="getRoleLabel()" />
+        <div class="user-meta">
+          <span class="user-name">{{ getCurrentUser()?.firstName }} {{ getCurrentUser()?.lastName }}</span>
+          <span class="user-role">{{ getRoleLabel() }}</span>
+        </div>
+        <div class="user-actions">
+          <a routerLink="/profile" class="btn-profile" (click)="closeMenu()">Moj profil</a>
+          <button (click)="logout()" class="btn-logout">Odjavi se</button>
+        </div>
       </div>
     </div>
   </nav>
