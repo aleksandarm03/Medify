@@ -1,49 +1,286 @@
 <section class="profile-page">
-  <div class="profile-header">
-    <img class="profile-avatar" [src]="getProfileImage()" [alt]="getRoleLabel()" />
-    <div class="profile-main-info">
-      <h1>{{ currentUser?.firstName }} {{ currentUser?.lastName }}</h1>
-      <p>{{ getRoleLabel() }}</p>
+  <div *ngIf="loading()" class="loading">Učitavanje profila...</div>
+  <div *ngIf="error() && !loading()" class="error-message">{{ error() }}</div>
+  <div *ngIf="successMessage()" class="success-message">{{ successMessage() }}</div>
+
+  <div *ngIf="profile() && !loading()">
+    <div class="profile-header">
+      <img class="profile-avatar" [src]="profileImage()" [alt]="roleLabel()" />
+      <div class="profile-main-info">
+        <h1>{{ profile()!.firstName }} {{ profile()!.lastName }}</h1>
+        <p>{{ roleLabel() }}</p>
+      </div>
+      <button class="btn-edit" type="button" (click)="toggleEditMode()" [disabled]="loading()">
+        {{ editMode() ? 'Otkaži izmenu' : 'Izmeni podatke' }}
+      </button>
     </div>
-    <button class="btn-edit" type="button" (click)="toggleEditMode()">
-      {{ editMode ? 'Zatvori izmenu' : 'Izmeni podatke' }}
-    </button>
-  </div>
 
-  <div class="profile-grid">
-    <article class="profile-card">
-      <h2>Osnovni podaci</h2>
-      <div class="profile-row">
-        <span>Ime</span>
-        <strong>{{ currentUser?.firstName || '-' }}</strong>
-      </div>
-      <div class="profile-row">
-        <span>Prezime</span>
-        <strong>{{ currentUser?.lastName || '-' }}</strong>
-      </div>
-      <div class="profile-row">
-        <span>Uloga</span>
-        <strong>{{ getRoleLabel() }}</strong>
-      </div>
-      <div class="profile-row">
-        <span>ID korisnika</span>
-        <strong>{{ currentUser?._id || '-' }}</strong>
-      </div>
-    </article>
+    <!-- Prikaz režim -->
+    <div class="profile-grid" *ngIf="!editMode()">
+      <article class="profile-card">
+        <h2>Osnovni podaci</h2>
+        <div class="profile-row">
+          <span>JMBG</span>
+          <strong>{{ profile()!.JMBG || '-' }}</strong>
+        </div>
+        <div class="profile-row">
+          <span>Ime</span>
+          <strong>{{ profile()!.firstName || '-' }}</strong>
+        </div>
+        <div class="profile-row">
+          <span>Prezime</span>
+          <strong>{{ profile()!.lastName || '-' }}</strong>
+        </div>
+        <div class="profile-row">
+          <span>Pol</span>
+          <strong>{{ profile()!.gender === 'male' ? 'Muški' : 'Ženski' }}</strong>
+        </div>
+        <div class="profile-row">
+          <span>Datum rođenja</span>
+          <strong>{{ formatDate(profile()!.dateOfBirth) }}</strong>
+        </div>
+        <div class="profile-row">
+          <span>Uloga</span>
+          <strong>{{ roleLabel() }}</strong>
+        </div>
+      </article>
 
-    <article class="profile-card profile-note" *ngIf="!editMode">
-      <h2>Sledeci korak</h2>
-      <p>
-        Ova stranica je spremna za prikaz i UX strukturu. U sledecoj iteraciji povezujemo backend endpoint za full profil,
-        pa omogucavamo cuvanje izmena (adresa, telefon, osiguranje, i ostalo po ulozi).
-      </p>
-    </article>
+      <article class="profile-card">
+        <h2>Kontakt informacije</h2>
+        <div class="profile-row">
+          <span>Adresa</span>
+          <strong>{{ profile()!.homeAddress || '-' }}</strong>
+        </div>
+        <div class="profile-row">
+          <span>Telefon</span>
+          <strong>{{ profile()!.phoneNumber || '-' }}</strong>
+        </div>
+      </article>
 
-    <article class="profile-card profile-note" *ngIf="editMode">
-      <h2>Izmena podataka</h2>
-      <p>
-        Forma za izmenu je ukljucena kao sledeci korak. Kada potvrdimo API polja, ovde dodajemo validiranu formu i Save akciju.
-      </p>
-    </article>
+      <!-- Polja specifična za doktore -->
+      <article class="profile-card" *ngIf="profile()!.role === 'doctor'">
+        <h2>Profesionalne informacije</h2>
+        <div class="profile-row">
+          <span>Specijalizacija</span>
+          <strong>{{ profile()!.specialization || '-' }}</strong>
+        </div>
+        <div class="profile-row">
+          <span>Broj licence</span>
+          <strong>{{ profile()!.licenseNumber || '-' }}</strong>
+        </div>
+        <div class="profile-row">
+          <span>Godine iskustva</span>
+          <strong>{{ profile()!.yearsOfExperience || '-' }}</strong>
+        </div>
+        <div class="profile-row">
+          <span>Broj ordinacije</span>
+          <strong>{{ profile()!.officeNumber || '-' }}</strong>
+        </div>
+        <div class="profile-row">
+          <span>Smena</span>
+          <strong>{{ getShiftLabel(profile()!.shift) }}</strong>
+        </div>
+      </article>
+
+      <!-- Polja specifična za pacijente -->
+      <article class="profile-card" *ngIf="profile()!.role === 'patient'">
+        <h2>Medicinske informacije</h2>
+        <div class="profile-row">
+          <span>Krvna grupa</span>
+          <strong>{{ profile()!.bloodType || '-' }}</strong>
+        </div>
+        <div class="profile-row">
+          <span>Broj osiguranja</span>
+          <strong>{{ profile()!.insuranceNumber || '-' }}</strong>
+        </div>
+        <div class="profile-row">
+          <span>Osiguravajuća kuća</span>
+          <strong>{{ profile()!.insuranceCompany || '-' }}</strong>
+        </div>
+        <div class="profile-row profile-row-vertical">
+          <span>Alergije</span>
+          <strong>{{ allergiesString() }}</strong>
+        </div>
+      </article>
+    </div>
+
+    <!-- Izmena režim -->
+    <div class="profile-grid" *ngIf="editMode()">
+      <article class="profile-card profile-form">
+        <h2>Osnovni podaci</h2>
+        <form>
+          <div class="form-group">
+            <label>Ime *</label>
+            <input 
+              type="text" 
+              [ngModel]="editedProfile().firstName" 
+              (ngModelChange)="updateEditedField('firstName', $event)"
+              name="firstName" 
+              required 
+            />
+          </div>
+          <div class="form-group">
+            <label>Prezime *</label>
+            <input 
+              type="text" 
+              [ngModel]="editedProfile().lastName" 
+              (ngModelChange)="updateEditedField('lastName', $event)"
+              name="lastName" 
+              required 
+            />
+          </div>
+          <div class="form-group">
+            <label>Datum rođenja</label>
+            <input 
+              type="date" 
+              [ngModel]="editedProfile().dateOfBirth" 
+              (ngModelChange)="updateEditedField('dateOfBirth', $event)"
+              name="dateOfBirth" 
+            />
+          </div>
+        </form>
+      </article>
+
+      <article class="profile-card profile-form">
+        <h2>Kontakt informacije</h2>
+        <form>
+          <div class="form-group">
+            <label>Adresa *</label>
+            <input 
+              type="text" 
+              [ngModel]="editedProfile().homeAddress" 
+              (ngModelChange)="updateEditedField('homeAddress', $event)"
+              name="homeAddress" 
+              required 
+            />
+          </div>
+          <div class="form-group">
+            <label>Telefon *</label>
+            <input 
+              type="tel" 
+              [ngModel]="editedProfile().phoneNumber" 
+              (ngModelChange)="updateEditedField('phoneNumber', $event)"
+              name="phoneNumber" 
+              required 
+            />
+          </div>
+        </form>
+      </article>
+
+      <!-- Polja specifična za doktore -->
+      <article class="profile-card profile-form" *ngIf="profile()!.role === 'doctor'">
+        <h2>Profesionalne informacije</h2>
+        <form>
+          <div class="form-group">
+            <label>Specijalizacija</label>
+            <input 
+              type="text" 
+              [ngModel]="editedProfile().specialization" 
+              (ngModelChange)="updateEditedField('specialization', $event)"
+              name="specialization" 
+            />
+          </div>
+          <div class="form-group">
+            <label>Broj licence</label>
+            <input 
+              type="text" 
+              [ngModel]="editedProfile().licenseNumber" 
+              (ngModelChange)="updateEditedField('licenseNumber', $event)"
+              name="licenseNumber" 
+            />
+          </div>
+          <div class="form-group">
+            <label>Godine iskustva</label>
+            <input 
+              type="number" 
+              [ngModel]="editedProfile().yearsOfExperience" 
+              (ngModelChange)="updateEditedField('yearsOfExperience', $event)"
+              name="yearsOfExperience" 
+              min="0" 
+            />
+          </div>
+          <div class="form-group">
+            <label>Broj ordinacije</label>
+            <input 
+              type="text" 
+              [ngModel]="editedProfile().officeNumber" 
+              (ngModelChange)="updateEditedField('officeNumber', $event)"
+              name="officeNumber" 
+            />
+          </div>
+          <div class="form-group">
+            <label>Smena</label>
+            <select 
+              [ngModel]="editedProfile().shift" 
+              (ngModelChange)="updateEditedField('shift', $event)"
+              name="shift"
+            >
+              <option [value]="undefined">-- Izaberite --</option>
+              <option *ngFor="let shift of shiftOptions" [value]="shift.value">{{ shift.label }}</option>
+            </select>
+          </div>
+        </form>
+      </article>
+
+      <!-- Polja specifična za pacijente -->
+      <article class="profile-card profile-form" *ngIf="profile()!.role === 'patient'">
+        <h2>Medicinske informacije</h2>
+        <form>
+          <div class="form-group">
+            <label>Krvna grupa</label>
+            <select 
+              [ngModel]="editedProfile().bloodType" 
+              (ngModelChange)="updateEditedField('bloodType', $event)"
+              name="bloodType"
+            >
+              <option [value]="undefined">-- Izaberite --</option>
+              <option *ngFor="let type of bloodTypeOptions" [value]="type">{{ type }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Broj osiguranja</label>
+            <input 
+              type="text" 
+              [ngModel]="editedProfile().insuranceNumber" 
+              (ngModelChange)="updateEditedField('insuranceNumber', $event)"
+              name="insuranceNumber" 
+            />
+          </div>
+          <div class="form-group">
+            <label>Osiguravajuća kuća</label>
+            <input 
+              type="text" 
+              [ngModel]="editedProfile().insuranceCompany" 
+              (ngModelChange)="updateEditedField('insuranceCompany', $event)"
+              name="insuranceCompany" 
+            />
+          </div>
+          <div class="form-group">
+            <label>Alergije (odvojene zarezom)</label>
+            <input 
+              type="text" 
+              [value]="editedAllergiesString()" 
+              (input)="onAllergiesChange($any($event.target).value)"
+              name="allergies"
+              placeholder="npr. polen, penicilin, laktoza"
+            />
+            <small>Unesite alergije odvojene zarezom</small>
+          </div>
+        </form>
+      </article>
+
+      <article class="profile-card profile-actions">
+        <h2>Akcije</h2>
+        <div class="action-buttons">
+          <button class="btn btn-primary" (click)="saveProfile()" [disabled]="loading()">
+            {{ loading() ? 'Čuvanje...' : 'Sačuvaj izmene' }}
+          </button>
+          <button class="btn btn-secondary" (click)="cancelEdit()" [disabled]="loading()">
+            Otkaži
+          </button>
+        </div>
+        <p class="info-text">* Obavezna polja</p>
+      </article>
+    </div>
   </div>
 </section>
