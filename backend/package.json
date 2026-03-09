@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "start": "node index.js",
+    "seed": "node scripts/seed.js",
+    "seed:reset": "node scripts/seed.js --reset"
+  },
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.1.0",
