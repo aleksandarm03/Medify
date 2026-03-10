@@ -38,7 +38,6 @@ export class ProfileComponent implements OnInit {
     const labels: Record<string, string> = {
       admin: 'Administrator',
       doctor: 'Doktor',
-      nurse: 'Medicinska sestra',
       patient: 'Pacijent'
     };
     return role ? labels[role] || role : 'Korisnik';

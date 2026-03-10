@@ -34,7 +34,7 @@ app.use('/api/admin', AdminRouter);
 app.get('/',(req,res)=>{    
     res.type('text/plain').send(`Medify - Sistem za upravljanje ordinacijom
 Medify je RESTful API backend za upravljanje ordinacijom sa podrškom za:
-- Upravljanje korisnicima (admin, doktor, medicinska sestra, pacijent)
+- Upravljanje korisnicima (admin, doktor, pacijent)
 - Zakazivanje i upravljanje terminima
 - Medicinske kartone i preglede
 - Recepte i propisane lekove

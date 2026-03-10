@@ -143,7 +143,6 @@ export class UsersComponent implements OnInit, OnDestroy {
     const roleNames: { [key: string]: string } = {
       'admin': 'Administrator',
       'doctor': 'Doktor',
-      'nurse': 'Medicinska sestra',
       'patient': 'Pacijent'
     };
     return roleNames[role] || role;

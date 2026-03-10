@@ -21,7 +21,7 @@ export class RegisterComponent {
     homeAddress: '',
     phoneNumber: '',
     gender: 'male' as 'male' | 'female',
-    role: 'patient' as 'admin' | 'doctor' | 'nurse' | 'patient',
+    role: 'patient' as 'admin' | 'doctor' | 'patient',
     dateOfBirth: '',
     // Doctor fields
     specialization: '',
@@ -38,7 +38,7 @@ export class RegisterComponent {
   
   error = signal('');
   loading = signal(false);
-  roles = ['patient', 'doctor', 'nurse', 'admin'];
+  roles = ['patient', 'doctor', 'admin'];
   genders = ['male', 'female'];
   bloodTypes = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
   shifts = ['morning', 'evening', 'night'];

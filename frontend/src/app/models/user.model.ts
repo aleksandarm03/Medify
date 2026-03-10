@@ -7,7 +7,7 @@ export interface User {
   phoneNumber: string;
   gender: 'male' | 'female';
   dateOfBirth?: Date;
-  role: 'admin' | 'doctor' | 'nurse' | 'patient';
+  role: 'admin' | 'doctor' | 'patient';
   createdAt?: Date;
   updatedAt?: Date;
   specialization?: string;
@@ -34,7 +34,7 @@ export interface RegisterRequest {
   homeAddress: string;
   phoneNumber: string;
   gender: 'male' | 'female';
-  role: 'admin' | 'doctor' | 'nurse' | 'patient';
+  role: 'admin' | 'doctor' | 'patient';
   dateOfBirth?: Date;
   specialization?: string;
   licenseNumber?: string;

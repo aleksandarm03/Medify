@@ -1,7 +1,7 @@
 <div class="medical-records-container">
   <div class="header">
     <h1>Medicinski kartoni</h1>
-    <button *ngIf="isDoctor() || isNurse()" (click)="openCreateModalManual()" class="btn btn-primary">Novi karton</button>
+    <button *ngIf="isDoctor()" (click)="openCreateModalManual()" class="btn btn-primary">Novi karton</button>
   </div>
 
   <div *ngIf="error()" class="error-message">{{ error() }}</div>

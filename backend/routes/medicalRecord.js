@@ -22,7 +22,7 @@ router.get("/all",
 // Kreiranje medicinskog kartona (samo doktori)
 router.post("/",
     passport.authenticate("jwt", { session: false }),
-    passport.authorizeRoles("doctor", "nurse"),
+    passport.authorizeRoles("doctor"),
     async function (req, res) {
         try {
             const { patientId, appointmentId, diagnosis, symptoms, examinationNotes, treatment, recommendations, vitalSigns, labResults, followUpDate } = req.body;
@@ -129,13 +129,6 @@ router.get("/:id",
             if (user.role === "patient" && medicalRecord.patient._id.toString() !== user._id.toString()) {
                 return res.status(403).json({ message: "Nemate pravo pristupa ovom medicinskom kartona." });
             }
-            if (user.role === "nurse") {
-                // Medicinska sestra može videti samo kartone svojih doktora
-                // Ovo zahteva da model nurse ima listu doktora, pa za sada dozvoljavamo samo ako joj je doktor dodeljen
-                // U praksi: backend bi trebao da ima mapping koji doktori su dodeljeni medicinstoj sestri
-                return res.status(403).json({ message: "Nemate pristup ovom bolesniku. Kontaktirajte administratora." });
-            }
-
             return res.json(medicalRecord);
         } catch (error) {
             console.error("Get medical record error:", error);
@@ -147,7 +140,7 @@ router.get("/:id",
 // Ažuriranje medicinskog kartona
 router.put("/:id",
     passport.authenticate("jwt", { session: false }),
-    passport.authorizeRoles("doctor", "nurse", "admin"),
+    passport.authorizeRoles("doctor", "admin"),
     async function (req, res) {
         try {
             const medicalRecord = await MedicalRecordService.getMedicalRecordById(req.params.id);
@@ -174,7 +167,7 @@ router.put("/:id",
 // Dodavanje laboratorijskog rezultata
 router.post("/:id/lab-results",
     passport.authenticate("jwt", { session: false }),
-    passport.authorizeRoles("doctor", "nurse", "admin"),
+    passport.authorizeRoles("doctor", "admin"),
     async function (req, res) {
         try {
             const { testName, result, normalRange } = req.body;

@@ -60,11 +60,6 @@ tbody tr:hover {
   color: var(--color-bg-surface);
 }
 
-.role-nurse {
-  background-color: var(--color-primary-strong);
-  color: var(--color-bg-surface);
-}
-
 .role-patient {
   background-color: var(--color-success);
   color: var(--color-bg-surface);

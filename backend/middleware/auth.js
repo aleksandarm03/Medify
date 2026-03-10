@@ -13,9 +13,13 @@ const authenticateJWT = (req, res, next) => {
         if (!user) {
             return res.status(401).json({ message: 'Neautorizovani pristup. Token nije validan.' });
         }
+
+        if (!['admin', 'doctor', 'patient'].includes(user.role)) {
+            return res.status(403).json({ message: 'Uloga korisnika više nije podržana u sistemu.' });
+        }
         
-        // Provera da li je korisnik odobren (za doctor i nurse role)
-        if ((user.role === 'doctor' || user.role === 'nurse') && !user.isApproved) {
+        // Provera da li je korisnik odobren (za doctor role)
+        if (user.role === 'doctor' && !user.isApproved) {
             return res.status(403).json({ 
                 message: 'Vaš nalog čeka odobrenje od strane administratora.' 
             });

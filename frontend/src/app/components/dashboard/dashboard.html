@@ -94,21 +94,6 @@
       </div>
     </div>
 
-    <!-- Nurse Dashboard -->
-    <div *ngIf="isNurse()" class="dashboard-cards">
-      <div class="card">
-        <h3>Termini</h3>
-        <p>Pregledajte termine</p>
-        <a routerLink="/appointments" class="card-link">Vidi termine →</a>
-      </div>
-
-      <div class="card">
-        <h3>Medicinski kartoni</h3>
-        <p>Kreirajte i ažurirajte medicinske kartone</p>
-        <a routerLink="/medical-records" class="card-link">Vidi kartone →</a>
-      </div>
-    </div>
-
     <!-- Admin Dashboard -->
     <div *ngIf="isAdmin()" class="dashboard-cards">
       <div class="card">

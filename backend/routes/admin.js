@@ -144,7 +144,6 @@ router.get('/dashboard', async (req, res) => {
             usersByRole: {
                 admin: userRoleMap.admin || 0,
                 doctor: userRoleMap.doctor || 0,
-                nurse: userRoleMap.nurse || 0,
                 patient: userRoleMap.patient || 0
             },
             appointmentsByStatus: {

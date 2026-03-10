@@ -14,9 +14,9 @@ const UserSchema = new mongoose.Schema({
     phoneNumber: { type: String, required: true },
     gender: { type: String, enum: ["male", "female"], required: true },
     dateOfBirth: { type: Date },
-    role: { type: String, enum: ["admin", "doctor", "nurse", "patient"], required: true },
+    role: { type: String, enum: ["admin", "doctor", "patient"], required: true },
     isApproved: { type: Boolean, default: function() { 
-        // Admin i pacijenti automatski odobreni, doktori i sestre čekaju odobrenje
+        // Admin i pacijenti automatski odobreni, doktori čekaju odobrenje
         return this.role === 'admin' || this.role === 'patient';
     }},
     approvalStatus: { 

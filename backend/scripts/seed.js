@@ -71,17 +71,6 @@ async function seed() {
       dateOfBirth: new Date("1985-02-10")
     },
     {
-      JMBG: "2002002002002",
-      firstName: "Nina",
-      lastName: "Sestra",
-      password: "Nurse123!",
-      homeAddress: "Bulevar Oslobodjenja 45, Novi Sad",
-      phoneNumber: "0602002002",
-      gender: "female",
-      role: "nurse",
-      dateOfBirth: new Date("1990-05-12")
-    },
-    {
       JMBG: "3003003003003",
       firstName: "Milan",
       lastName: "Jovanovic",

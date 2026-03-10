@@ -1,6 +1,6 @@
 # Medify - Sistem za upravljanje ordinacijom
 
-Medify je **studentski projekat iz predmeta Web programiranje 2** — RESTful API backend za upravljanje ordinacijom. Projekt je struktuisan da podrži više uloga (admin, doctor, nurse, patient) i sadrži funkcionalnosti za upravljanje korisnicima, zakazivanje termina, medicinske kartone, recepte i dostupnost doktora.
+Medify je **studentski projekat iz predmeta Web programiranje 2** — RESTful API backend za upravljanje ordinacijom. Projekt je struktuisan da podrži više uloga (admin, doctor, patient) i sadrži funkcionalnosti za upravljanje korisnicima, zakazivanje termina, medicinske kartone, recepte i dostupnost doktora.
 
 ---
 
@@ -91,7 +91,7 @@ Server će biti dostupan na `http://localhost:<PORT>` (podrazumevano port 3232).
   ```
 - Validacija:
   - Sva polja su obavezna
-  - `role` mora biti: `admin`, `doctor`, `nurse`, ili `patient`
+  - `role` mora biti: `admin`, `doctor`, ili `patient`
   - `gender` mora biti: `male` ili `female`
   - `password` mora imati najmanje 6 karaktera
   - `JMBG` mora biti jedinstven
@@ -177,9 +177,9 @@ Server će biti dostupan na `http://localhost:<PORT>` (podrazumevano port 3232).
 
 **POST /medical-records**
 
-- Opis: Kreira medicinski karton (doktor ili sestra)
+- Opis: Kreira medicinski karton (doktor)
 - Autentifikacija: JWT token
-- Autorizacija: `doctor`, `nurse`
+- Autorizacija: `doctor`
 - Telo: `patientId`, `diagnosis`, `symptoms`, `examinationNotes`, `treatment`, `vitalSigns`, `labResults`
 - Odgovor: HTTP 201 sa kreiranim kartonom
 
@@ -197,7 +197,7 @@ Server će biti dostupan na `http://localhost:<PORT>` (podrazumevano port 3232).
 
 **PUT /medical-records/:id**
 
-- Opis: Ažurira karton (doktor, sestra ili admin)
+- Opis: Ažurira karton (doktor ili admin)
 - Autentifikacija: JWT token
 - Odgovor: HTTP 200 sa ažuriranim kartonom
 
@@ -205,7 +205,7 @@ Server će biti dostupan na `http://localhost:<PORT>` (podrazumevano port 3232).
 
 - Opis: Dodaje laboratorijski rezultat u karton
 - Autentifikacija: JWT token
-- Autorizacija: `doctor`, `nurse`, `admin`
+- Autorizacija: `doctor`, `admin`
 - Odgovor: HTTP 200 sa ažuriranim kartonom
 
 ### Recepti (rute su pod `/prescriptions`)
@@ -315,7 +315,7 @@ Model korisnika sa podrškom za hash-ovanje lozinke putem Node-ovog ugrađenog `
 - `homeAddress`, `phoneNumber` (String, required)
 - `gender` (Enum: "male", "female", required)
 - `dateOfBirth` (Date, optional)
-- `role` (Enum: "admin", "doctor", "nurse", "patient", required)
+- `role` (Enum: "admin", "doctor", "patient", required)
 - `appointments` (Array of ObjectId references to Appointment)
 
 **Polja specifična za doktore:**

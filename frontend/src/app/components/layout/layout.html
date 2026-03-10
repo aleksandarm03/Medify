@@ -27,9 +27,6 @@
         <a *ngIf="authService.hasRole('doctor')" routerLink="/prescriptions" routerLinkActive="active" (click)="closeMenu()">Recepti</a>
         <a *ngIf="authService.hasRole('doctor')" routerLink="/availability" routerLinkActive="active" (click)="closeMenu()">Dostupnost</a>
       
-        <a *ngIf="authService.hasRole('nurse')" routerLink="/appointments" routerLinkActive="active" (click)="closeMenu()">Termini</a>
-        <a *ngIf="authService.hasRole('nurse')" routerLink="/medical-records" routerLinkActive="active" (click)="closeMenu()">Medicinski kartoni</a>
-      
         <a *ngIf="authService.hasRole('admin')" routerLink="/admin/appointments" routerLinkActive="active" (click)="closeMenu()">Svi termini</a>
         <a *ngIf="authService.hasRole('admin')" routerLink="/admin/medical-records" routerLinkActive="active" (click)="closeMenu()">Svi kartoni</a>
         <a *ngIf="authService.hasRole('admin')" routerLink="/admin/prescriptions" routerLinkActive="active" (click)="closeMenu()">Svi recepti</a>

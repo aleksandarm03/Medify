@@ -17,6 +17,10 @@ passport.use(new LocalStrategy(localOptions, async function(JMBG, password, done
         }
         else
         {
+            if (!["admin", "doctor", "patient"].includes(user.role)) {
+                return done(null, null, { message: "Role not supported" })
+            }
+
             var success = user.validatePassword(password)
             if (success)
             {
@@ -24,7 +28,7 @@ passport.use(new LocalStrategy(localOptions, async function(JMBG, password, done
                     return done(null, null, { message: "Account disabled" })
                 }
 
-                if ((user.role === "doctor" || user.role === "nurse") && !user.isApproved) {
+                if (user.role === "doctor" && !user.isApproved) {
                     return done(null, null, { message: "Account not approved" })
                 }
 
@@ -54,11 +58,15 @@ passport.use(new passportJWT.Strategy(JWTOptions,async function (payload,done) {
             return done(null, null, {message:"Token not valid!"})
         }
         else {
+            if (!["admin", "doctor", "patient"].includes(user.role)) {
+                return done(null, null, { message: "Role not supported" })
+            }
+
             if (!user.isActive) {
                 return done(null, null, { message: "Account disabled" })
             }
 
-            if ((user.role === "doctor" || user.role === "nurse") && !user.isApproved) {
+            if (user.role === "doctor" && !user.isApproved) {
                 return done(null, null, { message: "Account not approved" })
             }
 

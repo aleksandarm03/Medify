@@ -56,7 +56,6 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
   error = signal('');
   showCreateModal = signal(false);
   isDoctor = signal(false);
-  isNurse = signal(false);
   isPatient = signal(false);
   prefilledDoctorName = signal('');
   prefilledPatientName = signal('');
@@ -76,7 +75,6 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
   ngOnInit() {
     const user = this.authService.getCurrentUser();
     this.isDoctor.set(user?.role === 'doctor');
-    this.isNurse.set(user?.role === 'nurse');
     this.isPatient.set(user?.role === 'patient');
 
     if (user) {

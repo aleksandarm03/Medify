@@ -42,7 +42,6 @@ export class LayoutComponent {
     const labels: Record<string, string> = {
       admin: 'Administrator',
       doctor: 'Doktor',
-      nurse: 'Medicinska sestra',
       patient: 'Pacijent'
     };
 

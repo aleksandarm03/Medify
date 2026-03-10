@@ -14,7 +14,6 @@ export interface AdminDashboardData {
   usersByRole: {
     admin: number;
     doctor: number;
-    nurse: number;
     patient: number;
   };
   appointmentsByStatus: {

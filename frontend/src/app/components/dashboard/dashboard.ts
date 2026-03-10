@@ -109,11 +109,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (user.role === 'nurse') {
-      this.loadNurseStats(user);
-      return;
-    }
-
     this.statsLoading.set(false);
     this.stats.set([]);
   }
@@ -160,24 +155,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  private loadNurseStats(user: User): void {
-    this.doctorService.getAllDoctors()
-      .pipe(
-        catchError(() => {
-          this.statsError.set('Neke statistike trenutno nisu dostupne.');
-          return of([]);
-        }),
-        finalize(() => this.statsLoading.set(false))
-      )
-      .subscribe(doctors => {
-        this.stats.set([
-          { label: 'Dostupni doktori', value: doctors.length, hint: 'Ukupan broj doktora u sistemu' },
-          { label: 'Moja smena', value: this.getShiftName(user.shift), hint: 'Trenutno dodeljena smena' },
-          { label: 'Popunjenost profila', value: `${this.getProfileCompletion(user)}%`, hint: 'Koliko je profil kompletan' }
-        ]);
-      });
-  }
-
   private createAppointmentStatusSummary(appointments: Appointment[]): AppointmentStatusSummary {
     return appointments.reduce(
       (acc, appointment) => {
@@ -206,40 +183,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       date.getDate() === now.getDate();
   }
 
-  private getShiftName(shift?: 'morning' | 'evening' | 'night'): string {
-    const shiftNames: Record<'morning' | 'evening' | 'night', string> = {
-      morning: 'Jutarnja',
-      evening: 'Popodnevna',
-      night: 'Noćna'
-    };
-    return shift ? shiftNames[shift] : 'Nije definisana';
-  }
-
-  private getProfileCompletion(user: User): number {
-    const trackedFields: Array<keyof User> = [
-      'phoneNumber',
-      'homeAddress',
-      'dateOfBirth',
-      'gender',
-      'shift'
-    ];
-
-    const completed = trackedFields.filter(field => {
-      const value = user[field];
-      if (Array.isArray(value)) {
-        return value.length > 0;
-      }
-      return value !== undefined && value !== null && String(value).trim() !== '';
-    }).length;
-
-    return Math.round((completed / trackedFields.length) * 100);
-  }
-
   getRoleName(role: string): string {
     const roleNames: { [key: string]: string } = {
       'admin': 'Administrator',
       'doctor': 'Doktor',
-      'nurse': 'Medicinska sestra',
       'patient': 'Pacijent'
     };
     return roleNames[role] || role;
@@ -251,10 +198,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   isDoctor() {
     return this.user()?.role === 'doctor';
-  }
-
-  isNurse() {
-    return this.user()?.role === 'nurse';
   }
 
   isAdmin() {

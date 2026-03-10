@@ -91,7 +91,6 @@ export class AdminDashboardComponent implements OnInit {
     const labels: Record<string, string> = {
       admin: 'Administrator',
       doctor: 'Doktor',
-      nurse: 'Medicinska sestra',
       patient: 'Pacijent'
     };
     return labels[role] || role;
@@ -101,7 +100,6 @@ export class AdminDashboardComponent implements OnInit {
     const classes: Record<string, string> = {
       admin: 'badge-admin',
       doctor: 'badge-doctor',
-      nurse: 'badge-nurse',
       patient: 'badge-patient'
     };
     return classes[role] || '';

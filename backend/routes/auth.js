@@ -13,8 +13,8 @@ router.post('/register',async (req,res)=>{
             return res.status(400).json({ message: "Sva obavezna polja moraju biti popunjena." });
         }
 
-        if (!["admin", "doctor", "nurse", "patient"].includes(role)) {
-            return res.status(400).json({ message: "Nevažeća uloga. Dozvoljene uloge: admin, doctor, nurse, patient." });
+        if (!["admin", "doctor", "patient"].includes(role)) {
+            return res.status(400).json({ message: "Nevažeća uloga. Dozvoljene uloge: admin, doctor, patient." });
         }
 
         if (!["male", "female"].includes(gender)) {
