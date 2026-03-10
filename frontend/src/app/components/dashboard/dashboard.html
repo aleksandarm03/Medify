@@ -1,8 +1,45 @@
 <div class="dashboard">
-  <h1>Dobrodošli, {{ user()?.firstName }} {{ user()?.lastName }}!</h1>
-  <p class="subtitle">Uloga: {{ getRoleName(user()?.role) }}</p>
+  <div class="dashboard-head">
+    <div>
+      <h1>Dobrodošli, {{ user()?.firstName }} {{ user()?.lastName }}!</h1>
+      <p class="subtitle">Uloga: {{ getRoleName(user()?.role) }}</p>
+    </div>
+    <button class="refresh-btn" (click)="refreshDashboard()" [disabled]="isLoading() || statsLoading()">
+      {{ isLoading() || statsLoading() ? 'Učitavanje...' : 'Osveži pregled' }}
+    </button>
+  </div>
+
+  <section class="stats-section">
+    <div *ngIf="statsLoading()" class="stats-loading">Učitavanje statistike...</div>
+
+    <div *ngIf="statsError()" class="stats-error">{{ statsError() }}</div>
+
+    <div *ngIf="!statsLoading() && stats().length > 0" class="stats-grid">
+      <article class="stat-card" *ngFor="let stat of stats()">
+        <p class="stat-label">{{ stat.label }}</p>
+        <p class="stat-value">{{ stat.value }}</p>
+        <p class="stat-hint">{{ stat.hint }}</p>
+      </article>
+    </div>
+
+    <div *ngIf="appointmentStatus()" class="status-strip">
+      <div class="status-item scheduled">
+        <span class="status-name">Zakazani</span>
+        <span class="status-value">{{ appointmentStatus()!.scheduled }}</span>
+      </div>
+      <div class="status-item completed">
+        <span class="status-name">Završeni</span>
+        <span class="status-value">{{ appointmentStatus()!.completed }}</span>
+      </div>
+      <div class="status-item canceled">
+        <span class="status-name">Otkazani</span>
+        <span class="status-value">{{ appointmentStatus()!.canceled }}</span>
+      </div>
+    </div>
+  </section>
 
   <div class="dashboard-grid">
+    <h2 class="section-title">Brze akcije</h2>
     <!-- Patient Dashboard -->
     <div *ngIf="isPatient()" class="dashboard-cards">
       <div class="card">
