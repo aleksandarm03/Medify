@@ -1,0 +1,51 @@
+.app-shell {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.app-content {
+	flex: 1;
+}
+
+.site-footer {
+	border-top: 1px solid var(--color-border);
+	background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-strong) 100%);
+	padding: 1.25rem 1rem;
+}
+
+.footer-content {
+	max-width: 1200px;
+	margin: 0 auto;
+	text-align: center;
+}
+
+.footer-title {
+	margin: 0;
+	font-size: 1rem;
+	font-weight: 700;
+	color: var(--color-text-main);
+}
+
+.footer-text {
+	margin: 0.35rem 0;
+	color: white;
+	font-size: 0.92rem;
+}
+
+.footer-link {
+	display: inline-block;
+	margin: 0.2rem 0 0.5rem;
+	font-weight: 600;
+	color: yellow;
+}
+
+.footer-link:hover {
+	text-decoration: underline;
+}
+
+.footer-copy {
+	margin: 0.3rem 0 0;
+	color: white;
+	font-size: 0.82rem;
+}

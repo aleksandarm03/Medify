@@ -1,1 +1,22 @@
-<router-outlet></router-outlet>
+<div class="app-shell">
+	<div class="app-content">
+		<router-outlet></router-outlet>
+	</div>
+
+	<footer class="site-footer">
+		<div class="footer-content">
+			<p class="footer-title">Medify</p>
+			<p class="footer-text">Sistem za upravljanje terminima, kartonima i receptima.</p>
+			<p class="footer-text">Kontakt i kod projekta:</p>
+			<a
+				class="footer-link"
+				href="https://github.com/aleksandarm03"
+				target="_blank"
+				rel="noopener noreferrer"
+			>
+				github.com/aleksandarm03
+			</a>
+			<p class="footer-copy">© {{ currentYear }} Medify. Sva prava zadrzana.</p>
+		</div>
+	</footer>
+</div>
