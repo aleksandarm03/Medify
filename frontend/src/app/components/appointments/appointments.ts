@@ -138,13 +138,10 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
           reason: current.reason
         };
 
-    console.log('[Appointments] Create request payload:', appointmentData);
-
     this.appointmentService.createAppointment(appointmentData as any)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (created) => {
-          console.log('[Appointments] Create success:', created);
           this.closeCreateModal();
           this.newAppointment.set({ doctorId: '', patientJMBG: '', appointmentDate: '', reason: '' });
           this.loadAppointments();

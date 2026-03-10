@@ -28,11 +28,12 @@ router.post('/register',async (req,res)=>{
         var user = await userService.register(req.body);
         
         if (user) {
-            // Ne vraćamo password hash u odgovoru
+            // Vraćamo token da bi frontend mogao da završi auto-login tok nakon registracije.
+            const token = user.generateJwt();
             const userResponse = user.toObject();
             delete userResponse.passwordHash;
             delete userResponse.passwordSalt;
-            return res.status(201).json(userResponse);
+            return res.status(201).json({ token, user: userResponse });
         } else {
             return res.status(400).json({ message: "Registracija nije uspela." });
         }

@@ -49,14 +49,14 @@ router.get('/dashboard', async (req, res) => {
             
             // Termini danas
             Appointment.countDocuments({ 
-                dateTime: { $gte: startOfToday, $lt: new Date(startOfToday.getTime() + 24*60*60*1000) }
+                appointmentDate: { $gte: startOfToday, $lt: new Date(startOfToday.getTime() + 24*60*60*1000) }
             }),
             
             // Termini ove nedelje
-            Appointment.countDocuments({ dateTime: { $gte: startOfWeek } }),
+            Appointment.countDocuments({ appointmentDate: { $gte: startOfWeek } }),
             
             // Termini ovog meseca
-            Appointment.countDocuments({ dateTime: { $gte: startOfMonth } }),
+            Appointment.countDocuments({ appointmentDate: { $gte: startOfMonth } }),
             
             // Termini po statusu
             Appointment.aggregate([
@@ -72,7 +72,7 @@ router.get('/dashboard', async (req, res) => {
                 Appointment.find()
                     .populate('patient', 'firstName lastName')
                     .populate('doctor', 'firstName lastName')
-                    .select('patient doctor dateTime status createdAt')
+                    .select('patient doctor appointmentDate status createdAt')
                     .sort({ createdAt: -1 })
                     .limit(5)
             ]),
@@ -292,7 +292,7 @@ router.get('/audit-log', async (req, res) => {
             Appointment.find()
                 .populate('patient', 'firstName lastName')
                 .populate('doctor', 'firstName lastName')
-                .select('patient doctor dateTime status createdAt updatedAt')
+                .select('patient doctor appointmentDate status createdAt updatedAt')
                 .sort({ updatedAt: -1 })
                 .limit(limit),
             MedicalRecord.find()
