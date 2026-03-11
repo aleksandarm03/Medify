@@ -159,7 +159,7 @@
                 {{ appt.patient?.firstName }} {{ appt.patient?.lastName }} 
                 → Dr {{ appt.doctor?.lastName }}
               </p>
-              <span class="activity-meta">{{ formatDateTime(appt.dateTime) }}</span>
+              <span class="activity-meta">{{ formatDateTime(appt.appointmentDate || appt.dateTime || appt.createdAt) }}</span>
             </div>
           </div>
         </div>

@@ -105,16 +105,26 @@ export class AdminDashboardComponent implements OnInit {
     return classes[role] || '';
   }
 
-  formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('sr-RS', {
+  formatDate(date: Date | string | null | undefined): string {
+    const parsed = new Date(date as any);
+    if (!date || Number.isNaN(parsed.getTime())) {
+      return '-';
+    }
+
+    return parsed.toLocaleDateString('sr-RS', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
     });
   }
 
-  formatDateTime(date: Date): string {
-    return new Date(date).toLocaleString('sr-RS', {
+  formatDateTime(date: Date | string | null | undefined): string {
+    const parsed = new Date(date as any);
+    if (!date || Number.isNaN(parsed.getTime())) {
+      return '-';
+    }
+
+    return parsed.toLocaleString('sr-RS', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
