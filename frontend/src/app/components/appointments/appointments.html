@@ -11,18 +11,50 @@
       <option value="completed">Završeni</option>
       <option value="canceled">Otkazani</option>
     </select>
+
+    <input
+      type="text"
+      class="filter-input"
+      [value]="searchTerm()"
+      (input)="updateSearchTerm($any($event).target.value)"
+      placeholder="Pretraga (doktor, pacijent, razlog, status)"
+    />
+
+    <input
+      type="date"
+      class="filter-input"
+      [value]="dateFrom()"
+      (change)="updateDateFrom($any($event).target.value)"
+      aria-label="Od datuma"
+    />
+
+    <input
+      type="date"
+      class="filter-input"
+      [value]="dateTo()"
+      (change)="updateDateTo($any($event).target.value)"
+      aria-label="Do datuma"
+    />
+
+    <select [value]="sortBy()" (change)="updateSortBy($any($event).target.value)">
+      <option value="dateDesc">Najnoviji prvo</option>
+      <option value="dateAsc">Najstariji prvo</option>
+      <option value="statusAsc">Status A-Z</option>
+    </select>
+
+    <button type="button" class="btn btn-secondary" (click)="clearFiltersAndSorting()">Reset</button>
   </div>
 
   <div *ngIf="pageError()" class="error-message">{{ pageError() }}</div>
 
   <div *ngIf="loading()" class="loading">Učitavanje...</div>
 
-  <div *ngIf="!loading() && appointments().length === 0" class="empty-state">
+  <div *ngIf="!loading() && visibleAppointments().length === 0" class="empty-state">
     <p>Nema termina</p>
   </div>
 
   <div class="appointments-list">
-    <div *ngFor="let appointment of appointments()" class="appointment-card">
+    <div *ngFor="let appointment of visibleAppointments()" class="appointment-card">
       <div class="appointment-header">
         <h3>Termin #{{ appointment._id?.substring(0, 8) }}</h3>
         <span [class]="'status-badge ' + getStatusClass(appointment.status)">

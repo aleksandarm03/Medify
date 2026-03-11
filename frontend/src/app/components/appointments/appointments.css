@@ -15,14 +15,38 @@
 }
 
 .filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
   margin-bottom: 1.5rem;
 }
 
-.filters select {
+.filters select,
+.filter-input {
   padding: 0.5rem 1rem;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 16px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-main);
+}
+
+.filter-input {
+  min-width: 220px;
+}
+
+@media (max-width: 768px) {
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters select,
+  .filter-input,
+  .filters .btn {
+    width: 100%;
+  }
 }
 
 .appointments-list {

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AppointmentService } from '../../services/appointment.service';
@@ -24,6 +24,51 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
   showCreateModal = signal(false);
   statusFilter = signal('');
   minDate = signal(new Date().toISOString().split('T')[0]);
+  searchTerm = signal('');
+  dateFrom = signal('');
+  dateTo = signal('');
+  sortBy = signal<'dateDesc' | 'dateAsc' | 'statusAsc'>('dateDesc');
+
+  visibleAppointments = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    const fromDate = this.dateFrom() ? new Date(this.dateFrom()) : null;
+    const toDate = this.dateTo() ? new Date(this.dateTo()) : null;
+
+    if (toDate) {
+      toDate.setHours(23, 59, 59, 999);
+    }
+
+    const filtered = this.appointments().filter((appointment) => {
+      const appointmentDate = new Date(appointment.appointmentDate);
+      const doctorName = `${appointment.doctor?.firstName || ''} ${appointment.doctor?.lastName || ''}`.trim().toLowerCase();
+      const patientName = `${appointment.patient?.firstName || ''} ${appointment.patient?.lastName || ''}`.trim().toLowerCase();
+      const reason = (appointment.reason || '').toLowerCase();
+      const status = (appointment.status || '').toLowerCase();
+
+      const matchesTerm = !term
+        || reason.includes(term)
+        || doctorName.includes(term)
+        || patientName.includes(term)
+        || status.includes(term);
+
+      const matchesFrom = !fromDate || appointmentDate >= fromDate;
+      const matchesTo = !toDate || appointmentDate <= toDate;
+
+      return matchesTerm && matchesFrom && matchesTo;
+    });
+
+    return [...filtered].sort((a, b) => {
+      if (this.sortBy() === 'dateAsc') {
+        return new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime();
+      }
+
+      if (this.sortBy() === 'statusAsc') {
+        return (a.status || '').localeCompare(b.status || '');
+      }
+
+      return new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime();
+    });
+  });
 
   newAppointment = signal({
     doctorId: '',
@@ -248,6 +293,29 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
     this.statusFilter.set(value);
     this.pageError.set('');
     this.loadAppointments();
+  }
+
+  updateSearchTerm(value: string) {
+    this.searchTerm.set(value);
+  }
+
+  updateDateFrom(value: string) {
+    this.dateFrom.set(value);
+  }
+
+  updateDateTo(value: string) {
+    this.dateTo.set(value);
+  }
+
+  updateSortBy(value: 'dateDesc' | 'dateAsc' | 'statusAsc') {
+    this.sortBy.set(value);
+  }
+
+  clearFiltersAndSorting() {
+    this.searchTerm.set('');
+    this.dateFrom.set('');
+    this.dateTo.set('');
+    this.sortBy.set('dateDesc');
   }
 
   updateDoctorId(value: string) {
