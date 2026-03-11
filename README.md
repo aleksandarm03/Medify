@@ -1,132 +1,229 @@
 # Medify
 
-Medify je full-stack aplikacija za upravljanje ordinacijom (studentski projekat iz predmeta Web programiranje 2), sa Angular frontendom i Node.js/Express backendom.
+Medify je full-stack aplikacija za upravljanje ordinacijom, sa Angular frontend-om i Node.js/Express backend-om.
 
-## 1) Plan projekta
 
-### Cilj
-Napraviti sistem koji pokriva osnovne procese rada ordinacije:
-- autentifikacija i role-based pristup
-- zakazivanje termina
-- vođenje medicinskih kartona
-- izdavanje recepata
-- upravljanje dostupnošću doktora
 
-### Uloge u sistemu
-- **admin**: upravljanje korisnicima i administrativne privilegije
-- **doctor**: termini, kartoni, recepti, dostupnost
-- **nurse**: ograničen pristup medicinskim kartonima i pomoćnim operacijama
-- **patient**: uvid u sopstvene termine, kartone i recepte; zakazivanje termina
+## 1. Stack i arhitektura
 
-### Arhitektura
-- **Frontend**: Angular 21 (Standalone komponente)
-- **Backend**: Node.js + Express 5 + Passport (Local + JWT)
-- **Baza**: MongoDB + Mongoose
+- Frontend: Angular 21, TypeScript, RxJS
+- Backend: Node.js, Express 5, Passport (Local + JWT)
+- Baza: MongoDB + Mongoose
 
----
+Arhitektura:
 
-## 2) Funkcionalnosti
+- `frontend/` je SPA klijent koji koristi REST API
+- `backend/` je API servis sa autentifikacijom i RBAC pravilima
 
-### Autentifikacija i autorizacija
-- registracija korisnika
-- prijava i izdavanje JWT tokena
-- zaštita ruta po ulogama
+## 2. Uloge u sistemu
 
-### Termini
-- kreiranje termina (doctor/patient scenariji)
-- pregled termina za doktora i pacijenta
-- izmena statusa i detalja termina
-- brisanje termina
+Podrzane uloge:
 
-### Medicinski kartoni
-- kreiranje i izmena kartona
-- dodavanje laboratorijskih rezultata
-- pregled po pacijentu i po ID-u
-- brisanje kartona
+- `admin`
+- `doctor`
+- `patient`
 
-### Recepti
-- kreiranje recepta
-- pregled svih/aktivnih recepata pacijenta
-- promena statusa recepta
-- brisanje recepta
+Napomena: u autentifikacionoj konfiguraciji (`backend/routes/config.js`) ove tri uloge su eksplicitno podrzane.
 
-### Doktori i dostupnost
-- lista i pretraga doktora
-- pregled doktora po ID-u
-- podešavanje, izmena i brisanje dostupnosti
-- dobijanje slobodnih termina za datum
+## 3. Glavne funkcionalnosti
 
----
+- Registracija i login korisnika (JWT)
+- Zakazivanje i upravljanje terminima
+- Medicinski kartoni
+- Recepti
+- Dostupnost doktora
+- Administrativne funkcije (admin sekcije)
 
-## 3) Struktura repozitorijuma
+## 4. Struktura repozitorijuma
 
 ```text
 Medify/
+  README.md
   backend/
+    config.js
+    index.js
+    package.json
+    models/
+    routes/
+    services/
+    scripts/
   frontend/
+    angular.json
+    package.json
+    src/
+      environments/
+      app/
 ```
 
-- `backend/` sadrži REST API, modele, servise i rute
-- `frontend/` sadrži Angular aplikaciju i UI komponente
+## 5. Preduslovi
 
----
-
-## 4) Pokretanje projekta (lokalno)
-
-## Preduslovi
-- Node.js 18+ (preporuka: LTS)
+- Node.js 18+
 - npm
-- MongoDB (lokalni servis ili cloud konekcija)
+- MongoDB (lokalno ili cloud)
 
-## Backend
-1. Uđi u backend folder:
-   ```bash
-   cd backend
-   ```
-2. Instaliraj zavisnosti:
-   ```bash
-   npm install
-   ```
-3. Proveri konfiguraciju u `backend/config.js`:
-   - `PORT` (podrazumevano `3232`)
-   - `MongoConnection` (podrazumevano `mongodb://localhost:27017/Medify`)
-   - `secret` (JWT secret)
-4. Pokreni backend:
-   ```bash
-   node index.js
-   ```
+## 6. Quick start 
 
-Backend će biti dostupan na `http://localhost:3232`.
+### 6.1 Pokretanje backend-a
 
-## Frontend
-1. Uđi u frontend folder:
-   ```bash
-   cd frontend
-   ```
-2. Instaliraj zavisnosti:
-   ```bash
-   npm install
-   ```
-3. Pokreni frontend:
-   ```bash
-   npm start
-   ```
+```bash
+cd backend
+npm install
+npm start
+```
 
-Frontend će biti dostupan na `http://localhost:4200`.
+Podrazumevana adresa backend-a: `http://localhost:3232`
 
-Napomena: frontend očekuje backend na `http://localhost:3232`.
+### 6.2 Pokretanje frontend-a
 
----
+U novom terminalu:
 
-## 8) Korisni endpoint prefiksi
+```bash
+cd frontend
+npm install
+npm start
+```
+
+Podrazumevana adresa frontend-a: `http://localhost:4200`
+
+## 7. Konfiguracija
+
+### 7.1 Backend konfiguracija (`backend/config.js`)
+
+Podrazumevane vrednosti:
+
+- `PORT: 3232`
+- `MongoConnection: mongodb://localhost:27017/Medify`
+- `secret: <jwt-secret>`
+
+Ako promenis `PORT`, obavezno azuriraj frontend API URL.
+
+### 7.2 Frontend konfiguracija (`frontend/src/environments/environment.ts`)
+
+Podrazumevano:
+
+```ts
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:3232'
+};
+```
+
+Ako backend radi na drugom hostu/portu, promeni `apiUrl`.
+
+## 8. Seed podaci i test nalozi
+
+Seed skripte su u `backend/scripts/seed.js`.
+
+Komande (`backend/`):
+
+- `npm run seed` - puni bazu samo ako je prazna
+- `npm run seed:reset` - brise postojecu bazu i puni ponovo
+
+Seed kreira:
+
+- 1 admin nalog
+- 2 doctor naloga
+- 2 patient naloga
+- demo termine, kartone i recepte
+
+Test kredencijali iz seed-a (JMBG / lozinka):
+
+- Admin: `1001001001001` / `Admin123!`
+- Doctor 1: `3003003003003` / `Doctor123!`
+- Doctor 2: `4004004004004` / `Doctor123!`
+- Patient 1: `5005005005005` / `Patient123!`
+- Patient 2: `6006006006006` / `Patient123!`
+
+## 9. NPM skripte
+
+### 9.1 Backend (`backend/package.json`)
+
+- `npm start` - pokrece API server (`node index.js`)
+- `npm run seed` - pokrece seed bez reset-a
+- `npm run seed:reset` - reset + seed
+
+### 9.2 Frontend (`frontend/package.json`)
+
+- `npm start` - Angular dev server
+- `npm run build` - build aplikacije
+- `npm run watch` - build u watch modu
+- `npm run test` - testovi
+
+## 10. API pregled (prefiksi ruta)
+
+Glavni prefiksi:
 
 - `/auth`
 - `/appointments`
 - `/medical-records`
 - `/prescriptions`
 - `/doctors`
+- `/admin`
 
----
-Ukoliko imate bilo kakvih pitanja ili vam je potrebna podrška, slobodno otvorite issue na GitHub-u ili me direktno kontaktirajte.
+Tipicni endpoint-i:
 
-Napravljeno sa ❤️ uz Node.js, Angular i MongoDB
+- Auth:
+  - `POST /auth/register`
+  - `POST /auth/login`
+  - `GET /auth/users` (admin)
+- Appointments:
+  - `POST /appointments`
+  - `GET /appointments/doctor`
+  - `GET /appointments/patient`
+  - `PUT /appointments/:id/status`
+- Medical records:
+  - `POST /medical-records`
+  - `GET /medical-records/patient/:patientId`
+  - `GET /medical-records/:id`
+  - `PUT /medical-records/:id`
+- Prescriptions:
+  - `POST /prescriptions`
+  - `GET /prescriptions/patient/:patientId`
+  - `PUT /prescriptions/:id/status`
+- Doctors:
+  - `GET /doctors`
+  - `GET /doctors/search`
+  - `GET /doctors/:id/availability`
+  - `GET /doctors/:id/available-slots`
+
+## 11. Frontend stranice (pregled)
+
+- Login / Register
+- Dashboard
+- Termini
+- Medicinski kartoni
+- Recepti
+- Doktori
+- Dostupnost
+- Admin sekcije
+
+## 12. Tipican tok rada
+
+Doktor scenario:
+
+1. Doktor vidi listu termina.
+2. Zavrsava termin.
+3. Iz zavrsenog termina kreira medicinski karton.
+4. Iz kartona moze otvoriti kreiranje recepta.
+
+Patient scenario:
+
+1. Pacijent zakazuje i prati svoje termine.
+2. Gleda svoje medicinske kartone.
+3. Gleda recepte i njihov status.
+
+## 13. Troubleshooting
+
+- Frontend ne moze da pristupi API-ju:
+  - proveri da backend radi na `http://localhost:3232`
+  - proveri `frontend/src/environments/environment.ts`
+- Login ne prolazi:
+  - proveri da koristis ispravan `JMBG` i lozinku
+  - proveri da li je seed pokrenut (`npm run seed:reset`)
+- Nema podataka na listama:
+  - proveri da li je baza prazna
+  - proveri ulogu korisnika i prava pristupa
+
+## 14. Napomena
+
+Dokumentacija za backend i frontend postoji i u podfolderima (`backend/README.md`, `frontend/README.md`), ali je ovaj fajl (`README.md`) glavni i obuhvata kompletan projekat end-to-end.

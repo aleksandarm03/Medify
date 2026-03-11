@@ -1,59 +1,61 @@
-# Frontend
+# Medify Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.5.
+Angular frontend aplikacija za Medify sistem.
 
-## Development server
+## Tehnologije
 
-To start a local development server, run:
+- Angular 21 (standalone komponente)
+- TypeScript
+- RxJS
 
-```bash
-ng serve
-```
+## Preduslovi
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- Node.js 18+
+- npm
+- Pokrenut Medify backend (podrazumevano `http://localhost:3232`)
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Instalacija
 
 ```bash
-ng generate --help
+npm install
 ```
 
-## Building
-
-To build the project run:
+## Pokretanje
 
 ```bash
-ng build
+npm start
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Aplikacija je dostupna na `http://localhost:4200`.
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Build i test
 
 ```bash
-ng test
+npm run build
+npm run test
 ```
 
-## Running end-to-end tests
+## Konfiguracija API adrese
 
-For end-to-end (e2e) testing, run:
+API baza je definisana u `src/environments/environment.ts`:
 
-```bash
-ng e2e
+```ts
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:3232'
+};
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Ako backend radi na drugoj adresi/portu, promeni `apiUrl`.
 
-## Additional Resources
+## Kljucne stranice
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- Login / Register
+- Dashboard
+- Termini
+- Medicinski kartoni
+- Recepti
+- Doktori
+- Dostupnost
+- Admin sekcije
+
