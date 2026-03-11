@@ -15,18 +15,50 @@
       <option value="completed">Zavrseni</option>
       <option value="cancelled">Otkazani</option>
     </select>
+
+    <input
+      type="text"
+      class="filter-input"
+      [value]="searchTerm()"
+      (input)="updateSearchTerm($any($event).target.value)"
+      placeholder="Pretraga (pacijent, doktor, lek, status)"
+    />
+
+    <input
+      type="date"
+      class="filter-input"
+      [value]="dateFrom()"
+      (change)="updateDateFrom($any($event).target.value)"
+      aria-label="Od datuma"
+    />
+
+    <input
+      type="date"
+      class="filter-input"
+      [value]="dateTo()"
+      (change)="updateDateTo($any($event).target.value)"
+      aria-label="Do datuma"
+    />
+
+    <select [value]="sortBy()" (change)="updateSortBy($any($event).target.value)">
+      <option value="issueDateDesc">Najnoviji prvo</option>
+      <option value="issueDateAsc">Najstariji prvo</option>
+      <option value="statusAsc">Status A-Z</option>
+    </select>
+
+    <button type="button" class="btn btn-secondary" (click)="clearFiltersAndSorting()">Reset</button>
   </div>
 
   <div *ngIf="pageError() && !showCreateModal()" class="error-message">{{ pageError() }}</div>
 
   <div *ngIf="loading()" class="loading">Ucitavanje...</div>
 
-  <div *ngIf="!loading() && prescriptions().length === 0" class="empty-state">
+  <div *ngIf="!loading() && visiblePrescriptions().length === 0" class="empty-state">
     <p>Nema recepata</p>
   </div>
 
   <div class="prescriptions-list">
-    <div *ngFor="let prescription of prescriptions()" class="prescription-card">
+    <div *ngFor="let prescription of visiblePrescriptions()" class="prescription-card">
       <div class="prescription-header">
         <h3>Recept #{{ prescription._id?.substring(0, 8) }}</h3>
         <span [class]="'status-badge ' + getStatusClass(prescription.status)">

@@ -17,6 +17,7 @@
 .filters {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.65rem;
   margin-bottom: 1rem;
 }
@@ -26,12 +27,18 @@
   color: #334155;
 }
 
-.filters select {
+.filters select,
+.filter-input {
   min-width: 180px;
   padding: 0.52rem 0.72rem;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   background: var(--color-bg-surface);
+  color: var(--color-text-main);
+}
+
+.filter-input {
+  min-width: 220px;
 }
 
 .prescriptions-list {
@@ -376,6 +383,21 @@
 }
 
 @media (max-width: 768px) {
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters label {
+    margin-top: 0.25rem;
+  }
+
+  .filters select,
+  .filter-input,
+  .filters .btn {
+    width: 100%;
+  }
+
   .modal-content {
     padding: 1rem;
     border-radius: 14px;

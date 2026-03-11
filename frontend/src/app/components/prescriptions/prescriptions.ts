@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -23,12 +23,61 @@ export class PrescriptionsComponent implements OnInit {
   pageError = signal('');
   formError = signal('');
   statusFilter = signal('');
+  searchTerm = signal('');
+  dateFrom = signal('');
+  dateTo = signal('');
+  sortBy = signal<'issueDateDesc' | 'issueDateAsc' | 'statusAsc'>('issueDateDesc');
   showCreateModal = signal(false);
   isDoctor = signal(false);
   isPatient = signal(false);
   doctorMedicalRecords = signal<MedicalRecord[]>([]);
   filteredMedicalRecords = signal<MedicalRecord[]>([]);
   examinedPatients = signal<any[]>([]);
+
+  visiblePrescriptions = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    const fromDate = this.dateFrom() ? new Date(this.dateFrom()) : null;
+    const toDate = this.dateTo() ? new Date(this.dateTo()) : null;
+
+    if (toDate) {
+      toDate.setHours(23, 59, 59, 999);
+    }
+
+    const filtered = this.prescriptions().filter((prescription) => {
+      const issueDate = new Date(prescription.issueDate);
+      const patientName = `${prescription.patient?.firstName || ''} ${prescription.patient?.lastName || ''}`.trim().toLowerCase();
+      const doctorName = `${prescription.doctor?.firstName || ''} ${prescription.doctor?.lastName || ''}`.trim().toLowerCase();
+      const notes = (prescription.notes || '').toLowerCase();
+      const status = (prescription.status || '').toLowerCase();
+      const medicationsText = (prescription.medications || [])
+        .map((med) => `${med.name || ''} ${med.dosage || ''} ${med.frequency || ''} ${med.duration || ''}`.toLowerCase())
+        .join(' ');
+
+      const matchesTerm = !term
+        || patientName.includes(term)
+        || doctorName.includes(term)
+        || notes.includes(term)
+        || status.includes(term)
+        || medicationsText.includes(term);
+
+      const matchesFrom = !fromDate || issueDate >= fromDate;
+      const matchesTo = !toDate || issueDate <= toDate;
+
+      return matchesTerm && matchesFrom && matchesTo;
+    });
+
+    return [...filtered].sort((a, b) => {
+      if (this.sortBy() === 'issueDateAsc') {
+        return new Date(a.issueDate).getTime() - new Date(b.issueDate).getTime();
+      }
+
+      if (this.sortBy() === 'statusAsc') {
+        return (a.status || '').localeCompare(b.status || '');
+      }
+
+      return new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime();
+    });
+  });
 
   newPrescription = signal({
     patientId: '',
@@ -518,6 +567,31 @@ export class PrescriptionsComponent implements OnInit {
     if (!date) return '';
     const d = new Date(date);
     return d.toLocaleDateString('sr-RS');
+  }
+
+  updateSearchTerm(value: string) {
+    this.searchTerm.set(value);
+  }
+
+  updateDateFrom(value: string) {
+    this.dateFrom.set(value);
+  }
+
+  updateDateTo(value: string) {
+    this.dateTo.set(value);
+  }
+
+  updateSortBy(value: string) {
+    if (value === 'issueDateAsc' || value === 'statusAsc' || value === 'issueDateDesc') {
+      this.sortBy.set(value);
+    }
+  }
+
+  clearFiltersAndSorting() {
+    this.searchTerm.set('');
+    this.dateFrom.set('');
+    this.dateTo.set('');
+    this.sortBy.set('issueDateDesc');
   }
 }
 

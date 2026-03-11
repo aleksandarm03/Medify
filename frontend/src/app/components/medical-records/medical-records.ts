@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -54,6 +54,10 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
   records = signal<MedicalRecord[]>([]);
   loading = signal(false);
   error = signal('');
+  searchTerm = signal('');
+  dateFrom = signal('');
+  dateTo = signal('');
+  sortBy = signal<'visitDateDesc' | 'visitDateAsc' | 'diagnosisAsc'>('visitDateDesc');
   showCreateModal = signal(false);
   isDoctor = signal(false);
   isPatient = signal(false);
@@ -61,6 +65,47 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
   prefilledPatientName = signal('');
   isPrefilledFromAppointment = signal(false);
   newRecord = signal<MedicalRecordForm>(createEmptyForm());
+
+  visibleRecords = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    const fromDate = this.dateFrom() ? new Date(this.dateFrom()) : null;
+    const toDate = this.dateTo() ? new Date(this.dateTo()) : null;
+
+    if (toDate) {
+      toDate.setHours(23, 59, 59, 999);
+    }
+
+    const filtered = this.records().filter((record) => {
+      const visitDate = new Date(record.visitDate);
+      const patientName = `${record.patient?.firstName || ''} ${record.patient?.lastName || ''}`.trim().toLowerCase();
+      const diagnosis = (record.diagnosis || '').toLowerCase();
+      const treatment = (record.treatment || '').toLowerCase();
+      const recommendations = (record.recommendations || '').toLowerCase();
+
+      const matchesTerm = !term
+        || patientName.includes(term)
+        || diagnosis.includes(term)
+        || treatment.includes(term)
+        || recommendations.includes(term);
+
+      const matchesFrom = !fromDate || visitDate >= fromDate;
+      const matchesTo = !toDate || visitDate <= toDate;
+
+      return matchesTerm && matchesFrom && matchesTo;
+    });
+
+    return [...filtered].sort((a, b) => {
+      if (this.sortBy() === 'visitDateAsc') {
+        return new Date(a.visitDate).getTime() - new Date(b.visitDate).getTime();
+      }
+
+      if (this.sortBy() === 'diagnosisAsc') {
+        return (a.diagnosis || '').localeCompare(b.diagnosis || '');
+      }
+
+      return new Date(b.visitDate).getTime() - new Date(a.visitDate).getTime();
+    });
+  });
 
   private destroy$ = new Subject<void>();
 
@@ -276,6 +321,31 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
     if (!date) return '';
     const d = new Date(date);
     return d.toLocaleDateString('sr-RS');
+  }
+
+  updateSearchTerm(value: string) {
+    this.searchTerm.set(value);
+  }
+
+  updateDateFrom(value: string) {
+    this.dateFrom.set(value);
+  }
+
+  updateDateTo(value: string) {
+    this.dateTo.set(value);
+  }
+
+  updateSortBy(value: string) {
+    if (value === 'visitDateAsc' || value === 'diagnosisAsc' || value === 'visitDateDesc') {
+      this.sortBy.set(value);
+    }
+  }
+
+  clearFiltersAndSorting() {
+    this.searchTerm.set('');
+    this.dateFrom.set('');
+    this.dateTo.set('');
+    this.sortBy.set('visitDateDesc');
   }
 }
 

@@ -4,16 +4,50 @@
     <button *ngIf="isDoctor()" (click)="openCreateModalManual()" class="btn btn-primary">Novi karton</button>
   </div>
 
+  <div class="filters">
+    <input
+      type="text"
+      class="filter-input"
+      [value]="searchTerm()"
+      (input)="updateSearchTerm($any($event).target.value)"
+      placeholder="Pretraga (pacijent, dijagnoza, tretman)"
+    />
+
+    <input
+      type="date"
+      class="filter-input"
+      [value]="dateFrom()"
+      (change)="updateDateFrom($any($event).target.value)"
+      aria-label="Od datuma"
+    />
+
+    <input
+      type="date"
+      class="filter-input"
+      [value]="dateTo()"
+      (change)="updateDateTo($any($event).target.value)"
+      aria-label="Do datuma"
+    />
+
+    <select [value]="sortBy()" (change)="updateSortBy($any($event).target.value)">
+      <option value="visitDateDesc">Najnoviji prvo</option>
+      <option value="visitDateAsc">Najstariji prvo</option>
+      <option value="diagnosisAsc">Dijagnoza A-Z</option>
+    </select>
+
+    <button type="button" class="btn btn-secondary" (click)="clearFiltersAndSorting()">Reset</button>
+  </div>
+
   <div *ngIf="error()" class="error-message">{{ error() }}</div>
 
   <div *ngIf="loading()" class="loading">Učitavanje...</div>
 
-  <div *ngIf="!loading() && records().length === 0" class="empty-state">
+  <div *ngIf="!loading() && visibleRecords().length === 0" class="empty-state">
     <p>Nema medicinskih kartona</p>
   </div>
 
   <div class="records-list">
-    <div *ngFor="let record of records()" class="record-card">
+    <div *ngFor="let record of visibleRecords()" class="record-card">
       <div class="record-header">
         <h3>Karton #{{ record._id?.substring(0, 8) }}</h3>
         <span class="record-date">{{ formatDate(record.visitDate) }}</span>
