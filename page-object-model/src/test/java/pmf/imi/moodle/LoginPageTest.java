@@ -30,7 +30,7 @@ public class LoginPageTest {
         driver = new ChromeDriver();
         driver.manage().window().maximize();
         driver.get(LoginPage.LOGIN_URL);
-        // Čekamo da Angular renderuje formu prije nego što test počne
+        // Čekamo da Angular renderuje formu pre nego što test počne
         new WebDriverWait(driver, Duration.ofSeconds(10))
                 .until(ExpectedConditions.visibilityOfElementLocated(By.id("jmbg")));
         loginPage = new LoginPage(driver);
@@ -77,7 +77,7 @@ public class LoginPageTest {
     @Test
     public void testSuccessfulLogin() {
         loginPage.login(VALID_JMBG, VALID_PASSWORD);
-        // Nakon uspješne prijave, app preusmjerava van /login stranice
+        // Nakon uspešne prijave, app preusmerava van /login stranice
         assertFalse(driver.getCurrentUrl().contains("/login"));
     }
 }
