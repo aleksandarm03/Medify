@@ -53,6 +53,12 @@ Medify/
     src/
       environments/
       app/
+  page-object-model/
+    pom.xml
+    testng.xml
+    src/
+      main/java/
+      test/java/
 ```
 
 ## 5. Preduslovi
@@ -60,6 +66,9 @@ Medify/
 - Node.js 18+
 - npm
 - MongoDB (lokalno ili cloud)
+- JDK 21
+- Maven 3.9+
+- Google Chrome (aktuelna verzija)
 
 ## 6. Quick start 
 
@@ -84,6 +93,17 @@ npm start
 ```
 
 Podrazumevana adresa frontend-a: `http://localhost:4200`
+
+### 6.3 Pokretanje POM UI testova (Selenium + TestNG)
+
+U novom terminalu:
+
+```bash
+cd page-object-model
+mvn test -Dsurefire.suiteXmlFiles=testng.xml
+```
+
+Napomena: pre pokretanja testova moraju biti podignuti backend, frontend i seed podaci.
 
 ## 7. Konfiguracija
 
@@ -224,6 +244,34 @@ Patient scenario:
   - proveri da li je baza prazna
   - proveri ulogu korisnika i prava pristupa
 
+- Selenium/TestNG testovi padaju odmah na login/register:
+  - proveri da frontend radi na `http://localhost:4200`
+  - proveri da backend radi na `http://localhost:3232`
+  - pokreni seed (`cd backend && npm run seed:reset`)
+
+- CDP warning za Chrome u Selenium testovima:
+  - warning je cesto informativan, ali je preporuka da Selenium verzija u `page-object-model/pom.xml` bude uskladjena sa verzijom Chrome-a
+
 ## 14. Napomena
 
 Dokumentacija za backend i frontend postoji i u podfolderima (`backend/README.md`, `frontend/README.md`), ali je ovaj fajl (`README.md`) glavni i obuhvata kompletan projekat end-to-end.
+
+## 15. UI automatizacija (POM)
+
+UI automatizacija je izdvojena u modul `page-object-model/`.
+
+- Framework: Selenium WebDriver + TestNG + WebDriverManager
+- Stil: Page Object Model (POM)
+- Glavni suite fajl: `page-object-model/testng.xml`
+
+Trenutno pokrivene stranice:
+
+- Login (`LoginPageTest`)
+- Register (`RegisterPageTest`)
+- Dashboard (`DashboardPageTest`)
+- Profile (`ProfilePageTest`)
+- Doctors (`DoctorsPageTest`)
+
+Pokretanje iz IntelliJ-a:
+
+- desni klik na `page-object-model/testng.xml` -> `Run 'testng.xml'`
