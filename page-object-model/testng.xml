@@ -1,0 +1,12 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
+<suite name="Medify POM Suite" verbose="1" parallel="false">
+    <test name="UI Regression Tests">
+        <classes>
+            <class name="pmf.imi.moodle.LoginPageTest"/>
+            <class name="pmf.imi.moodle.RegisterPageTest"/>
+            <class name="pmf.imi.moodle.DashboardPageTest"/>
+            <class name="pmf.imi.moodle.ProfilePageTest"/>
+            <class name="pmf.imi.moodle.DoctorsPageTest"/>
+        </classes>
+    </test>
+</suite>
