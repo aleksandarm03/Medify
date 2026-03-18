@@ -1,20 +1,24 @@
 # Medify Frontend
 
-Angular frontend aplikacija za Medify sistem.
+Angular 21 frontend aplikacija za Medify sistem.
 
 ## Tehnologije
 
 - Angular 21 (standalone komponente)
 - TypeScript
 - RxJS
+- Angular Router
+- HTTP interceptor za JWT
 
 ## Preduslovi
 
 - Node.js 18+
 - npm
-- Pokrenut Medify backend (podrazumevano `http://localhost:3232`)
+- Pokrenut backend na http://localhost:3232 (ili izmenjen apiUrl)
 
 ## Instalacija
+
+Iz foldera frontend/:
 
 ```bash
 npm install
@@ -26,18 +30,19 @@ npm install
 npm start
 ```
 
-Aplikacija je dostupna na `http://localhost:4200`.
+Aplikacija je dostupna na http://localhost:4200
 
-## Build i test
+## Skripte
 
-```bash
-npm run build
-npm run test
-```
+- npm start -> ng serve
+- npm run build -> ng build
+- npm run watch -> ng build --watch --configuration development
+- npm run test -> ng test
+- npm run serve:ssr:frontend -> node dist/frontend/server/server.mjs
 
-## Konfiguracija API adrese
+## API konfiguracija
 
-API baza je definisana u `src/environments/environment.ts`:
+Fajl: src/environments/environment.ts
 
 ```ts
 export const environment = {
@@ -46,16 +51,71 @@ export const environment = {
 };
 ```
 
-Ako backend radi na drugoj adresi/portu, promeni `apiUrl`.
+## Auth i localStorage
 
-## Kljucne stranice
+Frontend koristi:
 
-- Login / Register
-- Dashboard
-- Termini
-- Medicinski kartoni
-- Recepti
-- Doktori
-- Dostupnost
-- Admin sekcije
+- medify_token
+- medify_user
+
+Guard logika validira token pozivom backend endpointa GET /auth/validate-token.
+
+## Ruta mapa
+
+### Javne rute
+
+- /login
+- /register
+
+### Zaštićene rute (authGuard)
+
+- /dashboard
+- /appointments
+- /medical-records
+- /prescriptions
+- /doctors
+- /doctors/:id
+- /profile
+
+### Role-restricted rute (roleGuard)
+
+Doctor:
+
+- /availability
+
+Admin:
+
+- /users
+- /admin/dashboard
+- /admin/appointments
+- /admin/medical-records
+- /admin/prescriptions
+- /admin/statistics
+
+## Ključni moduli
+
+Komponente:
+
+- login, register
+- dashboard
+- appointments
+- medical-records
+- prescriptions
+- doctors
+- availability
+- profile
+- users
+- admin/*
+
+Servisi:
+
+- api.service.ts
+- auth.service.ts
+- appointment.service.ts
+- medical-record.service.ts
+- prescription.service.ts
+- doctor.service.ts
+- profile.service.ts
+- admin.service.ts
+
 
