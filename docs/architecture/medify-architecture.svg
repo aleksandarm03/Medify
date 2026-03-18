@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860" role="img" aria-labelledby="title desc">
+  <title id="title">Medify Architecture Diagram</title>
+  <desc id="desc">High-level Medify system architecture with frontend, backend modules, and MongoDB storage.</desc>
+  <defs>
+    <style>
+      .title { font: 700 28px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 500 14px 'Segoe UI', Arial, sans-serif; fill: #334155; }
+      .h2 { font: 700 18px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .txt { font: 13px 'Segoe UI', Arial, sans-serif; fill: #1e293b; }
+      .small { font: 12px 'Segoe UI', Arial, sans-serif; fill: #334155; }
+      .box { fill: #f8fafc; stroke: #94a3b8; stroke-width: 2; rx: 12; }
+      .boxBlue { fill: #eff6ff; stroke: #3b82f6; stroke-width: 2; rx: 12; }
+      .boxGreen { fill: #ecfeff; stroke: #0891b2; stroke-width: 2; rx: 12; }
+      .boxAmber { fill: #fffbeb; stroke: #d97706; stroke-width: 2; rx: 12; }
+      .db { fill: #ecfccb; stroke: #65a30d; stroke-width: 2; rx: 12; }
+      .line { stroke: #475569; stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
+      .dashed { stroke-dasharray: 8 6; }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,4 L0,8 z" fill="#475569" />
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1400" height="860" fill="#f1f5f9" />
+
+  <text x="700" y="48" text-anchor="middle" class="title">Medify - System Architecture</text>
+  <text x="700" y="74" text-anchor="middle" class="subtitle">Angular SPA + Node.js/Express REST API + MongoDB + Selenium POM test automation</text>
+
+  <rect x="70" y="130" width="360" height="250" class="boxBlue" />
+  <text x="250" y="164" text-anchor="middle" class="h2">Frontend Layer</text>
+  <text x="250" y="192" text-anchor="middle" class="txt">Angular 21 (Standalone components)</text>
+  <text x="250" y="214" text-anchor="middle" class="txt">Auth Guard + Role Guard</text>
+  <text x="250" y="236" text-anchor="middle" class="txt">JWT Interceptor (Bearer token)</text>
+  <text x="250" y="258" text-anchor="middle" class="txt">Feature modules:</text>
+  <text x="250" y="280" text-anchor="middle" class="small">Appointments, Medical Records, Prescriptions</text>
+  <text x="250" y="300" text-anchor="middle" class="small">Doctors, Availability, Profile, Admin dashboard</text>
+  <text x="250" y="332" text-anchor="middle" class="small">Runs on: http://localhost:4200</text>
+
+  <rect x="500" y="130" width="430" height="500" class="boxGreen" />
+  <text x="715" y="164" text-anchor="middle" class="h2">Backend Layer</text>
+  <text x="715" y="190" text-anchor="middle" class="txt">Node.js + Express 5 + Passport (Local/JWT)</text>
+
+  <rect x="535" y="214" width="360" height="56" class="box" />
+  <text x="715" y="248" text-anchor="middle" class="txt">/auth, /profile, /api/admin</text>
+
+  <rect x="535" y="286" width="360" height="56" class="box" />
+  <text x="715" y="320" text-anchor="middle" class="txt">/appointments + slot validation</text>
+
+  <rect x="535" y="358" width="360" height="56" class="box" />
+  <text x="715" y="392" text-anchor="middle" class="txt">/medical-records + lab results</text>
+
+  <rect x="535" y="430" width="360" height="56" class="box" />
+  <text x="715" y="464" text-anchor="middle" class="txt">/prescriptions + status lifecycle</text>
+
+  <rect x="535" y="502" width="360" height="56" class="box" />
+  <text x="715" y="536" text-anchor="middle" class="txt">/doctors + availability + search</text>
+
+  <text x="715" y="596" text-anchor="middle" class="small">Runs on: http://localhost:3232</text>
+
+  <rect x="1000" y="130" width="330" height="250" class="db" />
+  <text x="1165" y="164" text-anchor="middle" class="h2">Data Layer</text>
+  <text x="1165" y="192" text-anchor="middle" class="txt">MongoDB + Mongoose</text>
+  <text x="1165" y="220" text-anchor="middle" class="txt">Collections:</text>
+  <text x="1165" y="242" text-anchor="middle" class="small">users, appointments, doctoravailabilities</text>
+  <text x="1165" y="262" text-anchor="middle" class="small">medicalrecords, prescriptions</text>
+  <text x="1165" y="294" text-anchor="middle" class="small">Indexes/constraints:</text>
+  <text x="1165" y="314" text-anchor="middle" class="small">unique JMBG, one availability per day/doctor</text>
+  <text x="1165" y="346" text-anchor="middle" class="small">Seed script builds realistic demo dataset</text>
+
+  <rect x="70" y="470" width="360" height="160" class="boxAmber" />
+  <text x="250" y="504" text-anchor="middle" class="h2">Authentication &amp; Authorization</text>
+  <text x="250" y="530" text-anchor="middle" class="txt">JWT contains _id, firstName, lastName, role</text>
+  <text x="250" y="552" text-anchor="middle" class="txt">Roles: admin, doctor, patient</text>
+  <text x="250" y="574" text-anchor="middle" class="txt">Doctor approval workflow enabled</text>
+  <text x="250" y="596" text-anchor="middle" class="txt">Admin-only endpoints under /api/admin</text>
+
+  <rect x="1000" y="470" width="330" height="160" class="boxAmber" />
+  <text x="1165" y="504" text-anchor="middle" class="h2">Quality &amp; Automation</text>
+  <text x="1165" y="530" text-anchor="middle" class="txt">Page Object Model (Java + TestNG)</text>
+  <text x="1165" y="552" text-anchor="middle" class="txt">Selenium + WebDriverManager</text>
+  <text x="1165" y="574" text-anchor="middle" class="txt">Regression suites: login/register/dashboard</text>
+  <text x="1165" y="596" text-anchor="middle" class="txt">profile/doctors</text>
+
+  <path class="line" d="M430 250 L500 250" />
+  <path class="line" d="M930 250 L1000 250" />
+  <path class="line dashed" d="M430 552 L500 552" />
+  <path class="line dashed" d="M930 552 L1000 552" />
+
+  <text x="465" y="238" text-anchor="middle" class="small">HTTPS/REST + JSON</text>
+  <text x="965" y="238" text-anchor="middle" class="small">Mongoose queries</text>
+
+</svg>

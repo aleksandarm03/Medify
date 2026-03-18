@@ -1,58 +1,84 @@
 # Medify
 
-Medify je full-stack aplikacija za upravljanje ordinacijom, sa Angular frontend-om i Node.js/Express backend-om.
+Medify je full-stack informacioni sistem za upravljanje ordinacijom nad 3 ključne operacije:
+
+- rad sa korisnicima i ulogama (admin, doctor, patient)
+- klinički tok (termini, kartoni, recepti, dostupnost doktora)
+- operativni nadzor kroz admin dashboard i audit pregled
+
+U praksi, ideja Medify sistema je jednostavna: da doktorima i pacijentima skrati administraciju, a timu ordinacije donese jasniji pregled rada. Umesto rasutih informacija po više mesta, ključni podaci o pacijentu, terminima i terapiji nalaze se u jednom konzistentnom toku.
+
+Repozitorijum je organizovan kao monorepo sa:
+
+- Angular 21 frontend aplikacijom
+- Node.js/Express 5 REST API backend-om
+- MongoDB bazom podataka (Mongoose)
+- Selenium + TestNG POM UI automatizacijom
 
 
+## Zašto Medify
 
-## 1. Stack i arhitektura
+Medify je dizajniran tako da podrži svakodnevne procese jedne ordinacije, bez komplikovanja korisničkog iskustva.
 
-- Frontend: Angular 21, TypeScript, RxJS
-- Backend: Node.js, Express 5, Passport (Local + JWT)
-- Baza: MongoDB + Mongoose
+- Za doktora: brz pregled rasporeda, lak unos kartona i direktno kreiranje recepta.
+- Za pacijenta: jasan uvid u termine, istoriju pregleda i terapiju.
+- Za admina: centralno mesto za kontrolu korisnika, odobrenja i operativnih metrika.
 
-Arhitektura:
+## Arhitektura sistema
 
-- `frontend/` je SPA klijent koji koristi REST API
-- `backend/` je API servis sa autentifikacijom i RBAC pravilima
+![Medify Architecture](docs/architecture/medify-architecture.svg)
 
-## 2. Uloge u sistemu
+Slika prikazuje kako frontend, backend i baza rade kao jedinstven sistem: Angular aplikacija komunicira sa REST API slojem, dok backend orkestrira poslovna pravila i pristup podacima u MongoDB.
 
-Podrzane uloge:
+## Tehnološki stack
 
-- `admin`
-- `doctor`
-- `patient`
+### Backend
 
-Napomena: u autentifikacionoj konfiguraciji (`backend/routes/config.js`) ove tri uloge su eksplicitno podrzane.
+- Node.js
+- Express 5
+- Passport Local + Passport JWT
+- jsonwebtoken
+- Mongoose
+- CORS
 
-## 3. Glavne funkcionalnosti
+### Frontend
 
-- Registracija i login korisnika (JWT)
-- Zakazivanje i upravljanje terminima
-- Medicinski kartoni
-- Recepti
-- Dostupnost doktora
-- Administrativne funkcije (admin sekcije)
+- Angular 21 (standalone komponente)
+- TypeScript
+- RxJS
+- Angular Router + route guards
+- HTTP interceptor za JWT
 
-## 4. Struktura repozitorijuma
+### Test automation
+
+- Java 21
+- Maven
+- Selenium WebDriver
+- TestNG
+- WebDriverManager
+
+## Struktura repozitorijuma
 
 ```text
 Medify/
   README.md
+  docs/
+    architecture/
+      medify-architecture.svg
   backend/
     config.js
     index.js
-    package.json
+    middleware/
     models/
     routes/
-    services/
     scripts/
+    services/
   frontend/
     angular.json
     package.json
     src/
-      environments/
       app/
+      environments/
   page-object-model/
     pom.xml
     testng.xml
@@ -61,18 +87,190 @@ Medify/
       test/java/
 ```
 
-## 5. Preduslovi
+## Poslovne uloge i pristup
+
+Sistem podržava tri uloge definisane u modelu korisnika i auth konfiguraciji:
+
+- `admin`
+- `doctor`
+- `patient`
+
+Ključna pravila iz implementacije:
+
+- doktor nalozi ulaze u approval tok (`approvalStatus: pending`) i tek nakon odobrenja imaju pun pristup
+- admin i patient su inicijalno odobreni
+- JWT payload sadrži `_id`, `firstName`, `lastName`, `role` i `exp`
+- frontend čuva token i osnovne user podatke u localStorage (`medify_token`, `medify_user`)
+
+Na ovaj način je razdvojeno ko šta može da radi, ali je korisnički tok i dalje prirodan: nakon uspešne prijave korisnik vidi samo ono što je relevantno za njegovu ulogu.
+
+## Funkcionalni opseg
+
+U nastavku je pregled funkcionalnosti po domenima, onako kako su implementirane u kodu i API sloju.
+
+### 1) Autentifikacija i korisnici
+
+- registracija korisnika sa validacijom obaveznih polja
+- login sa Passport Local strategijom
+- JWT token validacija endpoint (`GET /auth/validate-token`)
+- admin CRUD nad korisnicima
+
+### 2) Termini
+
+- zakazivanje termina od strane doktora i pacijenata
+- validacija dostupnog vremenskog slota doktora pre kreiranja termina
+- statusi termina: `scheduled`, `completed`, `canceled`
+- filtriranje po statusu za doctor/patient prikaze
+
+### 3) Medicinski kartoni
+
+- doktor kreira karton po pacijentu
+- karton može biti povezan sa terminom
+- podrška za vital signs, nalaze i follow-up datum
+- dodatno API proširenje za laboratorijske rezultate
+
+### 4) Recepti
+
+- doktor kreira recept sa listom lekova
+- recept se opciono vezuje za karton i termin
+- statusi recepta: `active`, `completed`, `cancelled`
+- endpoint za aktivne recepte pacijenta
+
+### 5) Dostupnost doktora
+
+- definisanje radnih intervala po danu u nedelji
+- podrška za pauze (`breakStart`, `breakEnd`)
+- podrška za smene preko ponoći
+- automatsko generisanje default dostupnosti na osnovu doctor shift-a
+
+### 6) Admin modul
+
+- agregirani dashboard sa statistikama
+- odobravanje/odbijanje naloga
+- aktivacija/deaktivacija naloga
+- audit pregled nedavnih aktivnosti
+
+Kombinacija ovih modula omogućava da se ceo ciklus rada, od zakazivanja do evidencije terapije, prati u jedinstvenom sistemu.
+
+## API mapa
+
+### Root
+
+- `GET /` opis sistema
+- `GET /test` health-like test endpoint
+
+### Auth (`/auth`)
+
+- `POST /auth/register`
+- `POST /auth/login`
+- `GET /auth/validate-token`
+- `GET /auth/users` (admin)
+- `GET /auth/users/:id` (admin)
+- `PUT /auth/users/:id` (admin)
+- `DELETE /auth/users/:id` (admin)
+
+### Profile (`/profile`)
+
+- `GET /profile` trenutno ulogovan korisnik
+- `PUT /profile` izmena sopstvenog profila
+
+### Appointments (`/appointments`)
+
+- `POST /appointments`
+- `GET /appointments/all` (admin)
+- `GET /appointments/doctor` (doctor)
+- `GET /appointments/patient` (patient)
+- `GET /appointments/:id`
+- `PUT /appointments/:id/status`
+- `PUT /appointments/:id`
+- `DELETE /appointments/:id`
+
+### Medical records (`/medical-records`)
+
+- `GET /medical-records/all` (admin)
+- `POST /medical-records` (doctor)
+- `GET /medical-records/patient/:patientId`
+- `GET /medical-records/doctor/:doctorId`
+- `GET /medical-records/:id`
+- `PUT /medical-records/:id` (doctor/admin)
+- `POST /medical-records/:id/lab-results` (doctor/admin)
+- `DELETE /medical-records/:id` (doctor/admin)
+
+### Prescriptions (`/prescriptions`)
+
+- `GET /prescriptions/all` (admin)
+- `POST /prescriptions` (doctor)
+- `GET /prescriptions/patient/:patientId/active`
+- `GET /prescriptions/patient/:patientId`
+- `GET /prescriptions/:id`
+- `PUT /prescriptions/:id/status`
+- `DELETE /prescriptions/:id`
+
+### Doctors (`/doctors`)
+
+- `POST /doctors/:id/availability` (doctor/admin)
+- `POST /doctors/:id/availability/generate-default` (doctor/admin)
+- `GET /doctors/:id/available-slots`
+- `GET /doctors/:id/availability`
+- `PUT /doctors/availability/:availabilityId` (doctor/admin)
+- `DELETE /doctors/availability/:availabilityId` (doctor/admin)
+- `GET /doctors/search`
+- `GET /doctors`
+- `GET /doctors/:id`
+
+### Admin (`/api/admin`)
+
+- `GET /api/admin/dashboard`
+- `POST /api/admin/approve-user/:userId`
+- `POST /api/admin/reject-user/:userId`
+- `POST /api/admin/toggle-user/:userId`
+- `GET /api/admin/audit-log`
+
+## Model podataka (sažetak)
+
+### User
+
+- identitet: `JMBG`, `firstName`, `lastName`, `gender`, `dateOfBirth`
+- sigurnost: `passwordHash`, `passwordSalt`
+- pristup: `role`, `isApproved`, `approvalStatus`, `isActive`
+- doctor polja: `specialization`, `licenseNumber`, `yearsOfExperience`, `officeNumber`, `shift`
+- patient polja: `bloodType`, `allergies`, `insuranceNumber`, `insuranceCompany`
+
+### Appointment
+
+- veze: `doctor`, `patient`
+- ključna polja: `appointmentDate`, `reason`, `status`
+
+### MedicalRecord
+
+- veze: `patient`, `doctor`, opciono `appointment`
+- klinički sadržaj: `diagnosis`, `symptoms`, `examinationNotes`, `treatment`, `recommendations`, `vitalSigns`, `labResults`
+
+### Prescription
+
+- veze: `patient`, `doctor`, opciono `medicalRecord`, `appointment`
+- terapija: `medications[]`, `validUntil`, `status`, `notes`
+
+### DoctorAvailability
+
+- veza: `doctor`
+- raspored: `dayOfWeek`, `startTime`, `endTime`, `breakStart`, `breakEnd`, `appointmentDuration`
+- jedinstvenost: jedan zapis po doktoru i danu (`doctor + dayOfWeek`)
+
+## Preduslovi
 
 - Node.js 18+
 - npm
 - MongoDB (lokalno ili cloud)
-- JDK 21
+- Java 21
 - Maven 3.9+
-- Google Chrome (aktuelna verzija)
+- Google Chrome (za Selenium suite)
 
-## 6. Quick start 
+## Instalacija i pokretanje (lokalni razvoj)
 
-### 6.1 Pokretanje backend-a
+Lokalno podizanje projekta je podeljeno u četiri jasna koraka i može se završiti za nekoliko minuta.
+
+### 1) Backend
 
 ```bash
 cd backend
@@ -80,11 +278,9 @@ npm install
 npm start
 ```
 
-Podrazumevana adresa backend-a: `http://localhost:3232`
+Backend default URL: `http://localhost:3232`
 
-### 6.2 Pokretanje frontend-a
-
-U novom terminalu:
+### 2) Frontend
 
 ```bash
 cd frontend
@@ -92,186 +288,109 @@ npm install
 npm start
 ```
 
-Podrazumevana adresa frontend-a: `http://localhost:4200`
+Frontend default URL: `http://localhost:4200`
 
-### 6.3 Pokretanje POM UI testova (Selenium + TestNG)
+### 3) Seed podaci
 
-U novom terminalu:
+Iz foldera `backend/`:
+
+```bash
+npm run seed
+```
+
+Reset + seed:
+
+```bash
+npm run seed:reset
+```
+
+`seed:reset` briše sve kolekcije i generiše realističan demo dataset (korisnici, dostupnosti, istorijski i budući termini, kartoni, recepti).
+
+### 4) UI automation (POM)
 
 ```bash
 cd page-object-model
 mvn test -Dsurefire.suiteXmlFiles=testng.xml
 ```
 
-Napomena: pre pokretanja testova moraju biti podignuti backend, frontend i seed podaci.
+Napomena: za uspešan run testova potrebno je da backend i frontend budu aktivni i da seed podaci postoje.
 
-## 7. Konfiguracija
+## Konfiguracija
 
-### 7.1 Backend konfiguracija (`backend/config.js`)
+### Backend konfiguracija
 
-Podrazumevane vrednosti:
+Fajl: `backend/config.js`
 
-- `PORT: 3232`
-- `MongoConnection: mongodb://localhost:27017/Medify`
-- `secret: <jwt-secret>`
+- `PORT` (default `3232`)
+- `MongoConnection` (default `mongodb://localhost:27017/Medify`)
+- `secret` (JWT secret)
 
-Ako promenis `PORT`, obavezno azuriraj frontend API URL.
+### Frontend API konfiguracija
 
-### 7.2 Frontend konfiguracija (`frontend/src/environments/environment.ts`)
+Fajl: `frontend/src/environments/environment.ts`
 
-Podrazumevano:
+- `apiUrl` (default `http://localhost:3232`)
 
-```ts
-export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:3232'
-};
-```
+## Frontend ruta mapa
 
-Ako backend radi na drugom hostu/portu, promeni `apiUrl`.
+Javne rute:
 
-## 8. Seed podaci i test nalozi
+- `/login`
+- `/register`
 
-Seed skripte su u `backend/scripts/seed.js`.
+Zaštićene rute (`authGuard(true)`):
 
-Komande (`backend/`):
-
-- `npm run seed` - puni bazu samo ako je prazna
-- `npm run seed:reset` - brise postojecu bazu i puni ponovo
-
-Seed kreira:
-
-- 1 admin nalog
-- 2 doctor naloga
-- 2 patient naloga
-- demo termine, kartone i recepte
-
-Test kredencijali iz seed-a (JMBG / lozinka):
-
-- Admin: `1001001001001` / `Admin123!`
-- Doctor 1: `3003003003003` / `Doctor123!`
-- Doctor 2: `4004004004004` / `Doctor123!`
-- Patient 1: `5005005005005` / `Patient123!`
-- Patient 2: `6006006006006` / `Patient123!`
-
-## 9. NPM skripte
-
-### 9.1 Backend (`backend/package.json`)
-
-- `npm start` - pokrece API server (`node index.js`)
-- `npm run seed` - pokrece seed bez reset-a
-- `npm run seed:reset` - reset + seed
-
-### 9.2 Frontend (`frontend/package.json`)
-
-- `npm start` - Angular dev server
-- `npm run build` - build aplikacije
-- `npm run watch` - build u watch modu
-- `npm run test` - testovi
-
-## 10. API pregled (prefiksi ruta)
-
-Glavni prefiksi:
-
-- `/auth`
+- `/dashboard`
 - `/appointments`
 - `/medical-records`
 - `/prescriptions`
 - `/doctors`
-- `/admin`
+- `/doctors/:id`
+- `/profile`
 
-Tipicni endpoint-i:
+Role-restricted rute:
 
-- Auth:
-  - `POST /auth/register`
-  - `POST /auth/login`
-  - `GET /auth/users` (admin)
-- Appointments:
-  - `POST /appointments`
-  - `GET /appointments/doctor`
-  - `GET /appointments/patient`
-  - `PUT /appointments/:id/status`
-- Medical records:
-  - `POST /medical-records`
-  - `GET /medical-records/patient/:patientId`
-  - `GET /medical-records/:id`
-  - `PUT /medical-records/:id`
-- Prescriptions:
-  - `POST /prescriptions`
-  - `GET /prescriptions/patient/:patientId`
-  - `PUT /prescriptions/:id/status`
-- Doctors:
-  - `GET /doctors`
-  - `GET /doctors/search`
-  - `GET /doctors/:id/availability`
-  - `GET /doctors/:id/available-slots`
+- doctor: `/availability`
+- admin: `/users`, `/admin/dashboard`, `/admin/appointments`, `/admin/medical-records`, `/admin/prescriptions`, `/admin/statistics`
 
-## 11. Frontend stranice (pregled)
+## Test kredencijali (iz seed skripte)
 
-- Login / Register
-- Dashboard
-- Termini
-- Medicinski kartoni
-- Recepti
-- Doktori
-- Dostupnost
-- Admin sekcije
+- admin: `1001001001001` / `Admin123!`
+- doctor: `3003003003003` / `Doctor123!`
+- doctor: `4004004004004` / `Doctor123!`
+- patient: `5005005005005` / `Patient123!`
+- patient: `6006006006006` / `Patient123!`
 
-## 12. Tipican tok rada
+## Bezbednosne i operativne napomene
 
-Doktor scenario:
+- CORS je trenutno podešen na frontend origin `http://localhost:4200`
+- u razvojnom režimu je JWT secret hardkodovan u `backend/config.js` i treba ga zameniti environment promenljivama pre produkcije
+- backend autentifikacija i autorizacija su centralizovane kroz Passport i middleware zaštitu ruta
 
-1. Doktor vidi listu termina.
-2. Zavrsava termin.
-3. Iz zavrsenog termina kreira medicinski karton.
-4. Iz kartona moze otvoriti kreiranje recepta.
+## Troubleshooting
 
-Patient scenario:
+Ako nešto ne radi iz prve, sekcija ispod pokriva najčešće situacije i brza rešenja.
 
-1. Pacijent zakazuje i prati svoje termine.
-2. Gleda svoje medicinske kartone.
-3. Gleda recepte i njihov status.
+### Frontend ne komunicira sa backend-om
 
-## 13. Troubleshooting
+- proveriti da backend radi na portu iz `frontend/src/environments/environment.ts`
+- proveriti CORS origin podešavanje u `backend/index.js`
 
-- Frontend ne moze da pristupi API-ju:
-  - proveri da backend radi na `http://localhost:3232`
-  - proveri `frontend/src/environments/environment.ts`
-- Login ne prolazi:
-  - proveri da koristis ispravan `JMBG` i lozinku
-  - proveri da li je seed pokrenut (`npm run seed:reset`)
-- Nema podataka na listama:
-  - proveri da li je baza prazna
-  - proveri ulogu korisnika i prava pristupa
+### Login/guard loop
 
-- Selenium/TestNG testovi padaju odmah na login/register:
-  - proveri da frontend radi na `http://localhost:4200`
-  - proveri da backend radi na `http://localhost:3232`
-  - pokreni seed (`cd backend && npm run seed:reset`)
+- proveriti validnost tokena preko `GET /auth/validate-token`
+- proveriti da li je token u localStorage (`medify_token`)
 
-- CDP warning za Chrome u Selenium testovima:
-  - warning je cesto informativan, ali je preporuka da Selenium verzija u `page-object-model/pom.xml` bude uskladjena sa verzijom Chrome-a
+### Nema dostupnih termina doktora
 
-## 14. Napomena
+- proveriti da li doktor ima dostupnosti (`GET /doctors/:id/availability`)
+- po potrebi generisati default dostupnost (`POST /doctors/:id/availability/generate-default`)
 
-Dokumentacija za backend i frontend postoji i u podfolderima (`backend/README.md`, `frontend/README.md`), ali je ovaj fajl (`README.md`) glavni i obuhvata kompletan projekat end-to-end.
+### Admin dashboard vraća 403
 
-## 15. UI automatizacija (POM)
+- proveriti da li je korisnik u ulozi `admin`
+- proveriti da frontend poziva `/api/admin/*` rute
 
-UI automatizacija je izdvojena u modul `page-object-model/`.
+---
 
-- Framework: Selenium WebDriver + TestNG + WebDriverManager
-- Stil: Page Object Model (POM)
-- Glavni suite fajl: `page-object-model/testng.xml`
-
-Trenutno pokrivene stranice:
-
-- Login (`LoginPageTest`)
-- Register (`RegisterPageTest`)
-- Dashboard (`DashboardPageTest`)
-- Profile (`ProfilePageTest`)
-- Doctors (`DoctorsPageTest`)
-
-Pokretanje iz IntelliJ-a:
-
-- desni klik na `page-object-model/testng.xml` -> `Run 'testng.xml'`
+Medify je pravljen sa puno pažnje, truda i želje da bude što bolji💕. 
