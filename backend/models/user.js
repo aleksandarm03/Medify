@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const crypto = require("crypto");
 const jwt=require("jsonwebtoken");
 const config=require("../config");
+const DoctorAvailabilityService = require("../services/doctorAvailabilityService");
 
 const UserSchema = new mongoose.Schema({
     // Zajednička polja za sve korisnike
@@ -105,7 +106,6 @@ UserModel.register=async function(body)
     
     // Automatsko kreiranje nedeljne dostupnosti za doktore
     if (savedUser.role === "doctor" && savedUser.shift) {
-        const DoctorAvailabilityService = require("../services/doctorAvailabilityService");
         try {
             await DoctorAvailabilityService.createDefaultAvailability(savedUser._id, savedUser.shift);
         } catch (error) {

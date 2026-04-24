@@ -3,6 +3,16 @@ const passport = require("./config");
 const DoctorAvailabilityService = require("../services/doctorAvailabilityService");
 const UserModel = require("../models/user");
 
+function getApprovedDoctorQuery(extra = {}) {
+    return {
+        role: "doctor",
+        isActive: true,
+        isApproved: true,
+        approvalStatus: "approved",
+        ...extra,
+    };
+}
+
 // ============ SPECIFIČNE RUTE SA /availability - MORAJU BITI PRE /:id ============
 
 // Postavljanje dostupnosti doktora
@@ -130,6 +140,11 @@ router.get("/:id/available-slots",
                 return res.status(400).json({ message: "Nevažeći format datuma. Koristite YYYY-MM-DD." });
             }
 
+            const doctor = await UserModel.findOne(getApprovedDoctorQuery({ _id: doctorId })).select("_id");
+            if (!doctor) {
+                return res.status(404).json({ message: "Doktor nije pronađen ili nije dostupan za zakazivanje." });
+            }
+
             const slots = await DoctorAvailabilityService.getAvailableTimeSlots(doctorId, date);
             return res.json({ date: date, availableSlots: slots });
         } catch (error) {
@@ -229,7 +244,7 @@ router.get("/search",
     async function (req, res) {
         try {
             const { specialization, name } = req.query;
-            const query = { role: "doctor" };
+            const query = getApprovedDoctorQuery();
 
             if (specialization) {
                 query.specialization = new RegExp(specialization, "i");
@@ -259,7 +274,7 @@ router.get("/",
     passport.authenticate("jwt", { session: false }),
     async function (req, res) {
         try {
-            const doctors = await UserModel.find({ role: "doctor" })
+            const doctors = await UserModel.find(getApprovedDoctorQuery())
                 .select("firstName lastName specialization yearsOfExperience officeNumber phoneNumber")
                 .sort({ lastName: 1, firstName: 1 });
 
@@ -276,7 +291,7 @@ router.get("/:id",
     passport.authenticate("jwt", { session: false }),
     async function (req, res) {
         try {
-            const doctor = await UserModel.findOne({ _id: req.params.id, role: "doctor" })
+            const doctor = await UserModel.findOne(getApprovedDoctorQuery({ _id: req.params.id }))
                 .select("firstName lastName specialization yearsOfExperience officeNumber phoneNumber shift licenseNumber");
 
             if (!doctor) {

@@ -4,6 +4,16 @@ const AppointmentService = require("../services/appointmentService");
 const DoctorAvailabilityService = require("../services/doctorAvailabilityService");
 const UserModel = require("../models/user");
 
+function isDoctorBookable(doctor) {
+    return Boolean(
+        doctor &&
+        doctor.role === "doctor" &&
+        doctor.isActive === true &&
+        doctor.isApproved === true &&
+        doctor.approvalStatus === "approved"
+    );
+}
+
 function pad2(value) {
     return String(value).padStart(2, "0");
 }
@@ -110,7 +120,7 @@ router.post(
           return res.status(404).json({ message: "Doktor nije pronađen." });
         }
 
-        if (doctor.role !== "doctor") {
+                if (doctor.role !== "doctor") {
           return res
             .status(400)
             .json({ message: "Korisnik mora biti doktor." });
@@ -120,6 +130,12 @@ router.post(
           .status(403)
           .json({ message: "Samo doktori i pacijenti mogu zakazivati termine." });
       }
+
+            if (!isDoctorBookable(doctor)) {
+                return res.status(400).json({
+                    message: "Nije moguće zakazati kod ovog doktora jer nalog nije aktivan ili odobren.",
+                });
+            }
 
             // Termin mora da bude u okviru dostupnih slotova doktora
             const dateKey = toLocalDateKey(appointmentDateObj);

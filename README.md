@@ -157,7 +157,41 @@ Kombinacija ovih modula omogućava da se ceo ciklus rada, od zakazivanja do evid
 ### Root
 
 - `GET /` opis sistema
-- `GET /test` health-like test endpoint
+
+## Kritična bezbednosna ispravka: odbijeni doktor ne sme biti zakaziv
+
+Ova ispravka rešava visokorizičan scenario u kome je doktor sa statusom `rejected` ostajao vidljiv u listama i potencijalno dostupan za zakazivanje.
+
+### Problem koji je postojao
+
+- admin odbije doktora (`approvalStatus = rejected`, `isApproved = false`)
+- pacijent ga i dalje vidi kroz `/doctors` i `/doctors/search`
+- kroz pojedine tokove je bilo moguće pokušati zakazivanje termina
+
+### Implementirani guardrails
+
+Sada je kroz backend uvedeno jedinstveno pravilo da doktor mora ispunjavati sva 4 uslova da bi bio "bookable":
+
+- `role = doctor`
+- `isActive = true`
+- `isApproved = true`
+- `approvalStatus = approved`
+
+Ključna implementacija:
+
+- shared helper: `backend/utils/doctorEligibility.js`
+- booking provera: `backend/routes/appointment.js`
+- query filtriranje doktora: `backend/routes/doctor.js`
+
+### Efekat po endpointima
+
+- `GET /doctors` vraća samo aktivne i odobrene doktore
+- `GET /doctors/search` pretražuje samo aktivne i odobrene doktore
+- `GET /doctors/:id` vraća detalj samo ako je doktor aktivan i odobren
+- `GET /doctors/:id/available-slots` vraća slotove samo za aktivnog i odobrenog doktora
+- `POST /appointments` blokira kreiranje termina ako doktor nije aktivan i odobren
+
+Na ovaj način je bug zatvoren na backend nivou (source of truth), pa UI više ne zavisi od "dobre volje" klijenta niti od front-end filtriranja.
 
 ### Auth (`/auth`)
 
@@ -360,6 +394,78 @@ Role-restricted rute:
 - doctor: `4004004004004` / `Doctor123!`
 - patient: `5005005005005` / `Patient123!`
 - patient: `6006006006006` / `Patient123!`
+
+## Strategija testiranja i regresija
+
+Dokumentovana su dva nivoa test pokrivenosti za kritična pravila odobravanja doktora.
+
+### 1) Backend unit test (pravilo podobnosti doktora)
+
+Fajl:
+
+- `backend/tests/doctorEligibility.test.js`
+
+Pokriće:
+
+- `isDoctorBookable = true` samo za aktivnog i odobrenog doktora
+- `isDoctorBookable = false` za odbijenog doktora
+- `isDoctorBookable = false` za neaktivnog doktora i ne-doctor role
+- `getApprovedDoctorQuery` uvek nameće filtere za odobrenog doktora
+
+Pokretanje:
+
+```bash
+cd backend
+node --test tests/doctorEligibility.test.js
+```
+
+Opcionalno (ako želite suite komandu):
+
+```bash
+cd backend
+node --test tests/**/*.test.js
+```
+
+### 2) POM E2E regresioni test (UI + API priprema stanja)
+
+Fajl:
+
+- `page-object-model/src/test/java/pmf/imi/moodle/DoctorsPageTest.java`
+
+Novi scenario:
+
+- `testRejectedDoctorIsNotVisibleInSearchResults`
+
+Šta test radi end-to-end:
+
+1. registruje novog doktora preko API (`POST /auth/register`)
+2. loguje se kao admin i uzima JWT (`POST /auth/login`)
+3. odbija tog doktora (`POST /api/admin/reject-user/:userId`)
+4. kao pacijent otvara `/doctors` i pretražuje po imenu tog doktora
+5. verifikuje da je broj rezultata `0`
+
+Ovaj test je važan jer potvrđuje i backend filtriranje i realno ponašanje UI pretrage nakon odbijanja doktora.
+
+Pokretanje samo tog testa:
+
+```bash
+cd page-object-model
+mvn -Dtest=DoctorsPageTest#testRejectedDoctorIsNotVisibleInSearchResults test
+```
+
+Pokretanje celog POM suite-a:
+
+```bash
+cd page-object-model
+mvn test -Dsurefire.suiteXmlFiles=testng.xml
+```
+
+Napomena za okruženje:
+
+- backend mora biti podignut na `http://localhost:3232`
+- frontend mora biti podignut na `http://localhost:4200`
+- seed kredencijali moraju postojati
+- ako `mvn` komanda nije dostupna, instalirati Maven ili pokrenuti testove iz IDE-a (TestNG run configuration)
 
 ## Bezbednosne i operativne napomene
 

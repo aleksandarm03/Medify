@@ -52,10 +52,6 @@ Dostupni endpointi:
 });
 
 
-app.get('/test',(req,res)=>{
-    res.send("Test API!")
-});
-
 app.listen(config.PORT,()=>{
     console.log(`Aplikacija je pokrenuta na portu ${config.PORT}!`);
 });
