@@ -26,6 +26,11 @@
         <a *ngIf="authService.hasRole('doctor')" routerLink="/medical-records" routerLinkActive="active" (click)="closeMenu()">Medicinski kartoni</a>
         <a *ngIf="authService.hasRole('doctor')" routerLink="/prescriptions" routerLinkActive="active" (click)="closeMenu()">Recepti</a>
         <a *ngIf="authService.hasRole('doctor')" routerLink="/availability" routerLinkActive="active" (click)="closeMenu()">Dostupnost</a>
+
+        <a routerLink="/notifications" routerLinkActive="active" (click)="closeMenu()">
+          Obaveštenja
+          <span *ngIf="notificationStore.unreadCount() > 0">({{ notificationStore.unreadCount() }})</span>
+        </a>
       
         <a *ngIf="authService.hasRole('admin')" routerLink="/admin/appointments" routerLinkActive="active" (click)="closeMenu()">Svi termini</a>
         <a *ngIf="authService.hasRole('admin')" routerLink="/admin/medical-records" routerLinkActive="active" (click)="closeMenu()">Svi kartoni</a>
@@ -47,6 +52,19 @@
       </div>
     </div>
   </nav>
+
+  <div class="global-notification-toast" *ngIf="notificationStore.currentToast() as toast">
+    <div class="toast-content" [class]="'toast-content ' + toast.type">
+      <div>
+        <strong>{{ toast.title }}</strong>
+        <p>{{ toast.message }}</p>
+      </div>
+      <div class="toast-actions">
+        <a routerLink="/notifications">Prikaži sve</a>
+        <button type="button" (click)="dismissNotificationToast()">Zatvori</button>
+      </div>
+    </div>
+  </div>
 
   <main class="main-content">
     <router-outlet></router-outlet>

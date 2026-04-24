@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AppointmentService } from '../../services/appointment.service';
 import { DoctorService } from '../../services/doctor.service';
 import { AuthService } from '../../services/auth.service';
+import { SocketService } from '../../services/socket.service';
 import { Appointment } from '../../models/appointment.model';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -20,6 +21,7 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
   appointments = signal<Appointment[]>([]);
   loading = signal(false);
   pageError = signal('');
+  pageNotice = signal('');
   formError = signal('');
   showCreateModal = signal(false);
   statusFilter = signal('');
@@ -88,6 +90,7 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
     private appointmentService: AppointmentService,
     private doctorService: DoctorService,
     private authService: AuthService,
+    private socketService: SocketService,
     private router: Router
   ) {}
 
@@ -112,6 +115,8 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
           }
         }
       });
+
+      this.bindSocketNotifications();
   }
 
   ngOnDestroy() {
@@ -149,6 +154,31 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       }
     });
+  }
+
+  private bindSocketNotifications() {
+    this.socketService
+      .getAppointmentCreatedObservable()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event: any) => {
+        const patientName = event?.appointment?.patientName || 'pacijenta';
+        this.pageNotice.set(`Novi termin je zakazan od ${patientName}.`);
+        this.loadAppointments();
+      });
+
+    this.socketService
+      .getAppointmentUpdatedObservable()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event: any) => {
+        const status = event?.newStatus || 'ažuriran';
+        const statusText = this.getStatusText(status);
+        this.pageNotice.set(`Status termina je promijenjen: ${statusText}.`);
+        this.loadAppointments();
+      });
+  }
+
+  clearNotice() {
+    this.pageNotice.set('');
   }
 
   createAppointment() {

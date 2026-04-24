@@ -47,6 +47,11 @@
 
   <div *ngIf="pageError()" class="error-message">{{ pageError() }}</div>
 
+  <div *ngIf="pageNotice()" class="success-message" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+    <span>{{ pageNotice() }}</span>
+    <button type="button" class="btn btn-secondary" (click)="clearNotice()">Zatvori</button>
+  </div>
+
   <div *ngIf="loading()" class="loading">Učitavanje...</div>
 
   <div *ngIf="!loading() && visibleAppointments().length === 0" class="empty-state">

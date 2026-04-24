@@ -3,6 +3,7 @@ const passport = require("./config");
 const AppointmentService = require("../services/appointmentService");
 const DoctorAvailabilityService = require("../services/doctorAvailabilityService");
 const UserModel = require("../models/user");
+const socketEmitter = require("../socket/socketEmitter");
 
 function isDoctorBookable(doctor) {
     return Boolean(
@@ -162,6 +163,17 @@ router.post(
         doctor,
         patient
       );
+
+            socketEmitter.emitAppointmentCreated(String(doctor._id), {
+                appointmentId: String(appointment._id),
+                patientId: String(patient._id),
+                patientName: `${patient.firstName} ${patient.lastName}`,
+                doctorId: String(doctor._id),
+                appointmentDate: appointment.appointmentDate,
+                reason: appointment.reason,
+                status: appointment.status
+            });
+
       return res.status(201).json(appointment);
     } catch (error) {
       console.error("Create appointment error:", error);
@@ -300,6 +312,15 @@ router.put("/:id/status",
             }
 
             const updatedAppointment = await AppointmentService.updateAppointmentStatus(req.params.id, status);
+
+            socketEmitter.emitAppointmentStatusUpdated(
+                String(updatedAppointment._id),
+                String(updatedAppointment.patient?._id || appointment.patient._id),
+                String(updatedAppointment.doctor?._id || appointment.doctor._id),
+                status,
+                ''
+            );
+
             return res.json(updatedAppointment);
         } catch (error) {
             console.error("Update appointment status error:", error);

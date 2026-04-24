@@ -132,6 +132,58 @@
   background-color: var(--color-bg-app);
 }
 
+.global-notification-toast {
+  position: fixed;
+  top: 86px;
+  right: 16px;
+  z-index: 60;
+  width: min(380px, calc(100vw - 32px));
+}
+
+.toast-content {
+  background: #ffffff;
+  border: 1px solid #d6e1ea;
+  border-left: 4px solid #2f6db3;
+  border-radius: 12px;
+  padding: 0.8rem;
+  box-shadow: 0 8px 20px rgba(8, 22, 34, 0.18);
+}
+
+.toast-content.success {
+  border-left-color: #1f8a4d;
+}
+
+.toast-content.warning {
+  border-left-color: #c47a00;
+}
+
+.toast-content.error {
+  border-left-color: #b5332b;
+}
+
+.toast-content p {
+  margin: 0.35rem 0 0;
+  color: #2d3a4b;
+}
+
+.toast-actions {
+  margin-top: 0.6rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.toast-actions a,
+.toast-actions button {
+  font-size: 0.82rem;
+  background: #eef3f8;
+  border: 1px solid #ccd7e2;
+  border-radius: 8px;
+  padding: 0.3rem 0.55rem;
+  text-decoration: none;
+  color: #1f2f44;
+  cursor: pointer;
+}
+
 .menu-toggle {
   display: none;
   width: 40px;
@@ -202,6 +254,12 @@
 
   .main-content {
     padding: 1.25rem;
+  }
+
+  .global-notification-toast {
+    top: 74px;
+    right: 10px;
+    width: calc(100vw - 20px);
   }
 }
 

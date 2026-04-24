@@ -1,0 +1,35 @@
+<div class="notifications-page">
+  <div class="page-head">
+    <h1>Obaveštenja</h1>
+    <div class="head-actions">
+      <span class="badge">Nepročitano: {{ unreadCount }}</span>
+      <button type="button" class="btn btn-secondary" (click)="notificationStore.markAllAsRead()">Označi sve kao pročitano</button>
+      <button type="button" class="btn btn-danger" (click)="notificationStore.clearAll()">Obriši sve</button>
+    </div>
+  </div>
+
+  <div *ngIf="!hasNotifications" class="empty-state">
+    Trenutno nema obaveštenja.
+  </div>
+
+  <div class="notifications-list" *ngIf="hasNotifications">
+    <div class="notification-card" *ngFor="let item of notifications" [class.unread]="!item.read">
+      <div class="card-head">
+        <h3>{{ item.title }}</h3>
+        <span class="type" [class]="item.type">{{ item.type }}</span>
+      </div>
+
+      <p class="message">{{ item.message }}</p>
+
+      <div class="meta">
+        <span>{{ formatDate(item.createdAt) }}</span>
+        <span>Kategorija: {{ item.category }}</span>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn-secondary" (click)="markRead(item)" [disabled]="item.read">Označi kao pročitano</button>
+        <button type="button" class="btn btn-danger" (click)="remove(item)">Obriši</button>
+      </div>
+    </div>
+  </div>
+</div>

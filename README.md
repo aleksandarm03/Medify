@@ -36,6 +36,7 @@ Slika prikazuje kako frontend, backend i baza rade kao jedinstven sistem: Angula
 
 - Node.js
 - Express 5
+- Socket.io (real-time event bus)
 - Passport Local + Passport JWT
 - jsonwebtoken
 - Mongoose
@@ -46,6 +47,7 @@ Slika prikazuje kako frontend, backend i baza rade kao jedinstven sistem: Angula
 - Angular 21 (standalone komponente)
 - TypeScript
 - RxJS
+- Socket.io client
 - Angular Router + route guards
 - HTTP interceptor za JWT
 
@@ -151,6 +153,34 @@ U nastavku je pregled funkcionalnosti po domenima, onako kako su implementirane 
 - audit pregled nedavnih aktivnosti
 
 Kombinacija ovih modula omogućava da se ceo ciklus rada, od zakazivanja do evidencije terapije, prati u jedinstvenom sistemu.
+
+### 7) Real-time obaveštenja (globalno)
+
+Uveden je Socket.io sloj koji omogućava trenutnu isporuku obaveštenja bez osvežavanja stranice.
+
+Ključna promena je da obaveštenja više nisu vezana samo za ekran termina, već su dostupna globalno, na bilo kom ekranu gde je korisnik prijavljen.
+
+Implementirani tok:
+
+- backend emituje događaje pri zakazivanju i promeni statusa termina
+- frontend centralizovano prikuplja događaje kroz globalni notification store
+- layout prikazuje globalni toast na svim zaštićenim rutama
+- stranica `/notifications` prikazuje listu aktuelnih obaveštenja (read/unread, clear)
+
+Najvažniji tehnički detalji:
+
+- JWT za socket handshake koristi isti token iz Auth servisa (`medify_token`)
+- Socket konekcija se automatski aktivira nakon login-a i gasi nakon logout-a
+- backend emituje ciljano ka relevantnim učesnicima (doctor/patient), ne broadcast ka svima
+- frontend čuva obaveštenja po korisniku u localStorage ključu `medify_notifications_<userId>`
+
+Relevantne implementacije:
+
+- backend: `backend/socket/*`, `backend/routes/appointment.js`
+- frontend socket lifecycle: `frontend/src/app/services/socket.service.ts`
+- frontend global store: `frontend/src/app/services/notification-store.service.ts`
+- globalni UI prikaz: `frontend/src/app/components/layout/*`
+- stranica obaveštenja: `frontend/src/app/components/notifications/*`
 
 ## API mapa
 
@@ -381,6 +411,7 @@ Zaštićene rute (`authGuard(true)`):
 - `/doctors`
 - `/doctors/:id`
 - `/profile`
+- `/notifications`
 
 Role-restricted rute:
 
@@ -491,6 +522,14 @@ Ako nešto ne radi iz prve, sekcija ispod pokriva najčešće situacije i brza r
 
 - proveriti da li doktor ima dostupnosti (`GET /doctors/:id/availability`)
 - po potrebi generisati default dostupnost (`POST /doctors/:id/availability/generate-default`)
+
+### Real-time obaveštenja se ne prikazuju
+
+- proveriti da su backend i frontend podignuti pre login-a
+- proveriti da je korisnik prijavljen (postoji `medify_token` u localStorage)
+- proveriti browser konzolu za `[Socket] Povezan sa serverom`
+- proveriti backend log za linije povezivanja korisnika i emit događaja
+- proveriti da li je korisnik na bilo kojoj zaštićenoj ruti (layout + global toast)
 
 ### Admin dashboard vraća 403
 

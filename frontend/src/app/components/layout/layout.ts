@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet } from '@angular/router';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { NotificationStoreService } from '../../services/notification-store.service';
 
 @Component({
   selector: 'app-layout',
@@ -16,6 +17,7 @@ export class LayoutComponent {
 
   constructor(
     public authService: AuthService,
+    public notificationStore: NotificationStoreService,
     private router: Router
   ) {}
 
@@ -59,6 +61,10 @@ export class LayoutComponent {
     }
 
     return '/images/patient.png';
+  }
+
+  dismissNotificationToast() {
+    this.notificationStore.dismissToast();
   }
 }
 
