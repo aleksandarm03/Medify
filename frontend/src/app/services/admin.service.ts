@@ -21,6 +21,12 @@ export interface AdminDashboardData {
     completed: number;
     canceled: number;
   };
+  appointmentsByCancellationSource: {
+    patient: number;
+    doctor: number;
+    admin: number;
+    other: number;
+  };
   pendingApprovals: any[];
   recentUsers: any[];
   recentAppointments: any[];

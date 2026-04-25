@@ -29,6 +29,7 @@ router.get('/dashboard', async (req, res) => {
             weekAppointments,
             monthAppointments,
             appointmentsByStatus,
+            canceledAppointmentsByRole,
             recentActivities,
             topDoctors,
             systemHealth
@@ -61,6 +62,17 @@ router.get('/dashboard', async (req, res) => {
             // Termini po statusu
             Appointment.aggregate([
                 { $group: { _id: '$status', count: { $sum: 1 } } }
+            ]),
+
+            // Otkazani termini po inicijatoru
+            Appointment.aggregate([
+                { $match: { status: 'canceled' } },
+                {
+                    $group: {
+                        _id: { $ifNull: ['$canceledByRole', 'unknown'] },
+                        count: { $sum: 1 }
+                    }
+                }
             ]),
             
             // Nedavne aktivnosti (novi korisnici i termini)
@@ -130,6 +142,17 @@ router.get('/dashboard', async (req, res) => {
             appointmentStatusMap[item._id] = item.count;
         });
 
+        const canceledByRoleMap = {};
+        canceledAppointmentsByRole.forEach(item => {
+            canceledByRoleMap[item._id] = item.count;
+        });
+
+        const canceledByPatient = canceledByRoleMap.patient || 0;
+        const canceledByDoctor = canceledByRoleMap.doctor || 0;
+        const canceledByAdmin = canceledByRoleMap.admin || 0;
+        const canceledByOther = (canceledByRoleMap.system || 0) + (canceledByRoleMap.unknown || 0);
+        const categorizedCanceled = canceledByPatient + canceledByDoctor + canceledByAdmin;
+
         const [recentUsers, recentAppointments] = recentActivities;
         const [totalRecords, totalPrescriptions, totalAvailabilities, activeDoctors] = systemHealth;
 
@@ -149,7 +172,13 @@ router.get('/dashboard', async (req, res) => {
             appointmentsByStatus: {
                 scheduled: appointmentStatusMap.scheduled || 0,
                 completed: appointmentStatusMap.completed || 0,
-                canceled: appointmentStatusMap.canceled || 0
+                canceled: categorizedCanceled
+            },
+            appointmentsByCancellationSource: {
+                patient: canceledByPatient,
+                doctor: canceledByDoctor,
+                admin: canceledByAdmin,
+                other: canceledByOther
             },
             pendingApprovals,
             recentUsers,

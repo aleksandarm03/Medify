@@ -79,8 +79,12 @@
             <span class="stat-count">{{ data()!.appointmentsByStatus.completed }}</span>
           </div>
           <div class="appointment-stat canceled">
-            <span class="stat-label">Otkazani</span>
-            <span class="stat-count">{{ data()!.appointmentsByStatus.canceled }}</span>
+            <span class="stat-label">Otkazao pacijent</span>
+            <span class="stat-count">{{ data()!.appointmentsByCancellationSource.patient }}</span>
+          </div>
+          <div class="appointment-stat canceled">
+            <span class="stat-label">Otkazao doktor</span>
+            <span class="stat-count">{{ data()!.appointmentsByCancellationSource.doctor }}</span>
           </div>
         </div>
       </div>

@@ -22,8 +22,12 @@
       <div class="stat-value">{{ totalCompleted() }}</div>
     </div>
     <div class="stat-card canceled">
-      <div class="stat-label">Otkazani</div>
-      <div class="stat-value">{{ totalCanceled() }}</div>
+      <div class="stat-label">Otkazao pacijent</div>
+      <div class="stat-value">{{ totalCanceledByPatient() }}</div>
+    </div>
+    <div class="stat-card canceled">
+      <div class="stat-label">Otkazao doktor</div>
+      <div class="stat-value">{{ totalCanceledByDoctor() }}</div>
     </div>
   </div>
 
@@ -37,9 +41,9 @@
           <th>Ukupno</th>
           <th>Zakazani</th>
           <th>Završeni</th>
-          <th>Otkazani</th>
+          <th>Otkazao doktor</th>
           <th>Završenost</th>
-          <th>Otkazivanje</th>
+          <th>Stopa otkazivanja doktora</th>
         </tr>
       </thead>
       <tbody>

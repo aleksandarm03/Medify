@@ -263,6 +263,12 @@ async function seed() {
 
     if (i % 10 === 0) {
       appointment.status = "canceled";
+      appointment.canceledByRole = i % 2 === 0 ? "patient" : "doctor";
+      appointment.canceledByUser = i % 2 === 0 ? patient._id : doctor._id;
+      appointment.cancellationReason =
+        appointment.canceledByRole === "patient"
+          ? "Seed: pacijent je otkazao termin"
+          : "Seed: doktor je otkazao termin";
     } else {
       appointment.status = "completed";
     }
@@ -348,7 +354,17 @@ async function seed() {
       pickFrom(appointmentReasons, i + 5)
     );
 
-    appointment.status = i % 8 === 0 ? "canceled" : "scheduled";
+    if (i % 8 === 0) {
+      appointment.status = "canceled";
+      appointment.canceledByRole = i % 2 === 0 ? "doctor" : "patient";
+      appointment.canceledByUser = i % 2 === 0 ? doctor._id : patient._id;
+      appointment.cancellationReason =
+        appointment.canceledByRole === "doctor"
+          ? "Seed: doktor je otkazao termin"
+          : "Seed: pacijent je otkazao termin";
+    } else {
+      appointment.status = "scheduled";
+    }
     await appointment.save();
     appointments.push(appointment);
   }

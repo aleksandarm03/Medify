@@ -6,6 +6,9 @@ var AppointmentSchema=mongoose.Schema({
     appointmentDate:{type:Date,required:true},
     reason:{type:String,required:true},
     status:{type:String,enum:["scheduled","completed","canceled"],default:"scheduled"},
+    canceledByRole:{type:String,enum:["doctor","patient","admin","system","unknown"],default:null},
+    canceledByUser:{type:mongoose.Types.ObjectId,ref:"User",default:null},
+    cancellationReason:{type:String,default:null},
     createdAt:{type:Date,default:Date.now},
     updatedAt:{type:Date,default:Date.now}
 })

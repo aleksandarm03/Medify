@@ -5,6 +5,9 @@ export interface Appointment {
   appointmentDate: Date;
   reason: string;
   status: 'scheduled' | 'completed' | 'canceled';
+  canceledByRole?: 'doctor' | 'patient' | 'admin' | 'system' | 'unknown' | null;
+  canceledByUser?: string | null;
+  cancellationReason?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }

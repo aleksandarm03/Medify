@@ -32,7 +32,8 @@ export class AdminStatisticsComponent implements OnInit, OnDestroy {
   totalAppointments = signal(0);
   totalScheduled = signal(0);
   totalCompleted = signal(0);
-  totalCanceled = signal(0);
+  totalCanceledByPatient = signal(0);
+  totalCanceledByDoctor = signal(0);
 
   private destroy$ = new Subject<void>();
 
@@ -102,7 +103,9 @@ export class AdminStatisticsComponent implements OnInit, OnDestroy {
           stats.completed++;
           break;
         case 'canceled':
-          stats.canceled++;
+          if (apt.canceledByRole === 'doctor') {
+            stats.canceled++;
+          }
           break;
       }
     });
@@ -124,7 +127,12 @@ export class AdminStatisticsComponent implements OnInit, OnDestroy {
     this.totalAppointments.set(appointments.length);
     this.totalScheduled.set(appointments.filter(a => a.status === 'scheduled').length);
     this.totalCompleted.set(appointments.filter(a => a.status === 'completed').length);
-    this.totalCanceled.set(appointments.filter(a => a.status === 'canceled').length);
+    this.totalCanceledByPatient.set(
+      appointments.filter(a => a.status === 'canceled' && a.canceledByRole === 'patient').length
+    );
+    this.totalCanceledByDoctor.set(
+      appointments.filter(a => a.status === 'canceled' && a.canceledByRole === 'doctor').length
+    );
   }
 
   getCompletionClass(rate: number): string {

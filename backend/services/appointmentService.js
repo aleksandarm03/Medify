@@ -35,15 +35,33 @@ var getAppointmentById = async function(appointmentId) {
         .populate("patient", "firstName lastName phoneNumber JMBG");
 };
 
-var updateAppointmentStatus = async function(appointmentId, status) {
+var updateAppointmentStatus = async function(appointmentId, status, options = {}) {
+    const updateDoc = {
+        $set: {
+            status: status,
+            updatedAt: new Date()
+        }
+    };
+
+    if (status === 'canceled') {
+        updateDoc.$set.canceledByRole = options.canceledByRole || 'unknown';
+        updateDoc.$set.cancellationReason = options.cancellationReason || null;
+        if (options.canceledByUser) {
+            updateDoc.$set.canceledByUser = options.canceledByUser;
+        } else {
+            updateDoc.$unset = { canceledByUser: '' };
+        }
+    } else {
+        updateDoc.$unset = {
+            canceledByRole: '',
+            canceledByUser: '',
+            cancellationReason: ''
+        };
+    }
+
     return await AppointmentModel.findByIdAndUpdate(
         appointmentId,
-        { 
-            $set: { 
-                status: status,
-                updatedAt: new Date()
-            }
-        },
+        updateDoc,
         { new: true }
     ).populate("doctor", "firstName lastName")
      .populate("patient", "firstName lastName");
@@ -86,7 +104,7 @@ var getAllAppointments = async function() {
         .sort({ appointmentDate: -1 });
 };
 
-var cancelScheduledAppointmentsForUser = async function(userId) {
+var cancelScheduledAppointmentsForUser = async function(userId, options = {}) {
     const query = {
         status: 'scheduled',
         $or: [
@@ -107,6 +125,9 @@ var cancelScheduledAppointmentsForUser = async function(userId) {
         {
             $set: {
                 status: 'canceled',
+                canceledByRole: options.canceledByRole || 'unknown',
+                canceledByUser: options.canceledByUser || null,
+                cancellationReason: options.cancellationReason || null,
                 updatedAt: new Date()
             }
         }

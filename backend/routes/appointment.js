@@ -311,14 +311,23 @@ router.put("/:id/status",
                 return res.status(403).json({ message: "Nemate pravo da menjate ovaj termin." });
             }
 
-            const updatedAppointment = await AppointmentService.updateAppointmentStatus(req.params.id, status);
+            const cancellationReason = typeof req.body.reason === 'string' ? req.body.reason.trim() : '';
+            const statusOptions = status === 'canceled'
+                ? {
+                    canceledByRole: user.role,
+                    canceledByUser: user._id,
+                    cancellationReason: cancellationReason || null
+                }
+                : {};
+
+            const updatedAppointment = await AppointmentService.updateAppointmentStatus(req.params.id, status, statusOptions);
 
             socketEmitter.emitAppointmentStatusUpdated(
                 String(updatedAppointment._id),
                 String(updatedAppointment.patient?._id || appointment.patient._id),
                 String(updatedAppointment.doctor?._id || appointment.doctor._id),
                 status,
-                ''
+                status === 'canceled' ? (cancellationReason || '') : ''
             );
 
             return res.json(updatedAppointment);

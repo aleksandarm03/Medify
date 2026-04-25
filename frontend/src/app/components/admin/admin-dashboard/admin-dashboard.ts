@@ -21,7 +21,8 @@ export class AdminDashboardComponent implements OnInit {
     if (!d) return 0;
     return d.appointmentsByStatus.scheduled + 
            d.appointmentsByStatus.completed + 
-           d.appointmentsByStatus.canceled;
+           d.appointmentsByStatus.canceled +
+           d.appointmentsByCancellationSource.other;
   });
 
   completionRate = computed(() => {

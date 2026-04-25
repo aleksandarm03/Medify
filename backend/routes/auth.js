@@ -165,7 +165,18 @@ passport.authorizeRoles("admin"),
 
             const cancellationReason = `Termin je automatski otkazan jer je administratorski obrisan nalog ${roleLabel}.`;
 
-            const canceledAppointments = await AppointmentService.cancelScheduledAppointmentsForUser(String(userToDelete._id));
+            const canceledByRole = ['doctor', 'patient'].includes(userToDelete.role)
+                ? userToDelete.role
+                : 'admin';
+
+            const canceledAppointments = await AppointmentService.cancelScheduledAppointmentsForUser(
+                String(userToDelete._id),
+                {
+                    canceledByRole,
+                    canceledByUser: req.user._id,
+                    cancellationReason
+                }
+            );
 
             canceledAppointments.forEach((appointment) => {
                 socketEmitter.emitAppointmentStatusUpdated(
