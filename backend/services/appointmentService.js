@@ -86,6 +86,38 @@ var getAllAppointments = async function() {
         .sort({ appointmentDate: -1 });
 };
 
+var cancelScheduledAppointmentsForUser = async function(userId) {
+    const query = {
+        status: 'scheduled',
+        $or: [
+            { doctor: userId },
+            { patient: userId }
+        ]
+    };
+
+    const appointmentsToCancel = await AppointmentModel.find(query).select('_id');
+    const appointmentIds = appointmentsToCancel.map((appointment) => appointment._id);
+
+    if (appointmentIds.length === 0) {
+        return [];
+    }
+
+    await AppointmentModel.updateMany(
+        { _id: { $in: appointmentIds } },
+        {
+            $set: {
+                status: 'canceled',
+                updatedAt: new Date()
+            }
+        }
+    );
+
+    return await AppointmentModel.find({ _id: { $in: appointmentIds } })
+        .populate('doctor', 'firstName lastName')
+        .populate('patient', 'firstName lastName')
+        .sort({ updatedAt: -1 });
+};
+
 module.exports = {
     createAppointment,
     getAppointmentsByDoctor,
@@ -94,5 +126,6 @@ module.exports = {
     updateAppointmentStatus,
     updateAppointment,
     deleteAppointment,
-    getAllAppointments
+    getAllAppointments,
+    cancelScheduledAppointmentsForUser
 };

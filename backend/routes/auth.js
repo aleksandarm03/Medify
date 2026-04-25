@@ -1,5 +1,7 @@
 const router=require('express').Router();
 const userService=require('../services/userService');
+const AppointmentService = require('../services/appointmentService');
+const socketEmitter = require('../socket/socketEmitter');
 const passport=require('../routes/config');
 const UserModel = require('../models/user');
 
@@ -150,11 +152,36 @@ router.delete('/users/:id', passport.authenticate("jwt",{session:false}),
 passport.authorizeRoles("admin"),
     async function (req,res) {
         try {
-            const deletedUser = await userService.deleteUser(req.params.id);
-            if (!deletedUser) {
+            const userToDelete = await userService.findUserById(req.params.id);
+            if (!userToDelete) {
                 return res.status(404).json({ message: "Korisnik nije pronađen." });
             }
-            return res.json({ message: "Korisnik je uspešno obrisan." });
+
+            const roleLabel = userToDelete.role === 'doctor'
+                ? 'doktora'
+                : userToDelete.role === 'patient'
+                    ? 'pacijenta'
+                    : 'korisnika';
+
+            const cancellationReason = `Termin je automatski otkazan jer je administratorski obrisan nalog ${roleLabel}.`;
+
+            const canceledAppointments = await AppointmentService.cancelScheduledAppointmentsForUser(String(userToDelete._id));
+
+            canceledAppointments.forEach((appointment) => {
+                socketEmitter.emitAppointmentStatusUpdated(
+                    String(appointment._id),
+                    String(appointment.patient?._id || appointment.patient),
+                    String(appointment.doctor?._id || appointment.doctor),
+                    'canceled',
+                    cancellationReason
+                );
+            });
+
+            const deletedUser = await userService.deleteUser(req.params.id);
+            return res.json({
+                message: "Korisnik je uspešno obrisan.",
+                canceledAppointments: canceledAppointments.length
+            });
         } catch (error) {
             console.error("Delete user error:", error);
             return res.status(500).json({ message: "Greška pri brisanju korisnika." });

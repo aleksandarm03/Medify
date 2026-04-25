@@ -49,6 +49,11 @@ export class NotificationStoreService {
 
   private bindSocketEvents(): void {
     this.socketService.getAppointmentCreatedObservable().subscribe((event: any) => {
+      const role = this.authService.getCurrentUser()?.role;
+      if (role !== 'doctor') {
+        return;
+      }
+
       const patientName = event?.appointment?.patientName || 'pacijenta';
       this.pushNotification({
         title: 'Novi termin',
@@ -61,6 +66,11 @@ export class NotificationStoreService {
     });
 
     this.socketService.getAppointmentUpdatedObservable().subscribe((event: any) => {
+      const role = this.authService.getCurrentUser()?.role;
+      if (role !== 'doctor' && role !== 'patient') {
+        return;
+      }
+
       const status = this.formatStatus(event?.newStatus);
       this.pushNotification({
         title: 'Promena statusa termina',
@@ -73,13 +83,20 @@ export class NotificationStoreService {
     });
 
     this.socketService.getNotificationObservable().subscribe((event: any) => {
+      const role = this.authService.getCurrentUser()?.role;
+      const sourceEvent = event?.__eventName || event?.type || 'notification:user-alert';
+
+      if (role === 'admin' && sourceEvent !== 'notification:admin-alert' && sourceEvent !== 'notification:user-alert') {
+        return;
+      }
+
       const message = event?.message || 'Stiglo je novo obaveštenje.';
       this.pushNotification({
         title: 'Obaveštenje',
         message,
         type: 'info',
         category: 'system',
-        sourceEvent: event?.type || 'notification:user-alert',
+        sourceEvent,
         payload: event
       });
     });

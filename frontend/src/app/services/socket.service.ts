@@ -100,19 +100,19 @@ export class SocketService {
 
         // Notification eventi
         this.socket.on('notification:user-alert', (data: any) => {
-            this.notificationSubject.next(data);
+            this.notificationSubject.next({ ...data, __eventName: 'notification:user-alert' });
         });
 
         this.socket.on('notification:admin-alert', (data: any) => {
-            this.notificationSubject.next(data);
+            this.notificationSubject.next({ ...data, __eventName: 'notification:admin-alert' });
         });
 
         this.socket.on('notification:prescription-added', (data: any) => {
-            this.notificationSubject.next(data);
+            this.notificationSubject.next({ ...data, __eventName: 'notification:prescription-added' });
         });
 
         this.socket.on('notification:medical-record-updated', (data: any) => {
-            this.notificationSubject.next(data);
+            this.notificationSubject.next({ ...data, __eventName: 'notification:medical-record-updated' });
         });
 
         // Doctor availability eventi
