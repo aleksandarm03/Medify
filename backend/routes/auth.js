@@ -47,17 +47,34 @@ router.post('/register',async (req,res)=>{
 });
 
 
-router.post("/login",
-    passport.authenticate("local", {session:false}),
-    async function(req, res){
-    try {
-        const token = req.user.generateJwt();
-        return res.json({ token: token });
-    } catch (error) {
-        console.error("Login error:", error);
-        return res.status(500).json({ message: "Greška pri prijavljivanju." });
-    }
-})
+router.post('/login', function (req, res, next) {
+    passport.authenticate('local', { session: false }, async (err, user, info) => {
+        if (err) {
+            console.error('Login auth error:', err);
+            return res.status(500).json({ message: 'Greška pri prijavljivanju.' });
+        }
+
+        if (!user) {
+            const messageMap = {
+                'Credentials not valid!': 'Neispravni kredencijali.',
+                'Role not supported': 'Uloga korisnika nije podržana.',
+                'Account disabled': 'Vaš nalog je deaktiviran. Kontaktirajte administratora.',
+                'Account not approved': 'Vaš nalog još nije odobren od strane administratora.'
+            };
+
+            const message = messageMap[info?.message] || 'Neuspešna prijava.';
+            return res.status(401).json({ message });
+        }
+
+        try {
+            const token = user.generateJwt();
+            return res.json({ token });
+        } catch (error) {
+            console.error('Login error:', error);
+            return res.status(500).json({ message: 'Greška pri prijavljivanju.' });
+        }
+    })(req, res, next);
+});
 
 // Endpoint za validaciju tokena
 router.get('/validate-token', 
