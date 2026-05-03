@@ -64,7 +64,7 @@
 
         <div class="form-group">
           <label for="dateOfBirth">Datum rođenja</label>
-          <input type="date" id="dateOfBirth" name="dateOfBirth" [(ngModel)]="formData.dateOfBirth" />
+          <input type="date" id="dateOfBirth" name="dateOfBirth" [(ngModel)]="formData.dateOfBirth" [max]="getMaxBirthDate()" />
         </div>
       </div>
 

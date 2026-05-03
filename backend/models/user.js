@@ -80,6 +80,26 @@ UserSchema.methods.generateJwt = function()
 var UserModel=mongoose.model("User", UserSchema);
 UserModel.register=async function(body)
 {
+    let dateOfBirth = body.dateOfBirth;
+    if (dateOfBirth) {
+        dateOfBirth = new Date(dateOfBirth);
+        if (Number.isNaN(dateOfBirth.getTime())) {
+            const error = new Error("Datum rođenja nije ispravan.");
+            error.status = 400;
+            throw error;
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        dateOfBirth.setHours(0, 0, 0, 0);
+
+        if (dateOfBirth > today) {
+            const error = new Error("Datum rođenja ne može biti u budućnosti.");
+            error.status = 400;
+            throw error;
+        }
+    }
+
     var user=new UserModel({
         JMBG: body.JMBG,
         firstName: body.firstName,
@@ -88,7 +108,7 @@ UserModel.register=async function(body)
         phoneNumber: body.phoneNumber,    
         gender: body.gender,
         role: body.role,
-        dateOfBirth: body.dateOfBirth,
+        dateOfBirth: dateOfBirth,
         // Polja za pacijente
         bloodType: body.bloodType,
         allergies: body.allergies || [],

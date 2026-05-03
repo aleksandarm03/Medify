@@ -126,7 +126,24 @@ export class RegisterComponent {
       return false;
     }
 
+    if (this.formData.dateOfBirth && this.formData.dateOfBirth > this.getTodayDateString()) {
+      this.error.set('Datum rođenja ne može biti u budućnosti');
+      return false;
+    }
+
     return true;
+  }
+
+  getMaxBirthDate(): string {
+    return this.getTodayDateString();
+  }
+
+  private getTodayDateString(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }
 

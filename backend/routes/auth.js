@@ -27,6 +27,21 @@ router.post('/register',async (req,res)=>{
             return res.status(400).json({ message: "Lozinka mora imati najmanje 6 karaktera." });
         }
 
+        if (req.body.dateOfBirth) {
+            const birthDate = new Date(req.body.dateOfBirth);
+            if (Number.isNaN(birthDate.getTime())) {
+                return res.status(400).json({ message: "Datum rođenja nije ispravan." });
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            birthDate.setHours(0, 0, 0, 0);
+
+            if (birthDate > today) {
+                return res.status(400).json({ message: "Datum rođenja ne može biti u budućnosti." });
+            }
+        }
+
         var user = await userService.register(req.body);
         
         if (user) {
@@ -43,6 +58,11 @@ router.post('/register',async (req,res)=>{
         if (error.code === 11000) {
             return res.status(400).json({ message: "Korisnik sa ovim JMBG-om već postoji." });
         }
+
+        if (error.status === 400) {
+            return res.status(400).json({ message: error.message });
+        }
+
         console.error("Registration error:", error);
         return res.status(500).json({ message: "Greška pri registraciji." });
     }
