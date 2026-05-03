@@ -6,6 +6,7 @@ const Appointment = require('../models/appointment');
 const MedicalRecord = require('../models/medicalRecord');
 const Prescription = require('../models/prescription');
 const DoctorAvailability = require('../models/doctorAvailability');
+const socketEmitter = require('../socket/socketEmitter');
 
 // Sve admin rute zahtevaju autentifikaciju i admin ulogu
 router.use(authenticateJWT);
@@ -219,6 +220,35 @@ router.post('/approve-user/:userId', async (req, res) => {
         user.updatedAt = new Date();
         
         await user.save();
+
+        const approverName = [req.user?.firstName, req.user?.lastName].filter(Boolean).join(' ') || 'Administrator';
+        const approvedUserName = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'korisnika';
+        const approvedUserLabel = user.role === 'doctor'
+            ? 'doktora'
+            : user.role === 'patient'
+                ? 'pacijenta'
+                : 'korisnika';
+        const approvalMessage = `${approverName} je odobrio ${approvedUserLabel} ${approvedUserName}`;
+
+        socketEmitter.notifyUser(String(user._id), approvalMessage, {
+            approvedUserId: String(user._id),
+            approvedUserName,
+            approvedUserRole: user.role,
+            approvedById: String(req.user._id),
+            approvedByName: approverName,
+            type: 'success',
+            eventType: 'user-approved'
+        }, 'success');
+
+        socketEmitter.notifyAllAdmins(approvalMessage, {
+            approvedUserId: String(user._id),
+            approvedUserName,
+            approvedUserRole: user.role,
+            approvedById: String(req.user._id),
+            approvedByName: approverName,
+            type: 'success',
+            eventType: 'user-approved'
+        });
 
         res.json({ 
             message: 'Korisnik uspešno odobren',
