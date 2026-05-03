@@ -175,11 +175,15 @@ function notifyAllPatients(message, data = {}) {
 /**
  * Šalje obavijest svim adminerima
  */
-function notifyAllAdmins(message, data = {}) {
+function notifyAllAdmins(message, data = {}, excludeUserId = null) {
     if (io) {
         const admins = connectionManager.getOnlineAdmins();
 
         admins.forEach((admin) => {
+            if (excludeUserId && String(admin.userId) === String(excludeUserId)) {
+                return;
+            }
+
             io.to(admin.socketId).emit('notification:admin-alert', {
                 message,
                 data,
@@ -188,7 +192,11 @@ function notifyAllAdmins(message, data = {}) {
             });
         });
 
-        console.log(`[SocketEmitter] notification:admin-alert -> ${admins.length} admina`);
+        const recipientCount = excludeUserId
+            ? admins.filter((admin) => String(admin.userId) !== String(excludeUserId)).length
+            : admins.length;
+
+        console.log(`[SocketEmitter] notification:admin-alert -> ${recipientCount} admina`);
     }
 }
 

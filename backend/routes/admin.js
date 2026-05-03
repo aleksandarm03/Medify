@@ -248,7 +248,7 @@ router.post('/approve-user/:userId', async (req, res) => {
             approvedByName: approverName,
             type: 'success',
             eventType: 'user-approved'
-        });
+        }, String(req.user._id));
 
         res.json({ 
             message: 'Korisnik uspešno odobren',

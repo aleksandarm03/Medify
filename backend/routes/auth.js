@@ -5,6 +5,22 @@ const socketEmitter = require('../socket/socketEmitter');
 const passport=require('../routes/config');
 const UserModel = require('../models/user');
 
+function formatUserDisplayName(user, fallback = 'korisnika') {
+    return [user?.firstName, user?.lastName].filter(Boolean).join(' ') || fallback;
+}
+
+function formatRoleLabel(role) {
+    if (role === 'doctor') {
+        return 'doktora';
+    }
+
+    if (role === 'patient') {
+        return 'pacijenta';
+    }
+
+    return 'korisnika';
+}
+
 
 router.post('/register',async (req,res)=>{
     try {
@@ -156,6 +172,22 @@ passport.authorizeRoles("admin"),
             if (!updatedUser) {
                 return res.status(404).json({ message: "Korisnik nije pronađen." });
             }
+
+            const adminName = formatUserDisplayName(req.user, 'Administrator');
+            const updatedUserName = formatUserDisplayName(updatedUser);
+            const updatedUserLabel = formatRoleLabel(updatedUser.role);
+            const updateMessage = `${adminName} je editovao ${updatedUserLabel} ${updatedUserName}`;
+
+            socketEmitter.notifyAllAdmins(updateMessage, {
+                eventType: 'user-updated',
+                userId: String(updatedUser._id),
+                userName: updatedUserName,
+                userRole: updatedUser.role,
+                performedById: String(req.user._id),
+                performedByName: adminName,
+                type: 'info'
+            }, String(req.user._id));
+
             const userObj = updatedUser.toObject();
             delete userObj.passwordHash;
             delete userObj.passwordSalt;
@@ -209,6 +241,23 @@ passport.authorizeRoles("admin"),
             });
 
             const deletedUser = await userService.deleteUser(req.params.id);
+
+            const adminName = formatUserDisplayName(req.user, 'Administrator');
+            const deletedUserName = formatUserDisplayName(userToDelete);
+            const deletedUserLabel = formatRoleLabel(userToDelete.role);
+            const deleteMessage = `${adminName} je obrisao ${deletedUserLabel} ${deletedUserName}`;
+
+            socketEmitter.notifyAllAdmins(deleteMessage, {
+                eventType: 'user-deleted',
+                userId: String(userToDelete._id),
+                userName: deletedUserName,
+                userRole: userToDelete.role,
+                performedById: String(req.user._id),
+                performedByName: adminName,
+                canceledAppointments: canceledAppointments.length,
+                type: 'warning'
+            }, String(req.user._id));
+
             return res.json({
                 message: "Korisnik je uspešno obrisan.",
                 canceledAppointments: canceledAppointments.length
