@@ -39,20 +39,24 @@ function emitAppointmentCreated(doctorId, appointmentDetails) {
 /**
  * Emituje promjenu statusa termina
  */
-function emitAppointmentStatusUpdated(appointmentId, patientId, doctorId, newStatus, reason = '') {
+function emitAppointmentStatusUpdated(appointment) {
     if (io) {
+        const appt = appointment || {};
         const payload = {
-            appointmentId,
-            patientId,
-            doctorId,
-            newStatus,
-            reason,
+            appointmentId: String(appt._id || appt.appointmentId || ''),
+            patientId: String((appt.patient && appt.patient._id) || appt.patientId || ''),
+            patientName: (appt.patient && `${appt.patient.firstName || ''} ${appt.patient.lastName || ''}`.trim()) || appt.patientName || '',
+            doctorId: String((appt.doctor && appt.doctor._id) || appt.doctorId || ''),
+            doctorName: (appt.doctor && `${appt.doctor.firstName || ''} ${appt.doctor.lastName || ''}`.trim()) || appt.doctorName || '',
+            appointmentDate: appt.appointmentDate || appt.date || null,
+            newStatus: appt.status || appt.newStatus || '',
+            cancellationReason: appt.cancellationReason || appt.reason || '',
             type: 'appointment_status_changed',
             timestamp: new Date()
         };
 
-        const patientSocket = findSocketByUserId(String(patientId));
-        const doctorSocket = findSocketByUserId(String(doctorId));
+        const patientSocket = findSocketByUserId(String(payload.patientId));
+        const doctorSocket = findSocketByUserId(String(payload.doctorId));
 
         if (patientSocket) {
             io.to(patientSocket.id).emit('notification:appointment-updated', payload);
@@ -63,9 +67,9 @@ function emitAppointmentStatusUpdated(appointmentId, patientId, doctorId, newSta
         }
 
         if (patientSocket || doctorSocket) {
-            console.log(`[SocketEmitter] notification:appointment-updated -> doctor ${doctorId}, patient ${patientId}, status ${newStatus}`);
+            console.log(`[SocketEmitter] notification:appointment-updated -> doctor ${payload.doctorId}, patient ${payload.patientId}, status ${payload.newStatus}`);
         } else {
-            console.log(`[SocketEmitter] Niko online za appointment-updated (${appointmentId})`);
+            console.log(`[SocketEmitter] Niko online za appointment-updated (${payload.appointmentId})`);
         }
     }
 }

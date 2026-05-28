@@ -71,11 +71,45 @@ export class NotificationStoreService {
         return;
       }
 
-      const status = this.formatStatus(event?.newStatus);
+      const currentUser = this.authService.getCurrentUser();
+      const newStatus = event?.newStatus || event?.status || '';
+      const apptDate = event?.appointmentDate ? new Date(event.appointmentDate).toLocaleString() : '';
+      let message = '';
+      let notifType: 'info' | 'warning' | 'success' | 'error' = 'info';
+
+      if (newStatus === 'canceled' || newStatus === 'cancelled') {
+        notifType = 'warning';
+        const reason = event?.cancellationReason || event?.reason || '';
+        const cancelledByRole = event?.canceledByRole || event?.canceledBy || '';
+        if (role === 'doctor') {
+          message = `Pacijent ${event?.patientName || ''} je otkazao termin zakazan za ${apptDate}.${reason ? ' Razlog: ' + reason : ''}`;
+        } else {
+          // patient view
+          const cancelledByUser = String(event?.canceledByUser || '');
+          if (cancelledByUser && currentUser && cancelledByUser === String(currentUser._id)) {
+            message = `Uspešno ste otkazali termin zakazan za ${apptDate}.${reason ? ' Razlog: ' + reason : ''}`;
+          } else if (cancelledByRole === 'doctor') {
+            message = `Vaš termin zakazan za ${apptDate} je otkazan od strane doktora.${reason ? ' Razlog: ' + reason : ''}`;
+          } else {
+            message = `Vaš termin zakazan za ${apptDate} je otkazan.${reason ? ' Razlog: ' + reason : ''}`;
+          }
+        }
+      } else if (newStatus === 'rescheduled') {
+        notifType = 'info';
+        message = `Termin je prebačen na novo vreme: ${apptDate}.`;
+      } else if (newStatus === 'confirmed') {
+        notifType = 'success';
+        message = `Termin je potvrđen za ${apptDate}.`;
+      } else if (newStatus) {
+        message = `Status termina je promenjen: ${this.formatStatus(newStatus)}.`;
+      } else {
+        message = 'Status termina je ažuriran.';
+      }
+
       this.pushNotification({
         title: 'Promena statusa termina',
-        message: `Status termina je promenjen: ${status}.`,
-        type: event?.newStatus === 'canceled' ? 'warning' : 'info',
+        message,
+        type: notifType,
         category: 'appointment',
         sourceEvent: 'notification:appointment-updated',
         payload: event

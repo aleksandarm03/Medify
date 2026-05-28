@@ -322,13 +322,8 @@ router.put("/:id/status",
 
             const updatedAppointment = await AppointmentService.updateAppointmentStatus(req.params.id, status, statusOptions);
 
-            socketEmitter.emitAppointmentStatusUpdated(
-                String(updatedAppointment._id),
-                String(updatedAppointment.patient?._id || appointment.patient._id),
-                String(updatedAppointment.doctor?._id || appointment.doctor._id),
-                status,
-                status === 'canceled' ? (cancellationReason || '') : ''
-            );
+            // Emit richer appointment payload so clients can build friendlier notifications
+            socketEmitter.emitAppointmentStatusUpdated(updatedAppointment);
 
             return res.json(updatedAppointment);
         } catch (error) {

@@ -170,9 +170,26 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
       .getAppointmentUpdatedObservable()
       .pipe(takeUntil(this.destroy$))
       .subscribe((event: any) => {
-        const status = event?.newStatus || 'ažuriran';
-        const statusText = this.getStatusText(status);
-        this.pageNotice.set(`Status termina je promijenjen: ${statusText}.`);
+        const status = event?.newStatus || event?.status || 'ažuriran';
+        const apptDate = event?.appointmentDate ? new Date(event.appointmentDate).toLocaleString() : '';
+        const reason = event?.cancellationReason || event?.reason || '';
+        let notice = '';
+
+        if (status === 'canceled' || status === 'cancelled') {
+          if (this.isDoctor()) {
+            notice = `Pacijent ${event?.patientName || ''} je otkazao termin zakazan za ${apptDate}.${reason ? ' Razlog: ' + reason : ''}`;
+          } else {
+            notice = `Termin zakazan za ${apptDate} je otkazan.${reason ? ' Razlog: ' + reason : ''}`;
+          }
+        } else if (status === 'rescheduled') {
+          notice = `Termin je prebačen na novo vreme: ${apptDate}.`;
+        } else if (status === 'confirmed') {
+          notice = `Termin je potvrđen za ${apptDate}.`;
+        } else {
+          notice = `Status termina je promijenjen: ${this.getStatusText(status)}.`;
+        }
+
+        this.pageNotice.set(notice);
         this.loadAppointments();
       });
   }

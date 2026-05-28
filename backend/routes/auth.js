@@ -231,13 +231,8 @@ passport.authorizeRoles("admin"),
             );
 
             canceledAppointments.forEach((appointment) => {
-                socketEmitter.emitAppointmentStatusUpdated(
-                    String(appointment._id),
-                    String(appointment.patient?._id || appointment.patient),
-                    String(appointment.doctor?._id || appointment.doctor),
-                    'canceled',
-                    cancellationReason
-                );
+                // Emit the full appointment object so clients receive cancellation details
+                socketEmitter.emitAppointmentStatusUpdated(appointment);
             });
 
             const cleanupResult = await AppointmentService.deleteAppointmentsForUser(
