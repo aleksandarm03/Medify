@@ -1,6 +1,7 @@
 import { Component, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ProfileService } from '../../services/profile.service';
 import { User } from '../../models/user.model';
@@ -64,7 +65,8 @@ export class ProfileComponent implements OnInit {
 
   constructor(
     public authService: AuthService,
-    private profileService: ProfileService
+    private profileService: ProfileService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -126,6 +128,14 @@ export class ProfileComponent implements OnInit {
     const edited = this.editedProfile();
     if (!edited) return;
 
+    const shouldSave = typeof window === 'undefined'
+      ? true
+      : window.confirm('Izmene će biti sačuvane, a zatim ćete biti odjavljeni sa profila. Da li želite da nastavite?');
+
+    if (!shouldSave) {
+      return;
+    }
+
     this.loading.set(true);
     this.error.set('');
     this.successMessage.set('');
@@ -136,6 +146,9 @@ export class ProfileComponent implements OnInit {
         this.loading.set(false);
         this.successMessage.set('Profil je uspešno ažuriran!');
         this.editMode.set(false);
+
+        this.authService.logout();
+        this.router.navigate(['/login'], { replaceUrl: true });
         
         // Sakrij success poruku posle 3 sekunde
         setTimeout(() => {

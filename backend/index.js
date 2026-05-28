@@ -72,7 +72,7 @@ httpServer.listen(config.PORT, () => {
     console.log(`
     ╔════════════════════════════════════════╗
     ║   Medify - Backend Server Started      ║
-    ║   Port: ${config.PORT}                     ║
+    ║   Port: ${config.PORT}                 ║
     ║   Socket.io: AKTIVAN                   ║
     ║   MongoDB: Povezan                     ║
     ╚════════════════════════════════════════╝
