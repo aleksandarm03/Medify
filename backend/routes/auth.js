@@ -240,6 +240,10 @@ passport.authorizeRoles("admin"),
                 );
             });
 
+            const cleanupResult = await AppointmentService.deleteAppointmentsForUser(
+                String(userToDelete._id)
+            );
+
             const deletedUser = await userService.deleteUser(req.params.id);
 
             const adminName = formatUserDisplayName(req.user, 'Administrator');
@@ -260,7 +264,8 @@ passport.authorizeRoles("admin"),
 
             return res.json({
                 message: "Korisnik je uspešno obrisan.",
-                canceledAppointments: canceledAppointments.length
+                canceledAppointments: canceledAppointments.length,
+                deletedAppointments: cleanupResult.deletedCount
             });
         } catch (error) {
             console.error("Delete user error:", error);

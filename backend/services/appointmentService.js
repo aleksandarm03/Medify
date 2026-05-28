@@ -14,9 +14,10 @@ var getAppointmentsByDoctor = async function(doctorId, status = null) {
     if (status && status.trim() !== "") {
         query.status = status;
     }
-    return await AppointmentModel.find(query)
+    const appointments = await AppointmentModel.find(query)
         .populate("patient", "firstName lastName phoneNumber")
         .sort({ appointmentDate: 1 });
+    return appointments.filter((appointment) => Boolean(appointment.patient));
 };
 
 var getAppointmentsByPatient = async function(patientId, status = null) {
@@ -24,9 +25,10 @@ var getAppointmentsByPatient = async function(patientId, status = null) {
     if (status && status.trim() !== "") {
         query.status = status;
     }
-    return await AppointmentModel.find(query)
+    const appointments = await AppointmentModel.find(query)
         .populate("doctor", "firstName lastName specialization officeNumber")
         .sort({ appointmentDate: 1 });
+    return appointments.filter((appointment) => Boolean(appointment.doctor));
 };
 
 var getAppointmentById = async function(appointmentId) {
@@ -98,10 +100,41 @@ var deleteAppointment = async function(appointmentId) {
 };
 
 var getAllAppointments = async function() {
-    return await AppointmentModel.find()
+    const appointments = await AppointmentModel.find()
         .populate("doctor", "firstName lastName specialization officeNumber")
         .populate("patient", "firstName lastName phoneNumber JMBG")
         .sort({ appointmentDate: -1 });
+    return appointments.filter((appointment) => Boolean(appointment.doctor) && Boolean(appointment.patient));
+};
+
+var deleteAppointmentsForUser = async function(userId) {
+    const appointments = await AppointmentModel.find({
+        $or: [
+            { doctor: userId },
+            { patient: userId }
+        ]
+    }).select('_id');
+
+    if (appointments.length === 0) {
+        return { deletedCount: 0, appointmentIds: [] };
+    }
+
+    const appointmentIds = appointments.map((appointment) => appointment._id);
+    const UserModel = require("../models/user");
+
+    await UserModel.updateMany(
+        { appointments: { $in: appointmentIds } },
+        { $pull: { appointments: { $in: appointmentIds } } }
+    );
+
+    const deleteResult = await AppointmentModel.deleteMany({
+        _id: { $in: appointmentIds }
+    });
+
+    return {
+        deletedCount: deleteResult.deletedCount || 0,
+        appointmentIds
+    };
 };
 
 var cancelScheduledAppointmentsForUser = async function(userId, options = {}) {
@@ -148,5 +181,6 @@ module.exports = {
     updateAppointment,
     deleteAppointment,
     getAllAppointments,
-    cancelScheduledAppointmentsForUser
+    cancelScheduledAppointmentsForUser,
+    deleteAppointmentsForUser
 };
