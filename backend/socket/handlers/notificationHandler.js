@@ -4,6 +4,7 @@
  */
 
 const connectionManager = require('../managers/connectionManager');
+const Notification = require('../../models/notification');
 
 /**
  * Inicijalizira notification event handlers
@@ -22,12 +23,20 @@ function setupNotificationHandler(io, socket) {
                 });
             }
 
-            // Ovdje možete učitati obavijesti iz baze podataka
-            socket.emit('notification:list', {
-                // Obavijesti će biti učitane iz baze
-                messages: [],
-                timestamp: new Date()
-            });
+            // Učitaj obavijesti iz baze (poslednjih 50)
+            Notification.find({ recipient: userId })
+                .sort({ createdAt: -1 })
+                .limit(50)
+                .then(messages => {
+                    socket.emit('notification:list', {
+                        messages,
+                        timestamp: new Date()
+                    });
+                })
+                .catch(err => {
+                    console.error('[Notification:fetch] Greška pri čitanju iz baze:', err);
+                    socket.emit('notification:list', { messages: [], timestamp: new Date() });
+                });
         } catch (error) {
             console.error('[Notification:fetch] Greška:', error);
         }

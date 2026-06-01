@@ -7,6 +7,7 @@ const MedicalRecord = require('../models/medicalRecord');
 const Prescription = require('../models/prescription');
 const DoctorAvailability = require('../models/doctorAvailability');
 const socketEmitter = require('../socket/socketEmitter');
+const Notification = require('../models/notification');
 
 // Sve admin rute zahtevaju autentifikaciju i admin ulogu
 router.use(authenticateJWT);
@@ -240,6 +241,36 @@ router.post('/approve-user/:userId', async (req, res) => {
             eventType: 'user-approved'
         }, 'success');
 
+        // Sačuvaj obaveštenja za sve admina (persistent), osim za onoga koji je odobrio
+        const admins = await User.find({ role: 'admin', isActive: true }).select('_id');
+        const recipients = admins
+            .map(a => String(a._id))
+            .filter(id => id !== String(req.user._id));
+
+        if (recipients.length > 0) {
+            const notifications = recipients.map(recipientId => ({
+                recipient: recipientId,
+                sender: req.user._id,
+                message: approvalMessage,
+                data: {
+                    approvedUserId: String(user._id),
+                    approvedUserName,
+                    approvedUserRole: user.role,
+                    approvedById: String(req.user._id),
+                    approvedByName: approverName,
+                    eventType: 'user-approved'
+                },
+                type: 'admin_alert'
+            }));
+
+            try {
+                await Notification.insertMany(notifications);
+            } catch (notifErr) {
+                console.error('Greška pri čuvanju notifikacija za admine:', notifErr);
+            }
+        }
+
+        // Emituj live obaveštenje online adminima (osim odobravaoca)
         socketEmitter.notifyAllAdmins(approvalMessage, {
             approvedUserId: String(user._id),
             approvedUserName,
