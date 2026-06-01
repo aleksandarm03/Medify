@@ -380,9 +380,15 @@ async function seed() {
   console.log("Seed zavrsen.");
   console.table(result);
   console.log("Test kredencijali:");
-  console.log("admin:   JMBG 1001001001001 / password Admin123!");
-  console.log("doctor:  JMBG 3003003003003 / password Doctor123!");
-  console.log("patient: JMBG 5005005005005 / password Patient123!");
+  console.table(
+    usersData.map((user) => ({
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      JMBG: user.JMBG,
+      password: user.password
+    }))
+  );
 }
 
 seed()
