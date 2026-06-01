@@ -128,15 +128,15 @@ socketService.getAppointmentUpdatedObservable().subscribe(data => {
 });
 ```
 
-#### `appointment:prescription-added` - Nova recepti
+#### `notification:prescription-added` - Novi recept
 ```typescript
 // Backend
 emitPrescriptionAdded(patientId, doctorId, prescriptionData);
 
 // Frontend
 socketService.getNotificationObservable().subscribe(data => {
-    if (data.type === 'prescription_added') {
-        showAlert('Doktor je dodao recepta');
+    if (data.__eventName === 'notification:prescription-added' || data.type === 'prescription_added') {
+        showAlert('Doktor je dodao recept za vas');
     }
 });
 ```

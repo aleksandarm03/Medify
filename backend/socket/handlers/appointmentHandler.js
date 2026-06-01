@@ -4,6 +4,7 @@
  */
 
 const connectionManager = require('../managers/connectionManager');
+const UserModel = require('../../models/user');
 
 /**
  * Inicijalizira appointment event handlers
@@ -74,15 +75,33 @@ function setupAppointmentHandler(io, socket) {
     /**
      * Obavijest o novom recceptu
      */
-    socket.on('appointment:prescription-added', (data) => {
+    socket.on('appointment:prescription-added', async (data) => {
         try {
             const { patientId, doctorId, prescriptionDetails } = data;
             const patientSocketId = connectionManager.getSocketId(patientId);
 
+            // Attempt to get doctor name for more informative notification
+            let doctorName = '';
+            try {
+                const doctor = await UserModel.findById(doctorId).select('firstName lastName');
+                if (doctor) {
+                    doctorName = [doctor.firstName, doctor.lastName].filter(Boolean).join(' ');
+                }
+            } catch (err) {
+                // ignore lookup errors
+            }
+
+            const prescriptionSummary = Array.isArray(prescriptionDetails?.items)
+                ? prescriptionDetails.items.map(i => i.name || i).slice(0,5).join(', ')
+                : (prescriptionDetails?.summary || prescriptionDetails?.note || '');
+
             if (patientSocketId) {
                 io.to(patientSocketId).emit('notification:prescription-added', {
-                    message: 'Doktor je dodao naslov za vas',
+                    message: `Doktor ${doctorName || ''} je dodao recept za vas`.trim(),
+                    doctorId,
+                    doctorName,
                     prescription: prescriptionDetails,
+                    prescriptionSummary,
                     type: 'prescription_added',
                     timestamp: new Date()
                 });
@@ -97,15 +116,26 @@ function setupAppointmentHandler(io, socket) {
     /**
      * Obavijest o medičinskom kartonu
      */
-    socket.on('appointment:medical-record-updated', (data) => {
+    socket.on('appointment:medical-record-updated', async (data) => {
         try {
             const { patientId, doctorId, recordDetails } = data;
             const patientSocketId = connectionManager.getSocketId(patientId);
 
+            let doctorName = '';
+            try {
+                const doctor = await UserModel.findById(doctorId).select('firstName lastName');
+                if (doctor) doctorName = [doctor.firstName, doctor.lastName].filter(Boolean).join(' ');
+            } catch (err) {}
+
+            const recordSummary = recordDetails?.summary || recordDetails?.note || '';
+
             if (patientSocketId) {
                 io.to(patientSocketId).emit('notification:medical-record-updated', {
-                    message: 'Doktor je ažurirao vašu medicinsku kartonu',
+                    message: `Doktor ${doctorName || ''} je ažurirao vašu medicinsku kartonu`.trim(),
+                    doctorId,
+                    doctorName,
                     record: recordDetails,
+                    recordSummary,
                     type: 'medical_record_updated',
                     timestamp: new Date()
                 });
@@ -120,16 +150,26 @@ function setupAppointmentHandler(io, socket) {
     /**
      * Obavijest doktoru o novoj poracci od pacijenta
      */
-    socket.on('appointment:patient-message', (data) => {
+    socket.on('appointment:patient-message', async (data) => {
         try {
             const { doctorId, patientId, message } = data;
             const doctorSocketId = connectionManager.getSocketId(doctorId);
 
+            let patientName = '';
+            try {
+                const patient = await UserModel.findById(patientId).select('firstName lastName');
+                if (patient) patientName = [patient.firstName, patient.lastName].filter(Boolean).join(' ');
+            } catch (err) {}
+
+            const snippet = typeof message === 'string' ? message.substring(0, 120) : '';
+
             if (doctorSocketId) {
                 io.to(doctorSocketId).emit('notification:patient-message', {
-                    message: `Nova poraka od pacijenta`,
+                    message: `Nova poruka od pacijenta ${patientName || ''}`.trim(),
                     patientId,
+                    patientName,
                     content: message,
+                    snippet,
                     type: 'patient_message',
                     timestamp: new Date()
                 });

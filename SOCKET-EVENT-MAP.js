@@ -48,9 +48,9 @@
 
 // Prescription Added
 {
-    event: 'appointment:prescription-added',
+    event: 'notification:prescription-added',
     sender: 'Backend Service',
-    receiver: 'Pacijent (kojem je dodana recepti)',
+    receiver: 'Pacijent (kojem je dodan recept)',
     trigger: 'appointmentService.addPrescription()',
     data: {
         patientId: 'patient-123',
@@ -61,15 +61,15 @@
         instructions: 'Tri puta dnevno'
     },
     frontend_listen: `socketService.getNotificationObservable().subscribe(notification => {
-        if (notification.type === 'prescription_added') {
-            showAlert('Doktor je dodao receptu za vas');
+        if (notification.__eventName === 'notification:prescription-added' || notification.type === 'prescription_added') {
+            showAlert('Doktor je dodao recept za vas');
         }
     })`
 }
 
 // Medical Record Updated
 {
-    event: 'appointment:medical-record-updated',
+    event: 'notification:medical-record-updated',
     sender: 'Backend Service',
     receiver: 'Pacijent (čija je kartona ažurirana)',
     trigger: 'appointmentService.updateMedicalRecord()',
@@ -81,7 +81,7 @@
         nextVisit: '2024-06-15'
     },
     frontend_listen: `socketService.getNotificationObservable().subscribe(notification => {
-        if (notification.type === 'medical_record_updated') {
+        if (notification.__eventName === 'notification:medical-record-updated' || notification.type === 'medical_record_updated') {
             showAlert('Medicinska kartona je ažurirana');
         }
     })`

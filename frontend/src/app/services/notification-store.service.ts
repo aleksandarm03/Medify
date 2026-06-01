@@ -124,11 +124,35 @@ export class NotificationStoreService {
         return;
       }
 
-      const message = event?.message || 'Stiglo je novo obaveštenje.';
+      // Build friendly messages for specific notification types
+      let title = 'Obaveštenje';
+      let message = event?.message || 'Stiglo je novo obaveštenje.';
+      let type: AppNotification['type'] = 'info';
+
+      if (sourceEvent === 'notification:prescription-added') {
+        title = 'Novi recept';
+        const doctor = event?.doctorName || '';
+        const summary = event?.prescriptionSummary || (event?.prescription && event.prescription.summary) || '';
+        message = doctor
+          ? `Doktor ${doctor} je dodao recept za vas${summary ? ': ' + summary : ''}`
+          : `Doktor je dodao recept za vas${summary ? ': ' + summary : ''}`;
+        type = 'success';
+      } else if (sourceEvent === 'notification:medical-record-updated') {
+        title = 'Ažuriranje kartona';
+        const doctor = event?.doctorName || '';
+        const summary = event?.recordSummary || '';
+        message = doctor
+          ? `Doktor ${doctor} je ažurirao vašu kartonu${summary ? ': ' + summary : ''}`
+          : `Vaša medicinska kartona je ažurirana${summary ? ': ' + summary : ''}`;
+        type = 'info';
+      } else {
+        message = event?.message || message;
+      }
+
       this.pushNotification({
-        title: 'Obaveštenje',
+        title,
         message,
-        type: 'info',
+        type,
         category: 'system',
         sourceEvent,
         payload: event

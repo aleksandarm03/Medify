@@ -94,8 +94,8 @@ this.socketService.getAppointmentCreatedObservable().subscribe(event => {
 📅 APPOINTMENT EVENTI (4):
   ✅ appointment:created
   ✅ appointment:status-updated
-  ✅ appointment:prescription-added
-  ✅ appointment:medical-record-updated
+   ✅ notification:prescription-added
+   ✅ notification:medical-record-updated
 
 💬 MESSAGE EVENTI (6):
   ✅ chat:send-message

@@ -87,10 +87,14 @@ function emitAppointmentStatusUpdated(appointment) {
  */
 function emitPrescriptionAdded(patientId, doctorId, prescriptionDetails) {
     if (io) {
-        io.emit('appointment:prescription-added', {
+        // Emit normalized notification event with richer payload
+        io.emit('notification:prescription-added', {
             patientId,
             doctorId,
+            doctorName: prescriptionDetails?.doctorName || '',
             prescriptionDetails,
+            message: `Doktor je dodao recept za vas`,
+            type: 'prescription_added',
             timestamp: new Date()
         });
     }
@@ -101,10 +105,13 @@ function emitPrescriptionAdded(patientId, doctorId, prescriptionDetails) {
  */
 function emitMedicalRecordUpdated(patientId, doctorId, recordDetails) {
     if (io) {
-        io.emit('appointment:medical-record-updated', {
+        io.emit('notification:medical-record-updated', {
             patientId,
             doctorId,
+            doctorName: recordDetails?.doctorName || '',
             recordDetails,
+            message: `Doktor je ažurirao vašu medicinsku kartonu`,
+            type: 'medical_record_updated',
             timestamp: new Date()
         });
     }
