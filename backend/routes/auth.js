@@ -1,6 +1,8 @@
 const router=require('express').Router();
 const userService=require('../services/userService');
 const AppointmentService = require('../services/appointmentService');
+const MedicalRecordService = require('../services/medicalRecordService');
+const PrescriptionService = require('../services/prescriptionService');
 const socketEmitter = require('../socket/socketEmitter');
 const passport=require('../routes/config');
 const UserModel = require('../models/user');
@@ -239,6 +241,32 @@ passport.authorizeRoles("admin"),
                 String(userToDelete._id)
             );
 
+            // Sačuvaj snapshot pacijenta u svim kartonima (medical records)
+            let snapshottedRecords = { updatedCount: 0 };
+            if (userToDelete.role === 'patient') {
+                snapshottedRecords = await MedicalRecordService.stampPatientSnapshotInMedicalRecords(
+                    userToDelete
+                );
+            }
+            if (userToDelete.role === 'doctor') {
+                snapshottedRecords = await MedicalRecordService.stampDoctorSnapshotInMedicalRecords(
+                    userToDelete
+                );
+            }
+
+            // Sačuvaj snapshot pacijenta u svim receptima (prescriptions)
+            let snapshottedPrescriptions = { updatedCount: 0 };
+            if (userToDelete.role === 'patient') {
+                snapshottedPrescriptions = await PrescriptionService.stampPatientSnapshotInPrescriptions(
+                    userToDelete
+                );
+            }
+            if (userToDelete.role === 'doctor') {
+                snapshottedPrescriptions = await PrescriptionService.stampDoctorSnapshotInPrescriptions(
+                    userToDelete
+                );
+            }
+
             const deletedUser = await userService.deleteUser(req.params.id);
 
             const adminName = formatUserDisplayName(req.user, 'Administrator');
@@ -254,13 +282,17 @@ passport.authorizeRoles("admin"),
                 performedById: String(req.user._id),
                 performedByName: adminName,
                 canceledAppointments: canceledAppointments.length,
+                snapshottedMedicalRecords: snapshottedRecords.updatedCount,
+                snapshottedPrescriptions: snapshottedPrescriptions.updatedCount,
                 type: 'warning'
             }, String(req.user._id));
 
             return res.json({
                 message: "Korisnik je uspešno obrisan.",
                 canceledAppointments: canceledAppointments.length,
-                deletedAppointments: cleanupResult.deletedCount
+                deletedAppointments: cleanupResult.deletedCount,
+                snapshottedMedicalRecords: snapshottedRecords.updatedCount,
+                snapshottedPrescriptions: snapshottedPrescriptions.updatedCount
             });
         } catch (error) {
             console.error("Delete user error:", error);

@@ -27,11 +27,11 @@
       <tbody>
         <tr *ngFor="let record of records()">
           <td>{{ record._id?.substring(0, 8) }}</td>
-          <td>{{ record.doctor?.firstName }} {{ record.doctor?.lastName }}</td>
-          <td>{{ record.patient?.firstName }} {{ record.patient?.lastName }}</td>
+          <td>{{ formatDoctorName(record) }}</td>
+          <td>{{ formatPatientName(record) }}</td>
           <td>{{ truncateText(record.diagnosis) }}</td>
           <td>{{ truncateText(record.treatment) }}</td>
-          <td>{{ truncateText(record.notes) }}</td>
+          <td>{{ truncateText(formatRecordNotes(record)) }}</td>
           <td>{{ formatDate(record.createdAt) }}</td>
         </tr>
       </tbody>

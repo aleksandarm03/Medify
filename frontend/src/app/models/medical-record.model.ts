@@ -14,9 +14,17 @@ export interface VitalSigns {
   height?: number;
 }
 
+export interface PatientSnapshot {
+  patientId?: string | null;
+  firstName?: string;
+  lastName?: string;
+  JMBG?: string;
+}
+
 export interface MedicalRecord {
   _id?: string;
   patient: any;
+  patientSnapshot?: PatientSnapshot;
   doctor: any;
   appointment?: any;
   visitDate: Date;

@@ -2,7 +2,19 @@ const mongoose = require("mongoose");
 
 const PrescriptionSchema = mongoose.Schema({
     patient: { type: mongoose.Types.ObjectId, ref: "User", required: true },
+    patientSnapshot: {
+        patientId: { type: mongoose.Types.ObjectId, default: null },
+        firstName: { type: String, default: "" },
+        lastName: { type: String, default: "" },
+        JMBG: { type: String, default: "" }
+    },
     doctor: { type: mongoose.Types.ObjectId, ref: "User", required: true },
+    doctorSnapshot: {
+        doctorId: { type: mongoose.Types.ObjectId, default: null },
+        firstName: { type: String, default: "" },
+        lastName: { type: String, default: "" },
+        specialization: { type: String, default: "" }
+    },
     medicalRecord: { type: mongoose.Types.ObjectId, ref: "MedicalRecord" },
     appointment: { type: mongoose.Types.ObjectId, ref: "Appointment" },
     medications: [{

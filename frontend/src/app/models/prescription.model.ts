@@ -7,9 +7,17 @@ export interface Medication {
   _id?: string;
 }
 
+export interface PatientSnapshot {
+  patientId?: string | null;
+  firstName?: string;
+  lastName?: string;
+  JMBG?: string;
+}
+
 export interface Prescription {
   _id?: string;
   patient: any;
+  patientSnapshot?: PatientSnapshot;
   doctor: any;
   medicalRecord?: any;
   appointment?: any;

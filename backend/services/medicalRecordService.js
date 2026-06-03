@@ -1,9 +1,47 @@
 const MedicalRecordModel = require("../models/medicalRecord");
 
+function buildPatientSnapshot(patient) {
+    if (!patient) {
+        return {
+            patientId: null,
+            firstName: "",
+            lastName: "",
+            JMBG: ""
+        };
+    }
+
+    return {
+        patientId: patient._id || null,
+        firstName: patient.firstName || "",
+        lastName: patient.lastName || "",
+        JMBG: patient.JMBG || ""
+    };
+}
+
+function buildDoctorSnapshot(doctor) {
+    if (!doctor) {
+        return {
+            doctorId: null,
+            firstName: "",
+            lastName: "",
+            specialization: ""
+        };
+    }
+
+    return {
+        doctorId: doctor._id || null,
+        firstName: doctor.firstName || "",
+        lastName: doctor.lastName || "",
+        specialization: doctor.specialization || ""
+    };
+}
+
 var createMedicalRecord = async function(body, doctor, patient, appointment) {
     const medicalRecord = new MedicalRecordModel({
         patient: patient._id,
+        patientSnapshot: buildPatientSnapshot(patient),
         doctor: doctor._id,
+        doctorSnapshot: buildDoctorSnapshot(doctor),
         appointment: appointment ? appointment._id : null,
         visitDate: body.visitDate || new Date(),
         diagnosis: body.diagnosis,
@@ -70,6 +108,86 @@ var getAllMedicalRecords = async function() {
         .sort({ visitDate: -1 });
 };
 
+var nullifyPatientInMedicalRecords = async function(patientId) {
+    const medicalRecords = await MedicalRecordModel.find({ patient: patientId }).select('_id');
+    
+    if (medicalRecords.length === 0) {
+        return { updatedCount: 0, recordIds: [] };
+    }
+    
+    const recordIds = medicalRecords.map(record => record._id);
+    const updateResult = await MedicalRecordModel.updateMany(
+        { _id: { $in: recordIds } },
+        { 
+            $set: { 
+                patient: null,
+                updatedAt: new Date()
+            }
+        }
+    );
+    
+    return {
+        updatedCount: updateResult.modifiedCount || 0,
+        recordIds
+    };
+};
+
+var stampPatientSnapshotInMedicalRecords = async function(patient) {
+    if (!patient || !patient._id) {
+        return { updatedCount: 0, recordIds: [] };
+    }
+
+    const medicalRecords = await MedicalRecordModel.find({ patient: patient._id }).select('_id');
+
+    if (medicalRecords.length === 0) {
+        return { updatedCount: 0, recordIds: [] };
+    }
+
+    const recordIds = medicalRecords.map(record => record._id);
+    const updateResult = await MedicalRecordModel.updateMany(
+        { _id: { $in: recordIds } },
+        {
+            $set: {
+                patientSnapshot: buildPatientSnapshot(patient),
+                updatedAt: new Date()
+            }
+        }
+    );
+
+    return {
+        updatedCount: updateResult.modifiedCount || 0,
+        recordIds
+    };
+};
+
+var stampDoctorSnapshotInMedicalRecords = async function(doctor) {
+    if (!doctor || !doctor._id) {
+        return { updatedCount: 0, recordIds: [] };
+    }
+
+    const medicalRecords = await MedicalRecordModel.find({ doctor: doctor._id }).select('_id');
+
+    if (medicalRecords.length === 0) {
+        return { updatedCount: 0, recordIds: [] };
+    }
+
+    const recordIds = medicalRecords.map(record => record._id);
+    const updateResult = await MedicalRecordModel.updateMany(
+        { _id: { $in: recordIds } },
+        {
+            $set: {
+                doctorSnapshot: buildDoctorSnapshot(doctor),
+                updatedAt: new Date()
+            }
+        }
+    );
+
+    return {
+        updatedCount: updateResult.modifiedCount || 0,
+        recordIds
+    };
+};
+
 module.exports = {
     createMedicalRecord,
     getMedicalRecordsByPatient,
@@ -78,7 +196,10 @@ module.exports = {
     updateMedicalRecord,
     addLabResult,
     deleteMedicalRecord,
-    getAllMedicalRecords
+    getAllMedicalRecords,
+    nullifyPatientInMedicalRecords,
+    stampPatientSnapshotInMedicalRecords,
+    stampDoctorSnapshotInMedicalRecords
 };
 
 

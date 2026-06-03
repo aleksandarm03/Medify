@@ -60,4 +60,26 @@ export class AdminMedicalRecordsComponent implements OnInit, OnDestroy {
     if (!text) return '-';
     return text.length > length ? text.substring(0, length) + '...' : text;
   }
+
+  formatPatientName(record: any): string {
+    const patient = record?.patient;
+    const snapshot = record?.patientSnapshot;
+    const firstName = patient?.firstName || snapshot?.firstName || '';
+    const lastName = patient?.lastName || snapshot?.lastName || '';
+    const formatted = `${firstName} ${lastName}`.trim();
+    return formatted || '-';
+  }
+
+  formatDoctorName(record: any): string {
+    const doctor = record?.doctor;
+    const snapshot = record?.doctorSnapshot;
+    const firstName = doctor?.firstName || snapshot?.firstName || '';
+    const lastName = doctor?.lastName || snapshot?.lastName || '';
+    const formatted = `${firstName} ${lastName}`.trim();
+    return formatted || '-';
+  }
+
+  formatRecordNotes(record: any): string {
+    return record?.examinationNotes || record?.notes || '-';
+  }
 }

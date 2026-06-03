@@ -10,6 +10,56 @@ import { MedicalRecordService } from '../../services/medical-record.service';
 import { AppointmentService } from '../../services/appointment.service';
 import { catchError, forkJoin, of } from 'rxjs';
 
+function resolvePatientName(patient: any, patientSnapshot?: { firstName?: string; lastName?: string }): string {
+  const firstName = patient?.firstName || patientSnapshot?.firstName || '';
+  const lastName = patient?.lastName || patientSnapshot?.lastName || '';
+  return `${firstName} ${lastName}`.trim();
+}
+
+function resolveDoctorName(doctor: any, doctorSnapshot?: { firstName?: string; lastName?: string }): string {
+  const firstName = doctor?.firstName || doctorSnapshot?.firstName || '';
+  const lastName = doctor?.lastName || doctorSnapshot?.lastName || '';
+  return `${firstName} ${lastName}`.trim();
+}
+
+function normalizePrescription(prescription: Prescription): Prescription {
+  const normalized = { ...prescription } as any;
+
+  if (!normalized.patient && normalized.patientSnapshot) {
+    normalized.patient = {
+      _id: normalized.patientSnapshot.patientId || '',
+      firstName: normalized.patientSnapshot.firstName || '',
+      lastName: normalized.patientSnapshot.lastName || ''
+    };
+  }
+
+  if (!normalized.doctor && normalized.doctorSnapshot) {
+    normalized.doctor = {
+      _id: normalized.doctorSnapshot.doctorId || '',
+      firstName: normalized.doctorSnapshot.firstName || '',
+      lastName: normalized.doctorSnapshot.lastName || '',
+      specialization: normalized.doctorSnapshot.specialization || ''
+    };
+  }
+
+  return normalized;
+}
+
+function normalizeMedicalRecord(record: MedicalRecord): MedicalRecord {
+  if (record.patient || !record.patientSnapshot) {
+    return record;
+  }
+
+  return {
+    ...record,
+    patient: {
+      _id: record.patientSnapshot.patientId || '',
+      firstName: record.patientSnapshot.firstName || '',
+      lastName: record.patientSnapshot.lastName || ''
+    }
+  };
+}
+
 @Component({
   selector: 'app-prescriptions',
   standalone: true,
@@ -45,8 +95,8 @@ export class PrescriptionsComponent implements OnInit {
 
     const filtered = this.prescriptions().filter((prescription) => {
       const issueDate = new Date(prescription.issueDate);
-      const patientName = `${prescription.patient?.firstName || ''} ${prescription.patient?.lastName || ''}`.trim().toLowerCase();
-      const doctorName = `${prescription.doctor?.firstName || ''} ${prescription.doctor?.lastName || ''}`.trim().toLowerCase();
+      const patientName = resolvePatientName(prescription.patient, prescription.patientSnapshot).toLowerCase();
+      const doctorName = resolveDoctorName(prescription.doctor, (prescription as any).doctorSnapshot).toLowerCase();
       const notes = (prescription.notes || '').toLowerCase();
       const status = (prescription.status || '').toLowerCase();
       const medicationsText = (prescription.medications || [])
@@ -152,8 +202,9 @@ export class PrescriptionsComponent implements OnInit {
   loadDoctorMedicalRecords(doctorId: string) {
     this.medicalRecordService.getMedicalRecordsByDoctor(doctorId).subscribe({
       next: (records) => {
-        this.doctorMedicalRecords.set(records);
-        this.mergePatientsIntoExamined(records.map(record => record.patient));
+        const normalizedRecords = records.map(normalizeMedicalRecord);
+        this.doctorMedicalRecords.set(normalizedRecords);
+        this.mergePatientsIntoExamined(normalizedRecords.map(record => record.patient));
         this.filterMedicalRecordsForPatient(this.newPrescription().patientId);
       },
       error: (err) => {
@@ -220,8 +271,9 @@ export class PrescriptionsComponent implements OnInit {
 
         for (const prescriptionList of results) {
           for (const prescription of prescriptionList) {
-            if (prescription?._id) {
-              byId.set(prescription._id, prescription);
+            const normalizedPrescription = normalizePrescription(prescription);
+            if (normalizedPrescription?._id) {
+              byId.set(normalizedPrescription._id, normalizedPrescription);
             }
           }
         }
@@ -268,7 +320,7 @@ export class PrescriptionsComponent implements OnInit {
 
     this.prescriptionService.getPrescriptionsByPatient(patientId, status).subscribe({
       next: (data) => {
-        this.prescriptions.set(data);
+        this.prescriptions.set(data.map(normalizePrescription));
         this.loading.set(false);
       },
       error: (err) => {
@@ -537,7 +589,7 @@ export class PrescriptionsComponent implements OnInit {
   }
 
   formatPatientName(patient: any): string {
-    return `${patient?.firstName || ''} ${patient?.lastName || ''}`.trim();
+    return resolvePatientName(patient);
   }
 
   formatMedicalRecordOption(record: MedicalRecord): string {

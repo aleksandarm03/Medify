@@ -89,6 +89,24 @@ export class AdminPrescriptionsComponent implements OnInit, OnDestroy {
       .join(', ') || '-';
   }
 
+  formatPatientName(prescription: any): string {
+    const patient = prescription?.patient;
+    const snapshot = prescription?.patientSnapshot;
+    const firstName = patient?.firstName || snapshot?.firstName || '';
+    const lastName = patient?.lastName || snapshot?.lastName || '';
+    const formatted = `${firstName} ${lastName}`.trim();
+    return formatted || '-';
+  }
+
+  formatDoctorName(prescription: any): string {
+    const doctor = prescription?.doctor;
+    const snapshot = prescription?.doctorSnapshot;
+    const firstName = doctor?.firstName || snapshot?.firstName || '';
+    const lastName = doctor?.lastName || snapshot?.lastName || '';
+    const formatted = `${firstName} ${lastName}`.trim();
+    return formatted || '-';
+  }
+
   truncateText(text: string, length: number = 50): string {
     if (!text) return '-';
     return text.length > length ? text.substring(0, length) + '...' : text;

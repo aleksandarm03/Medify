@@ -9,6 +9,41 @@ import { MedicalRecord } from '../../models/medical-record.model';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
+function resolvePatientName(patient: any, patientSnapshot?: { firstName?: string; lastName?: string }): string {
+  const firstName = patient?.firstName || patientSnapshot?.firstName || '';
+  const lastName = patient?.lastName || patientSnapshot?.lastName || '';
+  return `${firstName} ${lastName}`.trim();
+}
+
+function resolveDoctorName(doctor: any, doctorSnapshot?: { firstName?: string; lastName?: string }): string {
+  const firstName = doctor?.firstName || doctorSnapshot?.firstName || '';
+  const lastName = doctor?.lastName || doctorSnapshot?.lastName || '';
+  return `${firstName} ${lastName}`.trim();
+}
+
+function normalizeMedicalRecord(record: MedicalRecord): MedicalRecord {
+  const normalized = { ...record } as any;
+
+  if (!normalized.patient && normalized.patientSnapshot) {
+    normalized.patient = {
+      _id: normalized.patientSnapshot.patientId || '',
+      firstName: normalized.patientSnapshot.firstName || '',
+      lastName: normalized.patientSnapshot.lastName || ''
+    };
+  }
+
+  if (!normalized.doctor && normalized.doctorSnapshot) {
+    normalized.doctor = {
+      _id: normalized.doctorSnapshot.doctorId || '',
+      firstName: normalized.doctorSnapshot.firstName || '',
+      lastName: normalized.doctorSnapshot.lastName || '',
+      specialization: normalized.doctorSnapshot.specialization || ''
+    };
+  }
+
+  return normalized;
+}
+
 type MedicalRecordForm = {
   patientId: string;
   appointmentId: string;
@@ -77,13 +112,15 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
 
     const filtered = this.records().filter((record) => {
       const visitDate = new Date(record.visitDate);
-      const patientName = `${record.patient?.firstName || ''} ${record.patient?.lastName || ''}`.trim().toLowerCase();
+      const patientName = resolvePatientName(record.patient, record.patientSnapshot).toLowerCase();
+      const doctorName = resolveDoctorName(record.doctor, (record as any).doctorSnapshot).toLowerCase();
       const diagnosis = (record.diagnosis || '').toLowerCase();
       const treatment = (record.treatment || '').toLowerCase();
       const recommendations = (record.recommendations || '').toLowerCase();
 
       const matchesTerm = !term
         || patientName.includes(term)
+        || doctorName.includes(term)
         || diagnosis.includes(term)
         || treatment.includes(term)
         || recommendations.includes(term);
@@ -225,7 +262,7 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.medicalRecordService.getMedicalRecordsByPatient(patientId).pipe(takeUntil(this.destroy$)).subscribe({
       next: (data) => {
-        this.records.set(data);
+        this.records.set(data.map(normalizeMedicalRecord));
         this.loading.set(false);
       },
       error: (err) => {
@@ -239,7 +276,7 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.medicalRecordService.getMedicalRecordsByDoctor(doctorId).pipe(takeUntil(this.destroy$)).subscribe({
       next: (data) => {
-        this.records.set(data);
+        this.records.set(data.map(normalizeMedicalRecord));
         this.loading.set(false);
       },
       error: (err) => {
