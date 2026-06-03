@@ -60,7 +60,7 @@
   <div class="prescriptions-list">
     <div *ngFor="let prescription of visiblePrescriptions()" class="prescription-card">
       <div class="prescription-header">
-        <h3>Recept #{{ prescription._id?.substring(0, 8) }}</h3>
+        <h3>Recept #{{ prescription._id?.substring(0, 12) }}</h3>
         <span [class]="'status-badge ' + getStatusClass(prescription.status)">
           {{ getStatusText(prescription.status) }}
         </span>

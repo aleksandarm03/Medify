@@ -55,6 +55,7 @@ function emitAppointmentStatusUpdated(appointment) {
             doctorId: String((appt.doctor && appt.doctor._id) || appt.doctorId || ''),
             doctorName: (appt.doctor && `${appt.doctor.firstName || ''} ${appt.doctor.lastName || ''}`.trim()) || appt.doctorName || '',
             appointmentDate: appt.appointmentDate || appt.date || null,
+            reason: appt.reason || '',
             newStatus: appt.status || appt.newStatus || '',
             canceledByRole: appt.canceledByRole || appt.canceledBy || null,
             canceledByUser: appt.canceledByUser || appt.canceledByUserId || null,

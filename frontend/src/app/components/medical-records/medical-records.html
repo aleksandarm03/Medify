@@ -49,7 +49,7 @@
   <div class="records-list">
     <div *ngFor="let record of visibleRecords()" class="record-card">
       <div class="record-header">
-        <h3>Karton #{{ record._id?.substring(0, 8) }}</h3>
+        <h3>Karton #{{ record._id?.substring(0, 12) }}</h3>
         <span class="record-date">{{ formatDate(record.visitDate) }}</span>
       </div>
       

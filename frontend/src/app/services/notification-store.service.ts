@@ -79,18 +79,30 @@ export class NotificationStoreService {
 
       if (newStatus === 'canceled' || newStatus === 'cancelled') {
         notifType = 'warning';
-        const serviceName = event?.reason || event?.cancellationReason || '';
-        const appointmentDate = this.formatCanceledAppointmentDate(event?.appointmentDate);
+        const serviceName = event?.reason || event?.cancellationReason || 'nepoznata usluga';
+        const appointmentDate = this.formatCanceledAppointmentDate(event?.appointmentDate) || 'nepoznat termin';
         const cancelledByRole = event?.canceledByRole || event?.canceledBy || '';
+        const cancelledByUser = String(event?.canceledByUser || '');
+        const isSelfCancellation = !!(cancelledByUser && currentUser && cancelledByUser === String(currentUser._id));
+
         if (role === 'doctor') {
-          message = `Pacijent ${event?.patientName || ''} je otkazao termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}.`;
+          if (isSelfCancellation || cancelledByRole === 'doctor') {
+            message = `Uspešno ste otkazali termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}.`;
+          } else if (cancelledByRole === 'patient') {
+            message = `Pacijent ${event?.patientName || ''} je otkazao termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}.`;
+          } else if (cancelledByRole === 'admin') {
+            message = `Termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}, je otkazan od strane administratora.`;
+          } else {
+            message = `Termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}, je otkazan.`;
+          }
         } else {
           // patient view
-          const cancelledByUser = String(event?.canceledByUser || '');
-          if (cancelledByUser && currentUser && cancelledByUser === String(currentUser._id)) {
+          if (isSelfCancellation || cancelledByRole === 'patient') {
             message = `Uspešno ste otkazali termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}.`;
           } else if (cancelledByRole === 'doctor') {
             message = `Vaš termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}, je otkazan od strane doktora.`;
+          } else if (cancelledByRole === 'admin') {
+            message = `Vaš termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}, je otkazan od strane administratora.`;
           } else {
             message = `Vaš termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}, je otkazan.`;
           }

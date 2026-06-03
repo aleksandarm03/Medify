@@ -171,16 +171,36 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((event: any) => {
         const status = event?.newStatus || event?.status || 'ažuriran';
-        const appointmentDate = this.formatCanceledAppointmentDate(event?.appointmentDate);
+        const appointmentDate = this.formatCanceledAppointmentDate(event?.appointmentDate) || 'nepoznat termin';
         const apptDate = event?.appointmentDate ? new Date(event.appointmentDate).toLocaleString() : '';
-        const serviceName = event?.reason || event?.cancellationReason || '';
+        const serviceName = event?.reason || event?.cancellationReason || 'nepoznata usluga';
+        const cancelledByRole = event?.canceledByRole || event?.canceledBy || '';
+        const currentUser = this.authService.getCurrentUser();
+        const cancelledByUser = String(event?.canceledByUser || '');
+        const isSelfCancellation = !!(cancelledByUser && currentUser && cancelledByUser === String(currentUser._id));
         let notice = '';
 
         if (status === 'canceled' || status === 'cancelled') {
           if (this.isDoctor()) {
-            notice = `Pacijent ${event?.patientName || ''} je otkazao termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}.`;
+            if (isSelfCancellation || cancelledByRole === 'doctor') {
+              notice = `Uspešno ste otkazali termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}.`;
+            } else if (cancelledByRole === 'patient') {
+              notice = `Pacijent ${event?.patientName || ''} je otkazao termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}.`;
+            } else if (cancelledByRole === 'admin') {
+              notice = `Termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}, je otkazan od strane administratora.`;
+            } else {
+              notice = `Termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}, je otkazan.`;
+            }
           } else {
-            notice = `Termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}, je otkazan.`;
+            if (isSelfCancellation || cancelledByRole === 'patient') {
+              notice = `Uspešno ste otkazali termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}.`;
+            } else if (cancelledByRole === 'doctor') {
+              notice = `Vaš termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}, je otkazan od strane doktora.`;
+            } else if (cancelledByRole === 'admin') {
+              notice = `Vaš termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}, je otkazan od strane administratora.`;
+            } else {
+              notice = `Termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}, je otkazan.`;
+            }
           }
         } else if (status === 'rescheduled') {
           notice = `Termin je prebačen na novo vreme: ${apptDate}.`;
