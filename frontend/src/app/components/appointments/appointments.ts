@@ -171,15 +171,16 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((event: any) => {
         const status = event?.newStatus || event?.status || 'ažuriran';
+        const appointmentDate = this.formatCanceledAppointmentDate(event?.appointmentDate);
         const apptDate = event?.appointmentDate ? new Date(event.appointmentDate).toLocaleString() : '';
-        const reason = event?.cancellationReason || event?.reason || '';
+        const serviceName = event?.reason || event?.cancellationReason || '';
         let notice = '';
 
         if (status === 'canceled' || status === 'cancelled') {
           if (this.isDoctor()) {
-            notice = `Pacijent ${event?.patientName || ''} je otkazao termin zakazan za ${apptDate}.${reason ? ' Razlog: ' + reason : ''}`;
+            notice = `Pacijent ${event?.patientName || ''} je otkazao termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}.`;
           } else {
-            notice = `Termin zakazan za ${apptDate} je otkazan.${reason ? ' Razlog: ' + reason : ''}`;
+            notice = `Termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}, je otkazan.`;
           }
         } else if (status === 'rescheduled') {
           notice = `Termin je prebačen na novo vreme: ${apptDate}.`;
@@ -196,6 +197,26 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
 
   clearNotice() {
     this.pageNotice.set('');
+  }
+
+  private formatCanceledAppointmentDate(value: any): string {
+    const date = value ? new Date(value) : null;
+    if (!date || Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    const datePart = date.toLocaleDateString('sr-RS', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    const timePart = date.toLocaleTimeString('sr-RS', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+
+    return `${datePart}. u ${timePart}`;
   }
 
   createAppointment() {

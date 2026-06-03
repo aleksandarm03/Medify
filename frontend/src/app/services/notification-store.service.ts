@@ -79,19 +79,20 @@ export class NotificationStoreService {
 
       if (newStatus === 'canceled' || newStatus === 'cancelled') {
         notifType = 'warning';
-        const reason = event?.cancellationReason || event?.reason || '';
+        const serviceName = event?.reason || event?.cancellationReason || '';
+        const appointmentDate = this.formatCanceledAppointmentDate(event?.appointmentDate);
         const cancelledByRole = event?.canceledByRole || event?.canceledBy || '';
         if (role === 'doctor') {
-          message = `Pacijent ${event?.patientName || ''} je otkazao termin zakazan za ${apptDate}.${reason ? ' Razlog: ' + reason : ''}`;
+          message = `Pacijent ${event?.patientName || ''} je otkazao termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}.`;
         } else {
           // patient view
           const cancelledByUser = String(event?.canceledByUser || '');
           if (cancelledByUser && currentUser && cancelledByUser === String(currentUser._id)) {
-            message = `Uspešno ste otkazali termin zakazan za ${apptDate}.${reason ? ' Razlog: ' + reason : ''}`;
+            message = `Uspešno ste otkazali termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}.`;
           } else if (cancelledByRole === 'doctor') {
-            message = `Vaš termin zakazan za ${apptDate} je otkazan od strane doktora.${reason ? ' Razlog: ' + reason : ''}`;
+            message = `Vaš termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}, je otkazan od strane doktora.`;
           } else {
-            message = `Vaš termin zakazan za ${apptDate} je otkazan.${reason ? ' Razlog: ' + reason : ''}`;
+            message = `Vaš termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}, je otkazan.`;
           }
         }
       } else if (newStatus === 'rescheduled') {
@@ -172,6 +173,26 @@ export class NotificationStoreService {
     }
 
     return labels[status] || status;
+  }
+
+  private formatCanceledAppointmentDate(value: any): string {
+    const date = value ? new Date(value) : null;
+    if (!date || Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    const datePart = date.toLocaleDateString('sr-RS', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    const timePart = date.toLocaleTimeString('sr-RS', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+
+    return `${datePart}. u ${timePart}`;
   }
 
   private pushNotification(input: Omit<AppNotification, 'id' | 'createdAt' | 'read'>): void {
