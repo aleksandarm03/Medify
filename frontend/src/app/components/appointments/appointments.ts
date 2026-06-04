@@ -173,14 +173,14 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
         const status = event?.newStatus || event?.status || 'ažuriran';
         const appointmentDate = this.formatCanceledAppointmentDate(event?.appointmentDate) || 'nepoznat termin';
         const apptDate = event?.appointmentDate ? new Date(event.appointmentDate).toLocaleString() : '';
-        const serviceName = event?.reason || event?.cancellationReason || 'nepoznata usluga';
+        const serviceName = event?.serviceName || event?.reason || 'nepoznata usluga';
         const cancelledByRole = event?.canceledByRole || event?.canceledBy || '';
         const currentUser = this.authService.getCurrentUser();
-        const cancelledByUser = String(event?.canceledByUser || '');
+        const cancelledByUser = this.resolveCanceledByUserId(event?.canceledByUser);
         const isSelfCancellation = !!(cancelledByUser && currentUser && cancelledByUser === String(currentUser._id));
-        let notice = '';
+        let notice = typeof event?.message === 'string' ? event.message.trim() : '';
 
-        if (status === 'canceled' || status === 'cancelled') {
+        if (!notice && (status === 'canceled' || status === 'cancelled')) {
           if (this.isDoctor()) {
             if (isSelfCancellation || cancelledByRole === 'doctor') {
               notice = `Uspešno ste otkazali termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}.`;
@@ -202,11 +202,11 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
               notice = `Termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}, je otkazan.`;
             }
           }
-        } else if (status === 'rescheduled') {
+        } else if (!notice && status === 'rescheduled') {
           notice = `Termin je prebačen na novo vreme: ${apptDate}.`;
-        } else if (status === 'confirmed') {
+        } else if (!notice && status === 'confirmed') {
           notice = `Termin je potvrđen za ${apptDate}.`;
-        } else {
+        } else if (!notice) {
           notice = `Status termina je promijenjen: ${this.getStatusText(status)}.`;
         }
 
@@ -217,6 +217,16 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
 
   clearNotice() {
     this.pageNotice.set('');
+  }
+
+  private resolveCanceledByUserId(value: unknown): string {
+    if (!value) {
+      return '';
+    }
+    if (typeof value === 'object' && value !== null && '_id' in value) {
+      return String((value as { _id: unknown })._id);
+    }
+    return String(value);
   }
 
   private formatCanceledAppointmentDate(value: any): string {

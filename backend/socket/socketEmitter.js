@@ -4,6 +4,7 @@
  */
 
 const connectionManager = require('./managers/connectionManager');
+const { buildAppointmentStatusMessage } = require('./appointmentNotificationMessages');
 
 let io = null;
 
@@ -48,37 +49,53 @@ function emitAppointmentStatusUpdated(appointment) {
             return;
         }
 
-        const payload = {
+        const patientId = String((appt.patient && appt.patient._id) || appt.patientId || '');
+        const doctorId = String((appt.doctor && appt.doctor._id) || appt.doctorId || '');
+        const canceledByUserRaw = appt.canceledByUser || appt.canceledByUserId || null;
+        const canceledByUserId = canceledByUserRaw && typeof canceledByUserRaw === 'object' && canceledByUserRaw._id
+            ? String(canceledByUserRaw._id)
+            : (canceledByUserRaw ? String(canceledByUserRaw) : null);
+
+        const basePayload = {
             appointmentId: String(appt._id || appt.appointmentId || ''),
-            patientId: String((appt.patient && appt.patient._id) || appt.patientId || ''),
+            patientId,
             patientName: (appt.patient && `${appt.patient.firstName || ''} ${appt.patient.lastName || ''}`.trim()) || appt.patientName || '',
-            doctorId: String((appt.doctor && appt.doctor._id) || appt.doctorId || ''),
+            doctorId,
             doctorName: (appt.doctor && `${appt.doctor.firstName || ''} ${appt.doctor.lastName || ''}`.trim()) || appt.doctorName || '',
             appointmentDate: appt.appointmentDate || appt.date || null,
+            serviceName: appt.reason || '',
             reason: appt.reason || '',
             newStatus: appt.status || appt.newStatus || '',
             canceledByRole: appt.canceledByRole || appt.canceledBy || null,
-            canceledByUser: appt.canceledByUser || appt.canceledByUserId || null,
-            cancellationReason: appt.cancellationReason || appt.reason || appt.reasonText || '',
+            canceledByUser: canceledByUserId,
+            cancellationReason: appt.cancellationReason || null,
             type: 'appointment_status_changed',
             timestamp: new Date()
         };
 
-        const patientSocket = findSocketByUserId(String(payload.patientId));
-        const doctorSocket = findSocketByUserId(String(payload.doctorId));
+        const patientSocket = findSocketByUserId(patientId);
+        const doctorSocket = findSocketByUserId(doctorId);
 
         if (patientSocket) {
-            io.to(patientSocket.id).emit('notification:appointment-updated', payload);
+            const patientMessage = buildAppointmentStatusMessage('patient', appt, patientId);
+            io.to(patientSocket.id).emit('notification:appointment-updated', {
+                ...basePayload,
+                message: patientMessage || 'Status termina je ažuriran.'
+            });
         }
 
         if (doctorSocket) {
-            io.to(doctorSocket.id).emit('notification:appointment-updated', payload);
+            const doctorMessage = buildAppointmentStatusMessage('doctor', appt, doctorId);
+            io.to(doctorSocket.id).emit('notification:appointment-updated', {
+                ...basePayload,
+                message: doctorMessage || 'Status termina je ažuriran.'
+            });
         }
 
         if (patientSocket || doctorSocket) {
-            console.log(`[SocketEmitter] notification:appointment-updated -> doctor ${payload.doctorId}, patient ${payload.patientId}, status ${payload.newStatus}`);
+            console.log(`[SocketEmitter] notification:appointment-updated -> doctor ${doctorId}, patient ${patientId}, status ${basePayload.newStatus}`);
         } else {
-            console.log(`[SocketEmitter] Niko online za appointment-updated (${payload.appointmentId})`);
+            console.log(`[SocketEmitter] Niko online za appointment-updated (${basePayload.appointmentId})`);
         }
     }
 }

@@ -74,15 +74,22 @@ export class NotificationStoreService {
       const currentUser = this.authService.getCurrentUser();
       const newStatus = event?.newStatus || event?.status || '';
       const apptDate = event?.appointmentDate ? new Date(event.appointmentDate).toLocaleString() : '';
-      let message = '';
+      let message = typeof event?.message === 'string' ? event.message.trim() : '';
       let notifType: 'info' | 'warning' | 'success' | 'error' = 'info';
+      let title = 'Promena statusa termina';
 
       if (newStatus === 'canceled' || newStatus === 'cancelled') {
         notifType = 'warning';
-        const serviceName = event?.reason || event?.cancellationReason || 'nepoznata usluga';
+        if (role === 'doctor' && (event?.canceledByRole === 'patient')) {
+          title = 'Pacijent je otkazao termin';
+        }
+      }
+
+      if (!message && (newStatus === 'canceled' || newStatus === 'cancelled')) {
+        const serviceName = event?.serviceName || event?.reason || 'nepoznata usluga';
         const appointmentDate = this.formatCanceledAppointmentDate(event?.appointmentDate) || 'nepoznat termin';
         const cancelledByRole = event?.canceledByRole || event?.canceledBy || '';
-        const cancelledByUser = String(event?.canceledByUser || '');
+        const cancelledByUser = this.resolveUserId(event?.canceledByUser);
         const isSelfCancellation = !!(cancelledByUser && currentUser && cancelledByUser === String(currentUser._id));
 
         if (role === 'doctor') {
@@ -107,20 +114,20 @@ export class NotificationStoreService {
             message = `Vaš termin za uslugu „${serviceName}”, koji je bio zakazan za ${appointmentDate}, je otkazan.`;
           }
         }
-      } else if (newStatus === 'rescheduled') {
+      } else if (!message && newStatus === 'rescheduled') {
         notifType = 'info';
         message = `Termin je prebačen na novo vreme: ${apptDate}.`;
-      } else if (newStatus === 'confirmed') {
+      } else if (!message && newStatus === 'confirmed') {
         notifType = 'success';
         message = `Termin je potvrđen za ${apptDate}.`;
-      } else if (newStatus) {
+      } else if (!message && newStatus) {
         message = `Status termina je promenjen: ${this.formatStatus(newStatus)}.`;
-      } else {
+      } else if (!message) {
         message = 'Status termina je ažuriran.';
       }
 
       this.pushNotification({
-        title: 'Promena statusa termina',
+        title,
         message,
         type: notifType,
         category: 'appointment',
@@ -185,6 +192,16 @@ export class NotificationStoreService {
     }
 
     return labels[status] || status;
+  }
+
+  private resolveUserId(value: unknown): string {
+    if (!value) {
+      return '';
+    }
+    if (typeof value === 'object' && value !== null && '_id' in value) {
+      return String((value as { _id: unknown })._id);
+    }
+    return String(value);
   }
 
   private formatCanceledAppointmentDate(value: any): string {
