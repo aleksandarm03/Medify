@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
-import { Prescription, CreatePrescriptionRequest } from '../models/prescription.model';
+import { Prescription, CreatePrescriptionRequest, Medication } from '../models/prescription.model';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -30,6 +30,14 @@ export class PrescriptionService {
 
   updatePrescriptionStatus(id: string, status: 'active' | 'completed' | 'cancelled'): Observable<Prescription> {
     return this.api.put<Prescription>(`/prescriptions/${id}/status`, { status });
+  }
+
+  addMedicationToPrescription(id: string, medication: Medication): Observable<Prescription> {
+    return this.api.post<Prescription>(`/prescriptions/${id}/medications`, { medication });
+  }
+
+  cancelMedication(prescriptionId: string, medicationId: string): Observable<Prescription> {
+    return this.api.put<Prescription>(`/prescriptions/${prescriptionId}/medications/${medicationId}/cancel`, {});
   }
 
   getAllPrescriptions(): Observable<Prescription[]> {

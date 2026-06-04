@@ -113,6 +113,82 @@
   margin-bottom: 0.5rem;
 }
 
+.medication-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.medication-details {
+  flex: 1;
+  min-width: 220px;
+}
+
+.medication-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.prescription-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.medication-item-cancelled {
+  opacity: 0.75;
+  background: #f1f5f9;
+}
+
+.medication-item-cancelled .medication-details strong {
+  text-decoration: line-through;
+  color: #64748b;
+}
+
+.medication-status-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  text-decoration: none;
+}
+
+.add-medication-inline {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.add-medication-inline h5 {
+  margin: 0 0 0.75rem;
+  color: var(--color-primary);
+}
+
+.inline-medication-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.btn-sm {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.875rem;
+}
+
 .medication-item p {
   margin: 0.25rem 0;
 }
@@ -121,14 +197,6 @@
   font-size: 0.9rem;
   color: #888;
   font-style: italic;
-}
-
-.prescription-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-border);
 }
 
 .btn {
@@ -383,6 +451,26 @@
 }
 
 @media (max-width: 768px) {
+  .medication-item-row {
+    flex-direction: column;
+  }
+
+  .medication-actions {
+    width: 100%;
+  }
+
+  .medication-actions .btn {
+    flex: 1;
+  }
+
+  .prescription-footer-actions {
+    flex-direction: column;
+  }
+
+  .prescription-footer-actions .btn {
+    width: 100%;
+  }
+
   .filters {
     flex-direction: column;
     align-items: stretch;

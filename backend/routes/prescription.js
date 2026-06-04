@@ -4,6 +4,7 @@ const PrescriptionService = require("../services/prescriptionService");
 const MedicalRecordService = require("../services/medicalRecordService");
 const UserModel = require("../models/user");
 const AppointmentModel = require("../models/appointment");
+const socketEmitter = require("../socket/socketEmitter");
 
 // Dohvatanje svih recepata (samo admin)
 router.get("/all",
@@ -73,6 +74,12 @@ router.post("/",
                 medicalRecord,
                 appointment
             );
+
+            socketEmitter.emitPrescriptionPatientNotification(prescription, 'created', {
+                doctor,
+                hasMedicalRecord: Boolean(medicalRecord),
+                medicalRecordDiagnosis: medicalRecord?.diagnosis || ''
+            });
 
             return res.status(201).json(prescription);
         } catch (error) {
@@ -166,6 +173,95 @@ router.get("/:id",
     }
 );
 
+// Dodavanje leka na aktivan recept (samo doktor)
+router.post("/:id/medications",
+    passport.authenticate("jwt", { session: false }),
+    passport.authorizeRoles("doctor"),
+    async function (req, res) {
+        try {
+            const medication = req.body.medication || req.body;
+
+            const prescription = await PrescriptionService.getPrescriptionById(req.params.id);
+
+            if (!prescription) {
+                return res.status(404).json({ message: "Recept nije pronađen." });
+            }
+
+            if (prescription.doctor._id.toString() !== req.user._id.toString()) {
+                return res.status(403).json({ message: "Možete menjati samo svoje recepte." });
+            }
+
+            const updatedPrescription = await PrescriptionService.addMedicationToPrescription(
+                req.params.id,
+                medication
+            );
+
+            socketEmitter.emitPrescriptionPatientNotification(updatedPrescription, 'medication_added', {
+                doctor: req.user,
+                medicationName: medication?.name || updatedPrescription.medications?.slice(-1)[0]?.name || ''
+            });
+
+            return res.json(updatedPrescription);
+        } catch (error) {
+            if (error.code === "PRESCRIPTION_NOT_ACTIVE") {
+                return res.status(400).json({ message: "Lek se može dodati samo na aktivan recept." });
+            }
+            if (error.code === "INVALID_MEDICATION") {
+                return res.status(400).json({ message: "Lek mora imati naziv, dozu, učestalost i trajanje." });
+            }
+
+            console.error("Add medication to prescription error:", error);
+            return res.status(500).json({ message: "Greška pri dodavanju leka na recept." });
+        }
+    }
+);
+
+// Otkazivanje pojedinačnog leka na aktivnom receptu (samo doktor)
+router.put("/:id/medications/:medicationId/cancel",
+    passport.authenticate("jwt", { session: false }),
+    passport.authorizeRoles("doctor"),
+    async function (req, res) {
+        try {
+            const prescription = await PrescriptionService.getPrescriptionById(req.params.id);
+
+            if (!prescription) {
+                return res.status(404).json({ message: "Recept nije pronađen." });
+            }
+
+            if (prescription.doctor._id.toString() !== req.user._id.toString()) {
+                return res.status(403).json({ message: "Možete menjati samo svoje recepte." });
+            }
+
+            const medicationBeforeCancel = prescription.medications.id(req.params.medicationId);
+
+            const updatedPrescription = await PrescriptionService.cancelMedicationInPrescription(
+                req.params.id,
+                req.params.medicationId
+            );
+
+            socketEmitter.emitPrescriptionPatientNotification(updatedPrescription, 'medication_cancelled', {
+                doctor: req.user,
+                medicationName: medicationBeforeCancel?.name || ''
+            });
+
+            return res.json(updatedPrescription);
+        } catch (error) {
+            if (error.code === "PRESCRIPTION_NOT_ACTIVE") {
+                return res.status(400).json({ message: "Lek se može otkazati samo na aktivnom receptu." });
+            }
+            if (error.code === "MEDICATION_NOT_FOUND") {
+                return res.status(404).json({ message: "Lek nije pronađen na ovom receptu." });
+            }
+            if (error.code === "MEDICATION_ALREADY_CANCELLED") {
+                return res.status(400).json({ message: "Ovaj lek je već otkazan." });
+            }
+
+            console.error("Cancel medication error:", error);
+            return res.status(500).json({ message: "Greška pri otkazivanju leka." });
+        }
+    }
+);
+
 // Ažuriranje statusa recepta
 router.put("/:id/status",
     passport.authenticate("jwt", { session: false }),
@@ -190,6 +286,17 @@ router.put("/:id/status",
             }
 
             const updatedPrescription = await PrescriptionService.updatePrescriptionStatus(req.params.id, status);
+
+            if (status === 'completed') {
+                socketEmitter.emitPrescriptionPatientNotification(updatedPrescription, 'completed', {
+                    doctor: req.user
+                });
+            } else if (status === 'cancelled') {
+                socketEmitter.emitPrescriptionPatientNotification(updatedPrescription, 'cancelled', {
+                    doctor: req.user
+                });
+            }
+
             return res.json(updatedPrescription);
         } catch (error) {
             console.error("Update prescription status error:", error);

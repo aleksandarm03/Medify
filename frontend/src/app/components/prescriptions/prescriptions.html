@@ -74,18 +74,114 @@
         <p *ngIf="prescription.notes"><strong>Napomene:</strong> {{ prescription.notes }}</p>
 
         <div class="medications">
-          <h4>Lekovi:</h4>
-          <div *ngFor="let med of prescription.medications" class="medication-item">
-            <p><strong>{{ med.name }}</strong></p>
-            <p>Doza: {{ med.dosage }} | Ucestalost: {{ med.frequency }} | Trajanje: {{ med.duration }}</p>
-            <p *ngIf="med.instructions" class="instructions">Uputstvo: {{ med.instructions }}</p>
+          <h4>Lekovi</h4>
+          <div
+            *ngFor="let med of prescription.medications"
+            class="medication-item medication-item-row"
+            [class.medication-item-cancelled]="!isMedicationActive(med)">
+            <div class="medication-details">
+              <p>
+                <strong>{{ med.name }}</strong>
+                <span *ngIf="!isMedicationActive(med)" class="medication-status-badge">Otkazan</span>
+              </p>
+              <p>Doza: {{ med.dosage }} | Učestalost: {{ med.frequency }} | Trajanje: {{ med.duration }}</p>
+              <p *ngIf="med.instructions" class="instructions">Uputstvo: {{ med.instructions }}</p>
+            </div>
+            <div
+              class="medication-actions"
+              *ngIf="isDoctor() && prescription.status === 'active' && isMedicationActive(med) && med._id">
+              <button
+                type="button"
+                (click)="cancelMedication(prescription._id!, med._id!)"
+                class="btn btn-warning btn-sm"
+                [disabled]="loading()">
+                Otkaži
+              </button>
+            </div>
+          </div>
+
+          <div
+            *ngIf="isDoctor() && prescription.status === 'active' && isAddingMedicationTo(prescription._id)"
+            class="add-medication-inline">
+            <h5>Novi lek na receptu</h5>
+            <div *ngIf="addMedicationError()" class="error-message">{{ addMedicationError() }}</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Naziv *</label>
+                <input
+                  type="text"
+                  [ngModel]="addMedicationDraft().name"
+                  (ngModelChange)="updateAddMedicationField('name', $event)"
+                  name="addMedName-{{ prescription._id }}" />
+              </div>
+              <div class="form-group">
+                <label>Doza *</label>
+                <input
+                  type="text"
+                  [ngModel]="addMedicationDraft().dosage"
+                  (ngModelChange)="updateAddMedicationField('dosage', $event)"
+                  name="addMedDosage-{{ prescription._id }}"
+                  placeholder="500mg" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Učestalost *</label>
+                <input
+                  type="text"
+                  [ngModel]="addMedicationDraft().frequency"
+                  (ngModelChange)="updateAddMedicationField('frequency', $event)"
+                  name="addMedFrequency-{{ prescription._id }}"
+                  placeholder="2x dnevno" />
+              </div>
+              <div class="form-group">
+                <label>Trajanje *</label>
+                <input
+                  type="text"
+                  [ngModel]="addMedicationDraft().duration"
+                  (ngModelChange)="updateAddMedicationField('duration', $event)"
+                  name="addMedDuration-{{ prescription._id }}"
+                  placeholder="7 dana" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Uputstvo</label>
+              <input
+                type="text"
+                [ngModel]="addMedicationDraft().instructions"
+                (ngModelChange)="updateAddMedicationField('instructions', $event)"
+                name="addMedInstructions-{{ prescription._id }}"
+                placeholder="Uz obrok" />
+            </div>
+            <div class="inline-medication-actions">
+              <button type="button" class="btn btn-secondary btn-sm" (click)="closeAddMedicationPanel()">Odustani</button>
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                (click)="submitAddMedication(prescription._id!)"
+                [disabled]="loading()">
+                {{ loading() ? 'Čuvam...' : 'Sačuvaj lek' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="prescription-footer-actions" *ngIf="isDoctor() && prescription.status === 'active'">
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              (click)="openAddMedicationPanel(prescription._id!)"
+              [disabled]="loading()">
+              {{ isAddingMedicationTo(prescription._id) ? 'Zatvori formu' : 'Dodaj lek' }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-success btn-sm"
+              (click)="completePrescription(prescription._id!)"
+              [disabled]="loading()">
+              Završi
+            </button>
           </div>
         </div>
-      </div>
-
-      <div class="prescription-actions" *ngIf="isDoctor() && prescription.status === 'active'">
-        <button (click)="updateStatus(prescription._id!, 'completed')" class="btn btn-success">Zavrsi</button>
-        <button (click)="updateStatus(prescription._id!, 'cancelled')" class="btn btn-warning">Otkazi</button>
       </div>
     </div>
   </div>

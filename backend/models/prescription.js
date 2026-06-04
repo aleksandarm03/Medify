@@ -22,7 +22,8 @@ const PrescriptionSchema = mongoose.Schema({
         dosage: { type: String, required: true }, // npr. "500mg"
         frequency: { type: String, required: true }, // npr. "2x dnevno"
         duration: { type: String, required: true }, // npr. "7 dana"
-        instructions: String // npr. "Uz obrok"
+        instructions: String, // npr. "Uz obrok"
+        status: { type: String, enum: ["active", "cancelled"], default: "active" }
     }],
     issueDate: { type: Date, required: true, default: Date.now },
     validUntil: Date,

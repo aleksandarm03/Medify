@@ -54,11 +54,16 @@ var createMedicalRecord = async function(body, doctor, patient, appointment) {
         followUpDate: body.followUpDate
     });
     
-    return await medicalRecord.save();
+    const saved = await medicalRecord.save();
+    return await MedicalRecordModel.findById(saved._id)
+        .populate("patient", "firstName lastName JMBG")
+        .populate("doctor", "firstName lastName specialization")
+        .populate("appointment");
 };
 
 var getMedicalRecordsByPatient = async function(patientId) {
     return await MedicalRecordModel.find({ patient: patientId })
+        .populate("patient", "firstName lastName JMBG")
         .populate("doctor", "firstName lastName specialization")
         .populate("appointment")
         .sort({ visitDate: -1 });

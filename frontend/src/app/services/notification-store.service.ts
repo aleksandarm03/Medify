@@ -7,7 +7,7 @@ export interface AppNotification {
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
-  category: 'appointment' | 'message' | 'system';
+  category: 'appointment' | 'message' | 'system' | 'prescription';
   createdAt: string;
   read: boolean;
   sourceEvent: string;
@@ -149,14 +149,19 @@ export class NotificationStoreService {
       let message = event?.message || 'Stiglo je novo obaveštenje.';
       let type: AppNotification['type'] = 'info';
 
-      if (sourceEvent === 'notification:prescription-added') {
-        title = 'Novi recept';
-        const doctor = event?.doctorName || '';
-        const summary = event?.prescriptionSummary || (event?.prescription && event.prescription.summary) || '';
-        message = doctor
-          ? `Doktor ${doctor} je dodao recept za vas${summary ? ': ' + summary : ''}`
-          : `Doktor je dodao recept za vas${summary ? ': ' + summary : ''}`;
-        type = 'success';
+      if (sourceEvent === 'notification:prescription-added' || sourceEvent === 'notification:prescription-updated') {
+        const currentUser = this.authService.getCurrentUser();
+        if (currentUser?.role !== 'patient') {
+          return;
+        }
+        if (event?.patientId && currentUser._id && String(event.patientId) !== String(currentUser._id)) {
+          return;
+        }
+
+        const prescriptionNotice = this.buildPrescriptionPatientNotice(event);
+        title = prescriptionNotice.title;
+        message = prescriptionNotice.message;
+        type = prescriptionNotice.type;
       } else if (sourceEvent === 'notification:medical-record-updated') {
         title = 'Ažuriranje kartona';
         const doctor = event?.doctorName || '';
@@ -169,15 +174,101 @@ export class NotificationStoreService {
         message = event?.message || message;
       }
 
+      const category: AppNotification['category'] =
+        sourceEvent === 'notification:prescription-added' || sourceEvent === 'notification:prescription-updated'
+          ? 'prescription'
+          : 'system';
+
       this.pushNotification({
         title,
         message,
         type,
-        category: 'system',
+        category,
         sourceEvent,
         payload: event
       });
     });
+  }
+
+  private buildPrescriptionPatientNotice(event: any): {
+    title: string;
+    message: string;
+    type: AppNotification['type'];
+  } {
+    if (typeof event?.message === 'string' && event.message.trim()) {
+      return {
+        title: event?.title || 'Obaveštenje o receptu',
+        message: event.message.trim(),
+        type: this.mapPrescriptionNoticeType(event?.action)
+      };
+    }
+
+    const doctor = event?.doctorName || 'Doktor';
+    const medName = event?.medicationName || '';
+    const diagnosis = event?.medicalRecordDiagnosis || '';
+    const action = event?.action || 'created';
+
+    switch (action) {
+      case 'created':
+        if (event?.hasMedicalRecord || diagnosis) {
+          return {
+            title: 'Novi recept',
+            message: diagnosis
+              ? `Doktor ${doctor} je kreirao novi recept na osnovu kartona (dijagnoza: ${diagnosis}).`
+              : `Doktor ${doctor} je kreirao novi recept na osnovu kartona.`,
+            type: 'success'
+          };
+        }
+        return {
+          title: 'Novi recept',
+          message: `Doktor ${doctor} je kreirao novi recept za vas.`,
+          type: 'success'
+        };
+      case 'medication_added':
+        return {
+          title: 'Lek dodat na recept',
+          message: medName
+            ? `Doktor ${doctor} je dodao lek „${medName}” na vaš recept.`
+            : `Doktor ${doctor} je dodao novi lek na vaš recept.`,
+          type: 'info'
+        };
+      case 'medication_cancelled':
+        return {
+          title: 'Lek otkazan',
+          message: medName
+            ? `Doktor ${doctor} je otkazao lek „${medName}” na vaš recept.`
+            : `Doktor ${doctor} je otkazao lek na vaš recept.`,
+          type: 'warning'
+        };
+      case 'completed':
+        return {
+          title: 'Recept završen',
+          message: `Terapija po receptu doktora ${doctor} je završena.`,
+          type: 'success'
+        };
+      case 'cancelled':
+        return {
+          title: 'Recept otkazan',
+          message: `Doktor ${doctor} je otkazao vaš recept.`,
+          type: 'warning'
+        };
+      default:
+        return {
+          title: 'Obaveštenje o receptu',
+          message: `Doktor ${doctor} je ažurirao vaš recept.`,
+          type: 'info'
+        };
+    }
+  }
+
+  private mapPrescriptionNoticeType(action: string | undefined): AppNotification['type'] {
+    if (action === 'medication_cancelled' || action === 'cancelled') {
+      return 'warning';
+    }
+    if (action === 'created' || action === 'completed') {
+      return 'success';
+    }
+    return 'info';
   }
 
   private formatStatus(status: string | undefined): string {
@@ -236,7 +327,8 @@ export class NotificationStoreService {
     const next = [notification, ...current].slice(0, this.maxItems);
 
     this.notificationsSignal.set(next);
-    this.toastSignal.set(notification);
+    // Odloži toast da izbegnemo NG0100 u layout-u pri socket događajima u istom CD ciklusu.
+    setTimeout(() => this.toastSignal.set(notification), 0);
     this.persistToStorage();
   }
 

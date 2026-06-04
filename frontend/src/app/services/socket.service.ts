@@ -111,6 +111,10 @@ export class SocketService {
             this.notificationSubject.next({ ...data, __eventName: 'notification:prescription-added' });
         });
 
+        this.socket.on('notification:prescription-updated', (data: any) => {
+            this.notificationSubject.next({ ...data, __eventName: 'notification:prescription-updated' });
+        });
+
         this.socket.on('notification:medical-record-updated', (data: any) => {
             this.notificationSubject.next({ ...data, __eventName: 'notification:medical-record-updated' });
         });

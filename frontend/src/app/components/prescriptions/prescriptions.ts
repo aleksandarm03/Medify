@@ -45,17 +45,33 @@ function normalizePrescription(prescription: Prescription): Prescription {
   return normalized;
 }
 
+function resolveRecordPatientId(record: MedicalRecord): string {
+  const patient = record.patient as any;
+  if (typeof patient === 'string') {
+    return patient;
+  }
+  if (patient?._id) {
+    return String(patient._id);
+  }
+  if (record.patientSnapshot?.patientId) {
+    return String(record.patientSnapshot.patientId);
+  }
+  return '';
+}
+
 function normalizeMedicalRecord(record: MedicalRecord): MedicalRecord {
-  if (record.patient || !record.patientSnapshot) {
+  const patientId = resolveRecordPatientId(record);
+  if (!patientId) {
     return record;
   }
 
+  const patient = record.patient as any;
   return {
     ...record,
     patient: {
-      _id: record.patientSnapshot.patientId || '',
-      firstName: record.patientSnapshot.firstName || '',
-      lastName: record.patientSnapshot.lastName || ''
+      _id: patientId,
+      firstName: typeof patient === 'object' ? (patient?.firstName || '') : (record.patientSnapshot?.firstName || ''),
+      lastName: typeof patient === 'object' ? (patient?.lastName || '') : (record.patientSnapshot?.lastName || '')
     }
   };
 }
@@ -83,6 +99,15 @@ export class PrescriptionsComponent implements OnInit {
   doctorMedicalRecords = signal<MedicalRecord[]>([]);
   filteredMedicalRecords = signal<MedicalRecord[]>([]);
   examinedPatients = signal<any[]>([]);
+  addMedicationPrescriptionId = signal<string | null>(null);
+  addMedicationError = signal('');
+  addMedicationDraft = signal<Medication>({
+    name: '',
+    dosage: '',
+    frequency: '',
+    duration: '',
+    instructions: ''
+  });
 
   visiblePrescriptions = computed(() => {
     const term = this.searchTerm().trim().toLowerCase();
@@ -234,8 +259,12 @@ export class PrescriptionsComponent implements OnInit {
     }
 
     for (const patient of patients) {
-      if (patient?._id && !byPatient.has(patient._id)) {
-        byPatient.set(patient._id, patient);
+      const patientId = typeof patient === 'string' ? patient : patient?._id;
+      if (!patientId) {
+        continue;
+      }
+      if (!byPatient.has(patientId)) {
+        byPatient.set(patientId, typeof patient === 'string' ? { _id: patientId } : patient);
       }
     }
 
@@ -418,20 +447,27 @@ export class PrescriptionsComponent implements OnInit {
   onMedicalRecordChange(medicalRecordId: string) {
     this.formError.set('');
     const selectedRecord = this.filteredMedicalRecords().find(r => r._id === medicalRecordId);
-    if (selectedRecord?.patient?._id) {
+    const recordPatientId = selectedRecord ? resolveRecordPatientId(selectedRecord) : '';
+    if (recordPatientId) {
       this.newPrescription.update((current) => ({
         ...current,
-        patientId: selectedRecord.patient._id,
+        patientId: recordPatientId,
         medicalRecordId
       }));
-      this.ensurePatientOption(selectedRecord.patient._id);
-      this.filterMedicalRecordsForPatient(selectedRecord.patient._id);
+      this.ensurePatientOption(recordPatientId);
+      this.filterMedicalRecordsForPatient(recordPatientId);
     } else {
       this.newPrescription.update((current) => ({ ...current, medicalRecordId }));
     }
+
+    const appointment = selectedRecord?.appointment as any;
+    const appointmentId = typeof appointment === 'string'
+      ? appointment
+      : (appointment?._id ? String(appointment._id) : '');
+
     this.newPrescription.update((current) => ({
       ...current,
-      appointmentId: selectedRecord?.appointment?._id || ''
+      appointmentId
     }));
   }
 
@@ -442,7 +478,7 @@ export class PrescriptionsComponent implements OnInit {
     }
 
     this.filteredMedicalRecords.set(this.doctorMedicalRecords().filter(
-      r => r.patient?._id === patientId
+      (record) => resolveRecordPatientId(record) === patientId
     ));
   }
 
@@ -479,7 +515,7 @@ export class PrescriptionsComponent implements OnInit {
 
     if (!current.patientId && current.medicalRecordId) {
       const selectedRecord = this.doctorMedicalRecords().find(r => r._id === current.medicalRecordId);
-      const recordPatientId = selectedRecord?.patient?._id || '';
+      const recordPatientId = selectedRecord ? resolveRecordPatientId(selectedRecord) : '';
       if (recordPatientId) {
         this.newPrescription.update((state) => ({ ...state, patientId: recordPatientId }));
       }
@@ -532,27 +568,155 @@ export class PrescriptionsComponent implements OnInit {
     });
   }
 
-  updateStatus(id: string, status: string) {
-    const actionText = status === 'cancelled' ? 'otkazete' : 'zavrsite';
-    const confirmed = confirm(`Da li ste sigurni da zelite da ${actionText} ovaj recept?`);
+  isAddingMedicationTo(prescriptionId?: string): boolean {
+    return !!prescriptionId && this.addMedicationPrescriptionId() === prescriptionId;
+  }
+
+  openAddMedicationPanel(prescriptionId: string) {
+    if (this.addMedicationPrescriptionId() === prescriptionId) {
+      this.closeAddMedicationPanel();
+      return;
+    }
+
+    this.addMedicationPrescriptionId.set(prescriptionId);
+    this.addMedicationError.set('');
+    this.addMedicationDraft.set({
+      name: '',
+      dosage: '',
+      frequency: '',
+      duration: '',
+      instructions: ''
+    });
+  }
+
+  closeAddMedicationPanel() {
+    this.addMedicationPrescriptionId.set(null);
+    this.addMedicationError.set('');
+    this.addMedicationDraft.set({
+      name: '',
+      dosage: '',
+      frequency: '',
+      duration: '',
+      instructions: ''
+    });
+  }
+
+  updateAddMedicationField(field: keyof Medication, value: string) {
+    this.addMedicationDraft.update((current) => ({ ...current, [field]: value }));
+    this.addMedicationError.set('');
+  }
+
+  submitAddMedication(prescriptionId: string) {
+    const medication = this.addMedicationDraft();
+    if (!medication.name?.trim() || !medication.dosage?.trim() || !medication.frequency?.trim() || !medication.duration?.trim()) {
+      this.addMedicationError.set('Popunite naziv, dozu, učestalost i trajanje leka.');
+      return;
+    }
+
+    this.loading.set(true);
+    this.addMedicationError.set('');
+
+    this.prescriptionService.addMedicationToPrescription(prescriptionId, {
+      name: medication.name.trim(),
+      dosage: medication.dosage.trim(),
+      frequency: medication.frequency.trim(),
+      duration: medication.duration.trim(),
+      instructions: medication.instructions?.trim() || ''
+    }).subscribe({
+      next: () => {
+        this.closeAddMedicationPanel();
+        this.reloadPrescriptions();
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.addMedicationError.set(err.error?.message || 'Greška pri dodavanju leka.');
+        this.loading.set(false);
+      }
+    });
+  }
+
+  isMedicationActive(medication: Medication): boolean {
+    return !medication.status || medication.status === 'active';
+  }
+
+  cancelMedication(prescriptionId: string, medicationId: string) {
+    const confirmed = confirm('Da li ste sigurni da želite da otkažete ovaj lek?');
     if (!confirmed) {
       return;
     }
 
-    this.prescriptionService.updatePrescriptionStatus(id, status as any).subscribe({
-      next: () => {
-        if (this.isPatient() && this.authService.getCurrentUser()?._id) {
-          this.loadPatientPrescriptions(this.authService.getCurrentUser()!._id!);
-        }
+    this.loading.set(true);
+    this.pageError.set('');
 
-        if (this.isDoctor()) {
-          this.loadPrescriptionsForExaminedPatients();
-        }
+    this.prescriptionService.cancelMedication(prescriptionId, medicationId).subscribe({
+      next: () => {
+        this.reloadPrescriptions();
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.pageError.set(err.error?.message || 'Greška pri otkazivanju leka.');
+        this.loading.set(false);
+      }
+    });
+  }
+
+  completePrescription(prescriptionId: string) {
+    const confirmed = confirm('Da li ste sigurni da želite da završite ovaj recept?');
+    if (!confirmed) {
+      return;
+    }
+
+    this.loading.set(true);
+    this.pageError.set('');
+
+    this.prescriptionService.updatePrescriptionStatus(prescriptionId, 'completed').subscribe({
+      next: () => {
+        this.closeAddMedicationPanel();
+        this.reloadPrescriptions();
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.pageError.set(err.error?.message || 'Greška pri završavanju recepta.');
+        this.loading.set(false);
+      }
+    });
+  }
+
+  updateStatus(id: string, status: 'active' | 'completed' | 'cancelled') {
+    if (status === 'completed') {
+      this.completePrescription(id);
+      return;
+    }
+
+    const actionText = status === 'cancelled' ? 'otkažete' : 'promenite status';
+    const confirmed = confirm(`Da li ste sigurni da želite da ${actionText} ovaj recept?`);
+    if (!confirmed) {
+      return;
+    }
+
+    this.loading.set(true);
+    this.prescriptionService.updatePrescriptionStatus(id, status).subscribe({
+      next: () => {
+        this.closeAddMedicationPanel();
+        this.reloadPrescriptions();
+        this.loading.set(false);
       },
       error: (err) => {
         this.pageError.set(err.error?.message || 'Greška pri ažuriranju statusa');
+        this.loading.set(false);
       }
     });
+  }
+
+  private reloadPrescriptions(): void {
+    if (this.isPatient() && this.authService.getCurrentUser()?._id) {
+      this.loadPatientPrescriptions(this.authService.getCurrentUser()!._id!);
+      return;
+    }
+
+    if (this.isDoctor()) {
+      this.loadPrescriptionsForExaminedPatients();
+    }
   }
 
   updateStatusFilter(value: string) {

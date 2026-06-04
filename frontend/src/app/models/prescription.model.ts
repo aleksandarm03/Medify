@@ -4,6 +4,7 @@ export interface Medication {
   frequency: string;
   duration: string;
   instructions?: string;
+  status?: 'active' | 'cancelled';
   _id?: string;
 }
 

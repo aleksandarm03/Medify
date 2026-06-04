@@ -21,10 +21,44 @@ function resolveDoctorName(doctor: any, doctorSnapshot?: { firstName?: string; l
   return `${firstName} ${lastName}`.trim();
 }
 
+function resolveRecordPatientId(record: MedicalRecord): string {
+  const patient = record.patient as any;
+  if (typeof patient === 'string') {
+    return patient;
+  }
+  if (patient?._id) {
+    return String(patient._id);
+  }
+  if (record.patientSnapshot?.patientId) {
+    return String(record.patientSnapshot.patientId);
+  }
+  return '';
+}
+
+function resolveRecordAppointmentId(record: MedicalRecord): string {
+  const appointment = record.appointment as any;
+  if (typeof appointment === 'string') {
+    return appointment;
+  }
+  if (appointment?._id) {
+    return String(appointment._id);
+  }
+  return '';
+}
+
 function normalizeMedicalRecord(record: MedicalRecord): MedicalRecord {
   const normalized = { ...record } as any;
+  const patientId = resolveRecordPatientId(record);
 
-  if (!normalized.patient && normalized.patientSnapshot) {
+  if (patientId) {
+    const patient = record.patient as any;
+    normalized.patient = {
+      _id: patientId,
+      firstName: typeof patient === 'object' ? (patient?.firstName || '') : (normalized.patientSnapshot?.firstName || ''),
+      lastName: typeof patient === 'object' ? (patient?.lastName || '') : (normalized.patientSnapshot?.lastName || ''),
+      JMBG: typeof patient === 'object' ? (patient?.JMBG || '') : (normalized.patientSnapshot?.JMBG || '')
+    };
+  } else if (!normalized.patient && normalized.patientSnapshot) {
     normalized.patient = {
       _id: normalized.patientSnapshot.patientId || '',
       firstName: normalized.patientSnapshot.firstName || '',
@@ -236,8 +270,9 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
   }
 
   openCreatePrescription(record: MedicalRecord) {
-    const patientId = record.patient?._id;
-    const medicalRecordId = record._id;
+    const normalized = normalizeMedicalRecord(record);
+    const patientId = resolveRecordPatientId(normalized);
+    const medicalRecordId = normalized._id;
     if (!patientId || !medicalRecordId) {
       this.error.set('Nedostaju podaci za kreiranje recepta iz kartona.');
       return;
@@ -248,7 +283,7 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
         openCreate: '1',
         patientId,
         medicalRecordId,
-        appointmentId: record.appointment?._id || ''
+        appointmentId: resolveRecordAppointmentId(normalized)
       }
     });
   }
@@ -318,10 +353,12 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
 
     this.medicalRecordService.createMedicalRecord(recordData).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
-        const patientIdForReload = current.patientId;
+        const doctorId = this.authService.getCurrentUser()?._id;
         this.closeCreateModal();
-        if (patientIdForReload) {
-          this.loadPatientRecords(patientIdForReload);
+        if (this.isDoctor() && doctorId) {
+          this.loadDoctorRecords(doctorId);
+        } else if (current.patientId) {
+          this.loadPatientRecords(current.patientId);
         } else {
           this.loading.set(false);
         }

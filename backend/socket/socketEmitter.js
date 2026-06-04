@@ -5,6 +5,12 @@
 
 const connectionManager = require('./managers/connectionManager');
 const { buildAppointmentStatusMessage } = require('./appointmentNotificationMessages');
+const {
+    buildPrescriptionNotificationMessage,
+    getDoctorName,
+    getMedicationNamesSummary,
+    getNotificationTitle
+} = require('./prescriptionNotificationMessages');
 
 let io = null;
 
@@ -101,21 +107,65 @@ function emitAppointmentStatusUpdated(appointment) {
 }
 
 /**
- * Emituje dodanu recept
+ * Obaveštenje pacijentu o promeni recepta (kreiranje, lek, završetak...)
+ */
+function emitPrescriptionPatientNotification(prescription, action, options = {}) {
+    if (!io || !prescription) {
+        return;
+    }
+
+    const patientId = String(
+        (prescription.patient && prescription.patient._id) ||
+        prescription.patient ||
+        options.patientId ||
+        ''
+    );
+
+    if (!patientId) {
+        return;
+    }
+
+    const message = buildPrescriptionNotificationMessage(action, prescription, options);
+    const payload = {
+        action,
+        patientId,
+        doctorId: String(
+            (prescription.doctor && prescription.doctor._id) ||
+            prescription.doctor ||
+            options.doctorId ||
+            ''
+        ),
+        doctorName: getDoctorName(prescription, options.doctor),
+        prescriptionId: String(prescription._id || ''),
+        medicationName: options.medicationName || '',
+        medicalRecordDiagnosis: options.medicalRecordDiagnosis || '',
+        hasMedicalRecord: Boolean(options.hasMedicalRecord || prescription.medicalRecord),
+        prescriptionSummary: getMedicationNamesSummary(prescription.medications || []),
+        title: getNotificationTitle(action),
+        message,
+        type: 'prescription_updated',
+        timestamp: new Date()
+    };
+
+    const patientSocket = findSocketByUserId(patientId);
+
+    if (patientSocket) {
+        io.to(patientSocket.id).emit('notification:prescription-updated', payload);
+        console.log(`[SocketEmitter] notification:prescription-updated (${action}) -> patient ${patientId}`);
+    } else {
+        console.log(`[SocketEmitter] Pacijent ${patientId} nije online za prescription-updated (${action})`);
+    }
+}
+
+/**
+ * @deprecated Koristiti emitPrescriptionPatientNotification(prescription, 'created', ...)
  */
 function emitPrescriptionAdded(patientId, doctorId, prescriptionDetails) {
-    if (io) {
-        // Emit normalized notification event with richer payload
-        io.emit('notification:prescription-added', {
-            patientId,
-            doctorId,
-            doctorName: prescriptionDetails?.doctorName || '',
-            prescriptionDetails,
-            message: `Doktor je dodao recept za vas`,
-            type: 'prescription_added',
-            timestamp: new Date()
-        });
-    }
+    emitPrescriptionPatientNotification(
+        prescriptionDetails || { patient: patientId, doctor: doctorId },
+        'created',
+        { doctor: { firstName: '', lastName: '', ...prescriptionDetails } }
+    );
 }
 
 /**
@@ -242,6 +292,7 @@ module.exports = {
     emitAppointmentCreated,
     emitAppointmentStatusUpdated,
     emitPrescriptionAdded,
+    emitPrescriptionPatientNotification,
     emitMedicalRecordUpdated,
     emitPatientMessage,
     notifyUser,

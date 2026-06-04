@@ -44,14 +44,22 @@ var createPrescription = async function(body, doctor, patient, medicalRecord, ap
         doctorSnapshot: buildDoctorSnapshot(doctor),
         medicalRecord: medicalRecord ? medicalRecord._id : null,
         appointment: appointment ? appointment._id : null,
-        medications: body.medications,
+        medications: body.medications.map((med) => ({
+            name: med.name,
+            dosage: med.dosage,
+            frequency: med.frequency,
+            duration: med.duration,
+            instructions: med.instructions || "",
+            status: "active"
+        })),
         issueDate: body.issueDate || new Date(),
         validUntil: body.validUntil,
         notes: body.notes,
         status: "active"
     });
     
-    return await prescription.save();
+    const saved = await prescription.save();
+    return await getPrescriptionById(saved._id);
 };
 
 var getPrescriptionsByPatient = async function(patientId, status = null) {
@@ -77,16 +85,89 @@ var getPrescriptionById = async function(prescriptionId) {
 };
 
 var updatePrescriptionStatus = async function(prescriptionId, status) {
-    return await PrescriptionModel.findByIdAndUpdate(
+    const updated = await PrescriptionModel.findByIdAndUpdate(
         prescriptionId,
-        { 
-            $set: { 
+        {
+            $set: {
                 status: status,
                 updatedAt: new Date()
             }
         },
         { new: true }
     );
+
+    if (!updated) {
+        return null;
+    }
+
+    return await getPrescriptionById(prescriptionId);
+};
+
+var addMedicationToPrescription = async function(prescriptionId, medication) {
+    const prescription = await PrescriptionModel.findById(prescriptionId);
+
+    if (!prescription) {
+        return null;
+    }
+
+    if (prescription.status !== "active") {
+        const error = new Error("PRESCRIPTION_NOT_ACTIVE");
+        error.code = "PRESCRIPTION_NOT_ACTIVE";
+        throw error;
+    }
+
+    if (!medication || !medication.name || !medication.dosage || !medication.frequency || !medication.duration) {
+        const error = new Error("INVALID_MEDICATION");
+        error.code = "INVALID_MEDICATION";
+        throw error;
+    }
+
+    prescription.medications.push({
+        name: medication.name.trim(),
+        dosage: medication.dosage.trim(),
+        frequency: medication.frequency.trim(),
+        duration: medication.duration.trim(),
+        instructions: medication.instructions ? medication.instructions.trim() : "",
+        status: "active"
+    });
+    prescription.updatedAt = new Date();
+    await prescription.save();
+
+    return await getPrescriptionById(prescriptionId);
+};
+
+var cancelMedicationInPrescription = async function(prescriptionId, medicationId) {
+    const prescription = await PrescriptionModel.findById(prescriptionId);
+
+    if (!prescription) {
+        return null;
+    }
+
+    if (prescription.status !== "active") {
+        const error = new Error("PRESCRIPTION_NOT_ACTIVE");
+        error.code = "PRESCRIPTION_NOT_ACTIVE";
+        throw error;
+    }
+
+    const medication = prescription.medications.id(medicationId);
+
+    if (!medication) {
+        const error = new Error("MEDICATION_NOT_FOUND");
+        error.code = "MEDICATION_NOT_FOUND";
+        throw error;
+    }
+
+    if (medication.status === "cancelled") {
+        const error = new Error("MEDICATION_ALREADY_CANCELLED");
+        error.code = "MEDICATION_ALREADY_CANCELLED";
+        throw error;
+    }
+
+    medication.status = "cancelled";
+    prescription.updatedAt = new Date();
+    await prescription.save();
+
+    return await getPrescriptionById(prescriptionId);
 };
 
 var getActivePrescriptions = async function(patientId) {
@@ -219,6 +300,8 @@ module.exports = {
     getPrescriptionsByPatient,
     getPrescriptionById,
     updatePrescriptionStatus,
+    addMedicationToPrescription,
+    cancelMedicationInPrescription,
     getActivePrescriptions,
     deletePrescription,
     getAllPrescriptions,
