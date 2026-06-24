@@ -370,14 +370,14 @@ npm run seed:reset
 
 `seed:reset` briše sve kolekcije i generiše realističan demo dataset (korisnici, dostupnosti, istorijski i budući termini, kartoni, recepti).
 
-### 4) UI automation (POM)
+### 4) UI automation (Selenium POM)
 
 ```bash
 cd page-object-model
 mvn test -Dsurefire.suiteXmlFiles=testng.xml
 ```
 
-Napomena: za uspešan run testova potrebno je da backend i frontend budu aktivni i da seed podaci postoje.
+Napomena: za uspešan run UI testova potrebno je da backend i frontend budu aktivni i da seed podaci postoje. Selenium testovi otvaraju realan Chrome browser, loguju se kroz stvarni frontend i proveravaju ponašanje aplikacije kroz korisnički interfejs.
 
 ## Konfiguracija
 
@@ -428,9 +428,11 @@ Role-restricted rute:
 
 ## Strategija testiranja i regresija
 
-Dokumentovana su dva nivoa test pokrivenosti za kritična pravila odobravanja doktora.
+Medify koristi kombinaciju backend testova i UI end-to-end automatizacije. Cilj nije samo da se proveri da se stranice otvaraju, već da se potvrde realni korisnički tokovi: autentifikacija, autorizacija po ulogama, prikaz seed podataka, filtriranje, admin statistika i kritična pravila vezana za odobravanje doktora.
 
-### 1) Backend unit test (pravilo podobnosti doktora)
+### Backend unit testovi
+
+Backend testovi pokrivaju poslovna pravila koja moraju ostati tačna bez obzira na frontend. Najvažniji primer je pravilo podobnosti doktora za prikaz i zakazivanje.
 
 Fajl:
 
@@ -440,63 +442,261 @@ Pokriće:
 
 - `isDoctorBookable = true` samo za aktivnog i odobrenog doktora
 - `isDoctorBookable = false` za odbijenog doktora
-- `isDoctorBookable = false` za neaktivnog doktora i ne-doctor role
-- `getApprovedDoctorQuery` uvek nameće filtere za odobrenog doktora
+- `isDoctorBookable = false` za neaktivnog doktora i za korisnika koji nije doktor
+- `getApprovedDoctorQuery` uvek nameće filtere za aktivnog i odobrenog doktora
 
-Pokretanje:
+Pokretanje konkretnog backend testa:
 
 ```bash
 cd backend
 node --test tests/doctorEligibility.test.js
 ```
 
-Opcionalno (ako želite suite komandu):
+Pokretanje svih backend testova:
 
 ```bash
 cd backend
 node --test tests/**/*.test.js
 ```
 
-### 2) POM E2E regresioni test (UI + API priprema stanja)
+### Selenium Page Object Model testovi
 
-Fajl:
+UI automatizacija se nalazi u folderu `page-object-model/` i koristi klasičan Page Object Model pristup:
 
-- `page-object-model/src/test/java/pmf/imi/moodle/DoctorsPageTest.java`
+- page object klase su u `page-object-model/src/main/java/pmf/imi/moodle`
+- TestNG test klase su u `page-object-model/src/test/java/pmf/imi/moodle`
+- zajednička baza za page object-e je `BasePageModel`
+- suite konfiguracija je `page-object-model/testng.xml`
+- WebDriver se podešava preko `WebDriverManager`
+- testovi koriste realan Chrome browser i realne Angular rute
 
-Novi scenario:
+Page object sloj enkapsulira lokatore, akcije i eksplicitna čekanja. Test klase zato ostaju fokusirane na ponašanje sistema i poslovne asercije, a ne na detalje Selenium selektora.
 
-- `testRejectedDoctorIsNotVisibleInSearchResults`
+### Pravila za stabilnost UI testova
 
-Šta test radi end-to-end:
+Selenium testovi za Medify koriste `WebDriverWait` gde god UI zavisi od asinhronog ponašanja Angular aplikacije:
 
-1. registruje novog doktora preko API (`POST /auth/register`)
-2. loguje se kao admin i uzima JWT (`POST /auth/login`)
-3. odbija tog doktora (`POST /api/admin/reject-user/:userId`)
-4. kao pacijent otvara `/doctors` i pretražuje po imenu tog doktora
-5. verifikuje da je broj rezultata `0`
+- čekanje da login forma bude renderovana pre unosa podataka
+- čekanje da se završi `loading` stanje
+- čekanje da se pojavi tabela, empty state ili error state
+- čekanje promene URL-a posle login-a i klikova na brze linkove
+- čekanje promene status filtera na admin stranicama
+- zaštita od prolaznog `StaleElementReferenceException` tokom Angular re-rendera
 
-Ovaj test je važan jer potvrđuje i backend filtriranje i realno ponašanje UI pretrage nakon odbijanja doktora.
+Ovo je posebno važno jer Angular često uklanja i ponovo kreira elemente kada se promene signali (`signal`) ili kada API odgovor promeni stanje komponente.
 
-Pokretanje samo tog testa:
+### Preduslovi za POM suite
+
+Pre pokretanja Selenium testova potrebno je da rade svi delovi sistema:
+
+- backend: `http://localhost:3232`
+- frontend: `http://localhost:4200`
+- MongoDB baza sa seed podacima
+- Java 21
+- Maven 3.9+
+- Google Chrome
+
+Seed podaci su obavezni jer testovi koriste poznate kredencijale i očekuju realističan skup termina, korisnika, kartona i recepata.
+
+Priprema podataka:
 
 ```bash
-cd page-object-model
-mvn -Dtest=DoctorsPageTest#testRejectedDoctorIsNotVisibleInSearchResults test
+cd backend
+npm run seed:reset
 ```
 
-Pokretanje celog POM suite-a:
+Zatim u odvojenim terminalima pokrenuti backend i frontend:
+
+```bash
+cd backend
+npm start
+```
+
+```bash
+cd frontend
+npm start
+```
+
+### Pokretanje POM testova
+
+Pokretanje celog TestNG suite-a:
 
 ```bash
 cd page-object-model
 mvn test -Dsurefire.suiteXmlFiles=testng.xml
 ```
 
-Napomena za okruženje:
+Pokretanje pojedinačne test klase:
 
-- backend mora biti podignut na `http://localhost:3232`
-- frontend mora biti podignut na `http://localhost:4200`
-- seed kredencijali moraju postojati
-- ako `mvn` komanda nije dostupna, instalirati Maven ili pokrenuti testove iz IDE-a (TestNG run configuration)
+```bash
+cd page-object-model
+mvn -Dtest=LoginPageTest test
+```
+
+Pokretanje pojedinačnog test metoda:
+
+```bash
+cd page-object-model
+mvn -Dtest=DoctorsPageTest#testRejectedDoctorIsNotVisibleInSearchResults test
+```
+
+Ako `mvn` komanda nije dostupna, potrebno je instalirati Maven ili pokrenuti testove direktno iz IDE-a preko TestNG run konfiguracije.
+
+### Trenutni POM test suite
+
+`testng.xml` trenutno uključuje sledeće regresione klase:
+
+- `LoginPageTest`
+- `RegisterPageTest`
+- `DashboardPageTest`
+- `ProfilePageTest`
+- `DoctorsPageTest`
+- `AdminAppointmentsPageTest`
+- `AdminDashboardPageTest`
+
+Suite se izvršava sekvencijalno (`parallel="false"`) zato što testovi koriste isti lokalni frontend/backend i seed bazu. Sekvencijalno izvršavanje smanjuje rizik od konflikta oko sesije, test podataka i stanja browser-a.
+
+### Login stranica
+
+Fajlovi:
+
+- komponenta: `frontend/src/app/components/login/login.ts`
+- šablon: `frontend/src/app/components/login/login.html`
+- page object: `page-object-model/src/main/java/pmf/imi/moodle/LoginPage.java`
+- testovi: `page-object-model/src/test/java/pmf/imi/moodle/LoginPageTest.java`
+
+Testovi pokrivaju:
+
+- naslov browser taba (`Medify`)
+- heading-e `Medify` i `Prijavljivanje`
+- inicijalno stanje forme
+- `JMBG` input: `name`, `type`, `placeholder`, `required`
+- `Lozinka` input: `name`, `type`, `placeholder`, `required`
+- submit dugme `Prijavi se`
+- validaciju prazne forme
+- validaciju kada nedostaje lozinka
+- validaciju kada nedostaje JMBG
+- poruku `Molimo unesite JMBG i lozinku`
+- pogrešnu lozinku za postojećeg korisnika
+- pokušaj login-a za nepostojećeg korisnika
+- čišćenje prethodne validacione greške pri novom submit-u
+- navigaciju preko linka `Registrujte se`
+- uspešan login i redirekciju na `/dashboard`
+
+Važan tehnički detalj: test koji proverava promenu error poruke koristi čekanje koje ignoriše prolazni `StaleElementReferenceException`, jer Angular tokom promene signala može ukloniti stari `.error-message` element i renderovati novi.
+
+### Admin appointments stranica
+
+Fajlovi:
+
+- komponenta: `frontend/src/app/components/admin/admin-appointments/admin-appointments.ts`
+- šablon: `frontend/src/app/components/admin/admin-appointments/admin-appointments.html`
+- page object: `page-object-model/src/main/java/pmf/imi/moodle/AdminAppointmentsPage.java`
+- testovi: `page-object-model/src/test/java/pmf/imi/moodle/AdminAppointmentsPageTest.java`
+
+Testovi se loguju kao admin korisnik i otvaraju `/admin/appointments`.
+
+Pokriće:
+
+- heading `Svi termini`
+- potvrda admin URL-a `/admin/appointments`
+- status filter i opcije `Svi statusi`, `Zakazani`, `Završeni`, `Otkazani`
+- inicijalna vrednost filtera
+- kolone tabele: `ID`, `Doktor`, `Pacijent`, `Datum`, `Razlog`, `Status`
+- prikaz svih termina iz seed podataka
+- odsustvo error state-a kada API uspešno vrati podatke
+- filter `scheduled` i prikaz statusa `Zakazan`
+- filter `completed` i prikaz statusa `Završen`
+- filter `canceled` i prikaz statusa `Otkazan`
+- odgovarajuće CSS klase status badge-a: `status-scheduled`, `status-completed`, `status-canceled`
+- povratak filtera na `Svi statusi`
+- empty state `Nema termina sa odabranim filterima` ako za izabrani filter nema rezultata
+
+Ova stranica je dobar primer UI testa koji proverava i podatke i prezentacionu logiku: isti API rezultat se filtrira na klijentu kroz `statusFilter` signal, pa test potvrđuje da se tabela stvarno menja nakon izbora iz `<select>` elementa.
+
+### Admin dashboard stranica
+
+Fajlovi:
+
+- komponenta: `frontend/src/app/components/admin/admin-dashboard/admin-dashboard.ts`
+- šablon: `frontend/src/app/components/admin/admin-dashboard/admin-dashboard.html`
+- page object: `page-object-model/src/main/java/pmf/imi/moodle/AdminDashboardPage.java`
+- testovi: `page-object-model/src/test/java/pmf/imi/moodle/AdminDashboardPageTest.java`
+
+Testovi se loguju kao admin korisnik i otvaraju `/admin/dashboard`.
+
+Pokriće:
+
+- heading `Admin Dashboard`
+- potvrda admin URL-a `/admin/dashboard`
+- odsustvo error state-a pri uspešnom učitavanju dashboard-a
+- refresh dugme `Osveži`
+- ponovno učitavanje dashboard-a klikom na refresh
+- 4 KPI kartice
+- KPI labele: `Ukupno korisnika`, `Termini danas`, `Zahtevi za odobrenje`, `Stopa završavanja`
+- numeričke KPI vrednosti i procenat completion rate-a
+- sekcija `Korisnici po ulogama`
+- role labele: `Administratori`, `Doktori`, `Pacijenti`
+- sekcija `Termini po statusu`
+- appointment statistike: `Zakazani`, `Završeni`, `Otkazao pacijent`, `Otkazao doktor`
+- sekcija top doktora kada backend vrati podatke
+- kartice top doktora sa metrikama `Ukupno termina`, `Završeno`, `Stopa`
+- sekcije nedavnih aktivnosti: `Novi korisnici`, `Najnoviji termini`
+- status sistema: `Medicinski kartoni`, `Recepti`, `Dostupnosti`, `Aktivni doktori`, `Baza podataka`
+- vrednost statusa baze `connected`
+- brzi linkovi: `Upravljanje korisnicima`, `Svi termini`, `Medicinski kartoni`, `Recepti`, `Statistike`
+- navigacija preko brzog linka `Svi termini` ka `/admin/appointments`
+
+Testovi namerno ne klikću `Odobri` i `Odbij` dugmad u dashboard-u, jer te akcije menjaju stanje korisnika. Umesto toga, fokus je na stabilnoj regresiji prikaza, agregiranih metrika i navigacije.
+
+### Doctors regresija: odbijeni doktor
+
+Fajl:
+
+- `page-object-model/src/test/java/pmf/imi/moodle/DoctorsPageTest.java`
+
+Scenario:
+
+- `testRejectedDoctorIsNotVisibleInSearchResults`
+
+Šta test radi end-to-end:
+
+1. registruje novog doktora preko API-ja (`POST /auth/register`)
+2. loguje se kao admin i uzima JWT (`POST /auth/login`)
+3. odbija tog doktora (`POST /api/admin/reject-user/:userId`)
+4. kao pacijent otvara `/doctors` i pretražuje po imenu tog doktora
+5. verifikuje da je broj rezultata `0`
+
+Ovaj test potvrđuje dva sloja zaštite:
+
+- backend ne vraća doktora koji nije aktivan i odobren
+- frontend pretraga ne prikazuje odbijenog doktora korisniku
+
+### Test podaci i kredencijali
+
+Selenium suite se oslanja na seed korisnike:
+
+- admin: `1001001001001` / `Admin123!`
+- patient: `5005005005005` / `Patient123!`
+- doctor: `3003003003003` / `Doctor123!`
+- doctor: `4004004004004` / `Doctor123!`
+
+Admin testovi koriste admin nalog za rute `/admin/dashboard` i `/admin/appointments`. Login test koristi patient nalog za uspešan login scenario. Doctors regresioni test kombinuje API pripremu stanja i UI proveru.
+
+### Šta POM suite validira na nivou sistema
+
+POM testovi zajedno proveravaju:
+
+- da se korisnik može prijaviti kroz realan login ekran
+- da route guard i role guard vode korisnika na odgovarajuće stranice
+- da admin vidi zaštićene admin rute
+- da seed podaci stižu do UI-ja preko backend API-ja
+- da Angular komponente pravilno renderuju loading, tabelu, kartice, statistike i empty state
+- da status filteri menjaju prikaz bez reload-a stranice
+- da navigacioni linkovi vode na očekivane rute
+- da odbijeni doktor ne prolazi kroz UI pretragu
+
+Ovo daje praktičnu regresionu mrežu oko najvažnijih tokova sistema: autentifikacije, admin nadzora, termina i kontrole doktora.
 
 ## Bezbednosne i operativne napomene
 

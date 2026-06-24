@@ -3,10 +3,12 @@
     <test name="UI Regression Tests">
         <classes>
             <class name="pmf.imi.moodle.LoginPageTest"/>
-<!--            <class name="pmf.imi.moodle.RegisterPageTest"/>-->
-<!--            <class name="pmf.imi.moodle.DashboardPageTest"/>-->
-<!--            <class name="pmf.imi.moodle.ProfilePageTest"/>-->
-<!--            <class name="pmf.imi.moodle.DoctorsPageTest"/>-->
+            <class name="pmf.imi.moodle.RegisterPageTest"/>
+            <class name="pmf.imi.moodle.DashboardPageTest"/>
+            <class name="pmf.imi.moodle.ProfilePageTest"/>
+            <class name="pmf.imi.moodle.DoctorsPageTest"/>
+            <class name="pmf.imi.moodle.AdminAppointmentsPageTest"/>
+            <class name="pmf.imi.moodle.AdminDashboardPageTest"/>
         </classes>
     </test>
 </suite>
