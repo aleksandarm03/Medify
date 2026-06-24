@@ -31,7 +31,8 @@ public class DoctorsPageTest {
     private static final String VALID_PASSWORD = "Patient123!";
     private static final String ADMIN_JMBG = "1001001001001";
     private static final String ADMIN_PASSWORD = "Admin123!";
-    private static final String API_URL = "http://localhost:3232";
+    private static final String API_URL = "http://127.0.0.1:3232";
+    private static final int API_RETRY_ATTEMPTS = 3;
 
     private WebDriver driver;
     private DoctorsPage doctorsPage;
@@ -156,10 +157,15 @@ public class DoctorsPageTest {
 
     private HttpResponse<String> sendJson(String method, String url, String body, String bearerToken)
             throws IOException, InterruptedException {
-        HttpClient client = HttpClient.newHttpClient();
+        HttpClient client = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(Duration.ofSeconds(5))
+                .build();
         HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .header("Content-Type", "application/json");
+                .timeout(Duration.ofSeconds(15))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json");
 
         if (bearerToken != null && !bearerToken.isEmpty()) {
             builder.header("Authorization", "Bearer " + bearerToken);
@@ -171,7 +177,20 @@ public class DoctorsPageTest {
             default -> throw new IllegalArgumentException("Nepodrzan HTTP metod: " + method);
         };
 
-        return client.send(request, HttpResponse.BodyHandlers.ofString());
+        IOException lastException = null;
+        for (int attempt = 1; attempt <= API_RETRY_ATTEMPTS; attempt++) {
+            try {
+                return client.send(request, HttpResponse.BodyHandlers.ofString());
+            } catch (IOException exception) {
+                lastException = exception;
+                if (attempt == API_RETRY_ATTEMPTS) {
+                    break;
+                }
+                Thread.sleep(300L * attempt);
+            }
+        }
+
+        throw lastException;
     }
 
     private String extractJsonValue(String json, String key) {

@@ -549,12 +549,19 @@ Ako `mvn` komanda nije dostupna, potrebno je instalirati Maven ili pokrenuti tes
 - `LoginPageTest`
 - `RegisterPageTest`
 - `DashboardPageTest`
+- `AppointmentsPageTest`
+- `MedicalRecordsPageTest`
+- `PrescriptionsPageTest`
+- `NotificationsPageTest`
 - `ProfilePageTest`
 - `DoctorsPageTest`
+- `AvailabilityPageTest`
+- `UsersPageTest`
 - `AdminAppointmentsPageTest`
 - `AdminDashboardPageTest`
 - `AdminMedicalRecordsPageTest`
 - `AdminPrescriptionsPageTest`
+- `AdminStatisticsPageTest`
 
 Suite se izvršava sekvencijalno (`parallel="false"`) zato što testovi koriste isti lokalni frontend/backend i seed bazu. Sekvencijalno izvršavanje smanjuje rizik od konflikta oko sesije, test podataka i stanja browser-a.
 
@@ -587,6 +594,54 @@ Testovi pokrivaju:
 
 Važan tehnički detalj: test koji proverava promenu error poruke koristi čekanje koje ignoriše prolazni `StaleElementReferenceException`, jer Angular tokom promene signala može ukloniti stari `.error-message` element i renderovati novi.
 
+### Appointments stranica
+
+Fajlovi:
+
+- komponenta: `frontend/src/app/components/appointments/appointments.ts`
+- šablon: `frontend/src/app/components/appointments/appointments.html`
+- modal šablon: `frontend/src/app/components/appointments/appointment-form-modal/appointment-form-modal.html`
+- page object: `page-object-model/src/main/java/pmf/imi/moodle/AppointmentsPage.java`
+- testovi: `page-object-model/src/test/java/pmf/imi/moodle/AppointmentsPageTest.java`
+
+Testovi pokrivaju i patient i doctor prikaz iste stranice `/appointments`.
+
+Pokriće za patient tok:
+
+- login kao pacijent i otvaranje `/appointments`
+- heading `Termini`
+- dugme `Novi termin`
+- odsustvo error state-a pri uspešnom učitavanju
+- status filter opcije: `Svi statusi`, `Zakazani`, `Završeni`, `Otkazani`
+- početna vrednost status filtera
+- sort opcije: `Najnoviji prvo`, `Najstariji prvo`, `Status A-Z`
+- početna vrednost sortiranja `dateDesc`
+- prazna početna pretraga i prazni date filteri
+- prikaz appointment kartica iz seed podataka
+- osnovna struktura kartice: `Termin #`, `Doktor:`, `Datum:`, `Razlog:`
+- filter `scheduled` i status `Zakazan`
+- filter `completed` i status `Završen`
+- filter `canceled` i status `Otkazan`
+- odgovarajuće CSS klase status badge-a: `status-scheduled`, `status-completed`, `status-canceled`
+- empty state `Nema termina` kada pretraga nema rezultat
+- promena `dateFrom`, `dateTo` i `sortBy` kontrola
+- reset filtera i sortiranja
+- otvaranje i zatvaranje modala `Novi termin`
+- patient modal kontrole: izbor doktora, datum, razlog pregleda
+
+Pokriće za doctor tok:
+
+- login kao doktor i otvaranje `/appointments`
+- prikaz appointment kartica za doktora
+- doctor kartica prikazuje `Pacijent:`, `Datum:` i `Razlog:`
+- za zakazane termine proverava se prisustvo akcija `Završi termin` i `Otkaži`
+- doctor modal koristi polje `Pacijent (JMBG)` umesto izbora doktora
+- doctor modal prikazuje datum i razlog pregleda
+
+Testovi ne kreiraju, ne završavaju i ne otkazuju termine. Time ostaju regresiono bezbedni i ne menjaju seed podatke, a ipak potvrđuju najvažnije delove UI-ja: listu termina, filtere, sortiranje, role-specific prikaz i modal za kreiranje.
+
+Važan tehnički detalj: date input polja se podešavaju preko JavaScript `input` i `change` događaja, jer `type=date` može biti krhak u Selenium `sendKeys` pristupu zbog lokalizacije browser-a.
+
 ### Admin appointments stranica
 
 Fajlovi:
@@ -615,6 +670,121 @@ Pokriće:
 - empty state `Nema termina sa odabranim filterima` ako za izabrani filter nema rezultata
 
 Ova stranica je dobar primer UI testa koji proverava i podatke i prezentacionu logiku: isti API rezultat se filtrira na klijentu kroz `statusFilter` signal, pa test potvrđuje da se tabela stvarno menja nakon izbora iz `<select>` elementa.
+
+### Medical records stranica
+
+Fajlovi:
+
+- komponenta: `frontend/src/app/components/medical-records/medical-records.ts`
+- šablon: `frontend/src/app/components/medical-records/medical-records.html`
+- page object: `page-object-model/src/main/java/pmf/imi/moodle/MedicalRecordsPage.java`
+- testovi: `page-object-model/src/test/java/pmf/imi/moodle/MedicalRecordsPageTest.java`
+
+Pokriće:
+
+- patient login i otvaranje `/medical-records`
+- heading `Medicinski kartoni`
+- sort opcije `Najnoviji prvo`, `Najstariji prvo`, `Dijagnoza A-Z`
+- prikaz kartica medicinskih kartona iz seed podataka
+- osnovna struktura kartice: `Karton #`, `Dijagnoza:`
+- patient prikaz ne prikazuje dodatnu labelu `Pacijent:`
+- search empty state `Nema medicinskih kartona`
+- promena i reset search/date/sort filtera
+- doctor login i otvaranje doctor-only modala `Kreiraj medicinski karton`
+- modal polja `ID Pacijenta *` i `Dijagnoza *`
+
+Testovi ne kreiraju medicinski karton, već proveravaju prikaz, filtere i bezbedno otvaranje doctor-only forme.
+
+### Prescriptions stranica
+
+Fajlovi:
+
+- komponenta: `frontend/src/app/components/prescriptions/prescriptions.ts`
+- šablon: `frontend/src/app/components/prescriptions/prescriptions.html`
+- page object: `page-object-model/src/main/java/pmf/imi/moodle/PrescriptionsPage.java`
+- testovi: `page-object-model/src/test/java/pmf/imi/moodle/PrescriptionsPageTest.java`
+
+Pokriće:
+
+- patient login i otvaranje `/prescriptions`
+- heading `Recepti`
+- status filter opcije `Svi`, `Aktivni`, `Zavrseni`, `Otkazani`
+- sort opcije `Najnoviji prvo`, `Najstariji prvo`, `Status A-Z`
+- prikaz recepata iz seed podataka
+- osnovna struktura kartice: `Recept #`, `Pacijent:`, `Doktor:`, `Lekovi`, `Doza:`
+- status filteri za `active`, `completed`, `cancelled`
+- status badge klase `status-active`, `status-completed`, `status-cancelled`
+- search empty state `Nema recepata`
+- promena i reset search/date/sort filtera
+- doctor login i otvaranje modala `Kreiraj recept`
+- modal sekcije `Osnovne informacije` i `Lekovi`
+
+Testovi ne kreiraju recepte i ne menjaju lekove, već proveravaju regresiono stabilan prikaz i doctor-only modal.
+
+### Notifications stranica
+
+Fajlovi:
+
+- komponenta: `frontend/src/app/components/notifications/notifications.ts`
+- šablon: `frontend/src/app/components/notifications/notifications.html`
+- page object: `page-object-model/src/main/java/pmf/imi/moodle/NotificationsPage.java`
+- testovi: `page-object-model/src/test/java/pmf/imi/moodle/NotificationsPageTest.java`
+
+Pokriće:
+
+- patient login i otvaranje `/notifications`
+- heading `Obaveštenja`
+- badge `Nepročitano: <broj>`
+- akcije `Označi sve kao pročitano` i `Obriši sve`
+- validacija praznog stanja `Trenutno nema obaveštenja.`
+- validacija kartice obaveštenja kada postoje podaci: kategorija, akcija za čitanje i akcija brisanja
+
+Ovaj test je namerno napisan da bude stabilan i kada localStorage nema obaveštenja i kada ih ima, jer obaveštenja zavise od prethodnih real-time događaja.
+
+### Availability stranica
+
+Fajlovi:
+
+- komponenta: `frontend/src/app/components/availability/availability.ts`
+- šablon: `frontend/src/app/components/availability/availability.html`
+- page object: `page-object-model/src/main/java/pmf/imi/moodle/AvailabilityPage.java`
+- testovi: `page-object-model/src/test/java/pmf/imi/moodle/AvailabilityPageTest.java`
+
+Pokriće:
+
+- doctor login i otvaranje `/availability`
+- heading `Dostupnost`
+- prikaz default dostupnosti iz seed podataka
+- osnovna struktura kartice: `Vreme:`, `Trajanje termina:`, `Status:`
+- otvaranje i zatvaranje modala `Dodaj dostupnost`
+- modal polja `Dan u nedelji *`, `Početno vreme *`, `Završno vreme *`, `Trajanje termina`
+
+Testovi ne dodaju i ne brišu dostupnosti, jer su to destruktivne promene nad rasporedom. Cilj je regresija prikaza i forme.
+
+### Users stranica
+
+Fajlovi:
+
+- komponenta: `frontend/src/app/components/users/users.ts`
+- šablon: `frontend/src/app/components/users/users.html`
+- page object: `page-object-model/src/main/java/pmf/imi/moodle/UsersPage.java`
+- testovi: `page-object-model/src/test/java/pmf/imi/moodle/UsersPageTest.java`
+
+Pokriće:
+
+- admin login i otvaranje `/users`
+- heading `Korisnici`
+- tabela korisnika iz seed podataka
+- kolone `JMBG`, `Ime`, `Prezime`, `Uloga`, `Telefon`, `Adresa`, `Akcije`
+- validacija prvog reda tabele
+- role badge tekstovi `Administrator`, `Doktor`, `Pacijent`
+- role CSS klase `role-*`
+- otvaranje i zatvaranje modala `Izmeni korisnika`
+- osnovna polja edit modala: `Ime *`, `Prezime *`, `Telefon *`, `Adresa *`
+- otvaranje i zatvaranje delete confirmation modala
+- tekst upozorenja `Ova akcija je nepovratna!`
+
+Testovi ne čuvaju izmene i ne brišu korisnike, tako da ostaju bezbedni za ponovljeno regresiono izvršavanje.
 
 ### Admin dashboard stranica
 
@@ -709,6 +879,38 @@ Pokriće:
 
 Ovaj test pokriva administratorski pregled recepata bez menjanja terapijskih podataka. Time ostaje bezbedan za regresiono izvršavanje, a istovremeno potvrđuje da admin ruta, API `GET /prescriptions/all`, formatiranje liste lekova i tabela rade zajedno.
 
+### Admin statistics stranica
+
+Fajlovi:
+
+- komponenta: `frontend/src/app/components/admin/admin-statistics/admin-statistics.ts`
+- šablon: `frontend/src/app/components/admin/admin-statistics/admin-statistics.html`
+- page object: `page-object-model/src/main/java/pmf/imi/moodle/AdminStatisticsPage.java`
+- testovi: `page-object-model/src/test/java/pmf/imi/moodle/AdminStatisticsPageTest.java`
+
+Testovi se loguju kao admin korisnik i otvaraju `/admin/statistics`.
+
+Pokriće:
+
+- heading `Statistika termina`
+- potvrda admin URL-a `/admin/statistics`
+- odsustvo error state-a kada API uspešno vrati podatke
+- 5 ukupnih statističkih kartica
+- kartice: `Ukupni termini`, `Zakazani`, `Završeni`, `Otkazao pacijent`, `Otkazao doktor`
+- numeričke vrednosti na svim statističkim karticama
+- heading tabele `Statistika po doktoru`
+- kolone tabele: `Doktor`, `Ukupno`, `Zakazani`, `Završeni`, `Otkazao doktor`, `Završenost`, `Stopa otkazivanja doktora`
+- prikaz doktora iz seed termina
+- struktura prvog reda tabele
+- numeričke vrednosti za ukupno, zakazano, završeno i otkazano
+- procenat završenosti po doktoru
+- procenat otkazivanja po doktoru
+- progress bar tekstove u procentima
+- CSS klase za kvalitet stope (`rate-excellent`, `rate-good`, `rate-fair`, `rate-poor`)
+- posebnu `cancellation` klasu za stopu otkazivanja doktora
+
+Ovaj test pokriva administratorski analitički ekran koji agregira termine na frontend strani. Posebno je važan jer proverava da `GET /appointments/all` podaci pravilno prolaze kroz računanje ukupnih metrika, grupisanje po doktoru, procente i vizuelne progress bar indikatore.
+
 ### Doctors regresija: odbijeni doktor
 
 Fajl:
@@ -752,9 +954,14 @@ POM testovi zajedno proveravaju:
 - da admin vidi zaštićene admin rute
 - da seed podaci stižu do UI-ja preko backend API-ja
 - da Angular komponente pravilno renderuju loading, tabelu, kartice, statistike i empty state
+- da patient i doctor prikaz termina pravilno menjaju UI po ulozi
+- da patient i doctor prikaz kartona i recepata pravilno menjaju UI po ulozi
 - da status filteri menjaju prikaz bez reload-a stranice
+- da doctor može da vidi formu dostupnosti bez menjanja rasporeda
+- da admin može da pregleda i otvori modale za upravljanje korisnicima bez izmene podataka
 - da admin može da pregleda medicinske kartone kroz zaštićenu admin rutu
 - da admin može da pregleda recepte kroz zaštićenu admin rutu
+- da admin može da pregleda agregiranu statistiku termina po doktorima
 - da navigacioni linkovi vode na očekivane rute
 - da odbijeni doktor ne prolazi kroz UI pretragu
 

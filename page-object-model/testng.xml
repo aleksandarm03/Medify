@@ -5,12 +5,19 @@
             <class name="pmf.imi.moodle.LoginPageTest"/>
             <class name="pmf.imi.moodle.RegisterPageTest"/>
             <class name="pmf.imi.moodle.DashboardPageTest"/>
+            <class name="pmf.imi.moodle.AppointmentsPageTest"/>
+            <class name="pmf.imi.moodle.MedicalRecordsPageTest"/>
+            <class name="pmf.imi.moodle.PrescriptionsPageTest"/>
+            <class name="pmf.imi.moodle.NotificationsPageTest"/>
             <class name="pmf.imi.moodle.ProfilePageTest"/>
             <class name="pmf.imi.moodle.DoctorsPageTest"/>
+            <class name="pmf.imi.moodle.AvailabilityPageTest"/>
+            <class name="pmf.imi.moodle.UsersPageTest"/>
             <class name="pmf.imi.moodle.AdminAppointmentsPageTest"/>
             <class name="pmf.imi.moodle.AdminDashboardPageTest"/>
             <class name="pmf.imi.moodle.AdminMedicalRecordsPageTest"/>
             <class name="pmf.imi.moodle.AdminPrescriptionsPageTest"/>
+            <class name="pmf.imi.moodle.AdminStatisticsPageTest"/>
         </classes>
     </test>
 </suite>
