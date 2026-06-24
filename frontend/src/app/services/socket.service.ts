@@ -107,6 +107,18 @@ export class SocketService {
             this.notificationSubject.next({ ...data, __eventName: 'notification:admin-alert' });
         });
 
+        this.socket.on('notification:doctor-alert', (data: any) => {
+            this.notificationSubject.next({ ...data, __eventName: 'notification:doctor-alert' });
+        });
+
+        this.socket.on('notification:patient-alert', (data: any) => {
+            this.notificationSubject.next({ ...data, __eventName: 'notification:patient-alert' });
+        });
+
+        this.socket.on('notification:broadcast', (data: any) => {
+            this.notificationSubject.next({ ...data, __eventName: 'notification:broadcast' });
+        });
+
         this.socket.on('notification:prescription-added', (data: any) => {
             this.notificationSubject.next({ ...data, __eventName: 'notification:prescription-added' });
         });
@@ -117,6 +129,30 @@ export class SocketService {
 
         this.socket.on('notification:medical-record-updated', (data: any) => {
             this.notificationSubject.next({ ...data, __eventName: 'notification:medical-record-updated' });
+        });
+
+        this.socket.on('notification:patient-message', (data: any) => {
+            this.notificationSubject.next({ ...data, __eventName: 'notification:patient-message' });
+        });
+
+        this.socket.on('notification:appointment-in-progress', (data: any) => {
+            this.notificationSubject.next({ ...data, __eventName: 'notification:appointment-in-progress' });
+        });
+
+        this.socket.on('notification:appointment-completed', (data: any) => {
+            this.notificationSubject.next({ ...data, __eventName: 'notification:appointment-completed' });
+        });
+
+        this.socket.on('notification:video-call-incoming', (data: any) => {
+            this.notificationSubject.next({ ...data, __eventName: 'notification:video-call-incoming' });
+        });
+
+        this.socket.on('notification:video-call-accepted', (data: any) => {
+            this.notificationSubject.next({ ...data, __eventName: 'notification:video-call-accepted' });
+        });
+
+        this.socket.on('notification:video-call-rejected', (data: any) => {
+            this.notificationSubject.next({ ...data, __eventName: 'notification:video-call-rejected' });
         });
 
         // Doctor availability eventi

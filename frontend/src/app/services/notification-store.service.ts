@@ -7,7 +7,7 @@ export interface AppNotification {
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
-  category: 'appointment' | 'message' | 'system' | 'prescription';
+  category: 'appointment' | 'message' | 'system' | 'prescription' | 'medical-record' | 'video-call';
   createdAt: string;
   read: boolean;
   sourceEvent: string;
@@ -140,14 +140,34 @@ export class NotificationStoreService {
       const role = this.authService.getCurrentUser()?.role;
       const sourceEvent = event?.__eventName || event?.type || 'notification:user-alert';
 
-      if (role === 'admin' && sourceEvent !== 'notification:admin-alert' && sourceEvent !== 'notification:user-alert') {
+      if (sourceEvent === 'notification:broadcast' && event?.targetRole && role !== event.targetRole) {
+        return;
+      }
+
+      if (sourceEvent === 'notification:doctor-alert' && role !== 'doctor') {
+        return;
+      }
+
+      if (sourceEvent === 'notification:patient-alert' && role !== 'patient') {
+        return;
+      }
+
+      const isAdminTargetedBroadcast =
+        role === 'admin' && sourceEvent === 'notification:broadcast' && event?.targetRole === 'admin';
+
+      if (
+        role === 'admin' &&
+        sourceEvent !== 'notification:admin-alert' &&
+        sourceEvent !== 'notification:user-alert' &&
+        !isAdminTargetedBroadcast
+      ) {
         return;
       }
 
       // Build friendly messages for specific notification types
       let title = 'Obaveštenje';
       let message = event?.message || 'Stiglo je novo obaveštenje.';
-      let type: AppNotification['type'] = 'info';
+      let type: AppNotification['type'] = this.resolveNotificationType(event?.type || event?.severity);
 
       if (sourceEvent === 'notification:prescription-added' || sourceEvent === 'notification:prescription-updated') {
         const currentUser = this.authService.getCurrentUser();
@@ -163,13 +183,52 @@ export class NotificationStoreService {
         message = prescriptionNotice.message;
         type = prescriptionNotice.type;
       } else if (sourceEvent === 'notification:medical-record-updated') {
-        title = 'Ažuriranje kartona';
-        const doctor = event?.doctorName || '';
-        const summary = event?.recordSummary || '';
-        message = doctor
-          ? `Doktor ${doctor} je ažurirao vašu kartonu${summary ? ': ' + summary : ''}`
-          : `Vaša medicinska kartona je ažurirana${summary ? ': ' + summary : ''}`;
+        const currentUser = this.authService.getCurrentUser();
+        if (currentUser?.role !== 'patient') {
+          return;
+        }
+        if (event?.patientId && currentUser._id && String(event.patientId) !== String(currentUser._id)) {
+          return;
+        }
+
+        title = event?.title || 'Ažuriranje kartona';
+        if (event?.message) {
+          message = event.message;
+          type = event?.action === 'created' ? 'success' : 'info';
+        } else {
+          const doctor = event?.doctorName || '';
+          const summary = event?.recordSummary || '';
+          message = doctor
+            ? `Doktor ${doctor} je ažurirao vaš medicinski karton${summary ? ': ' + summary : ''}`
+            : `Vaš medicinski karton je ažuriran${summary ? ': ' + summary : ''}`;
+          type = 'info';
+        }
+      } else if (sourceEvent === 'notification:patient-message') {
+        title = 'Nova poruka pacijenta';
+        message = event?.message || 'Stigla je nova poruka pacijenta.';
         type = 'info';
+      } else if (sourceEvent === 'notification:video-call-incoming') {
+        title = 'Dolazni video poziv';
+        message = 'Doktor vas poziva na video konsultaciju.';
+        type = 'info';
+      } else if (sourceEvent === 'notification:video-call-accepted') {
+        title = 'Video poziv prihvaćen';
+        message = 'Pacijent je prihvatio video poziv.';
+        type = 'success';
+      } else if (sourceEvent === 'notification:video-call-rejected') {
+        title = 'Video poziv odbijen';
+        message = event?.reason
+          ? `Pacijent je odbio video poziv. Razlog: ${event.reason}`
+          : 'Pacijent je odbio video poziv.';
+        type = 'warning';
+      } else if (sourceEvent === 'notification:appointment-in-progress') {
+        title = 'Pregled je počeo';
+        message = 'Termin je označen kao pregled u toku.';
+        type = 'info';
+      } else if (sourceEvent === 'notification:appointment-completed') {
+        title = 'Pregled je završen';
+        message = 'Termin je označen kao završen.';
+        type = 'success';
       } else {
         message = event?.message || message;
       }
@@ -177,7 +236,18 @@ export class NotificationStoreService {
       const category: AppNotification['category'] =
         sourceEvent === 'notification:prescription-added' || sourceEvent === 'notification:prescription-updated'
           ? 'prescription'
-          : 'system';
+          : sourceEvent === 'notification:medical-record-updated'
+            ? 'medical-record'
+            : sourceEvent === 'notification:patient-message'
+              ? 'message'
+              : sourceEvent === 'notification:video-call-incoming' ||
+                  sourceEvent === 'notification:video-call-accepted' ||
+                  sourceEvent === 'notification:video-call-rejected'
+                ? 'video-call'
+                : sourceEvent === 'notification:appointment-in-progress' ||
+                    sourceEvent === 'notification:appointment-completed'
+                  ? 'appointment'
+                  : 'system';
 
       this.pushNotification({
         title,
@@ -267,6 +337,13 @@ export class NotificationStoreService {
     }
     if (action === 'created' || action === 'completed') {
       return 'success';
+    }
+    return 'info';
+  }
+
+  private resolveNotificationType(value: unknown): AppNotification['type'] {
+    if (value === 'success' || value === 'warning' || value === 'error' || value === 'info') {
+      return value;
     }
     return 'info';
   }

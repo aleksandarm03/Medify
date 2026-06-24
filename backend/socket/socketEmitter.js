@@ -168,20 +168,110 @@ function emitPrescriptionAdded(patientId, doctorId, prescriptionDetails) {
     );
 }
 
+function resolveId(value) {
+    if (!value) {
+        return '';
+    }
+    if (typeof value === 'object' && value._id) {
+        return String(value._id);
+    }
+    return String(value);
+}
+
+function resolveDoctorName(recordDetails = {}) {
+    if (recordDetails.doctorName) {
+        return recordDetails.doctorName;
+    }
+
+    const doctor = recordDetails.doctor;
+    if (doctor && typeof doctor === 'object') {
+        const name = `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim();
+        if (name) {
+            return name;
+        }
+    }
+
+    const snapshot = recordDetails.doctorSnapshot;
+    if (snapshot) {
+        const name = `${snapshot.firstName || ''} ${snapshot.lastName || ''}`.trim();
+        if (name) {
+            return name;
+        }
+    }
+
+    return 'Doktor';
+}
+
+function resolveRecordSummary(recordDetails = {}, action = 'updated', options = {}) {
+    if (options.recordSummary) {
+        return options.recordSummary;
+    }
+    if (action === 'lab_result_added' && options.testName) {
+        return `dodat laboratorijski rezultat: ${options.testName}`;
+    }
+    if (recordDetails.diagnosis) {
+        return `dijagnoza: ${recordDetails.diagnosis}`;
+    }
+    return '';
+}
+
+function buildMedicalRecordMessage(action, doctorName, summary) {
+    const summarySuffix = summary ? ` (${summary})` : '';
+    if (action === 'created') {
+        return `Doktor ${doctorName} je kreirao vaš medicinski karton${summarySuffix}.`;
+    }
+    if (action === 'lab_result_added') {
+        return `Doktor ${doctorName} je dodao laboratorijski rezultat u vaš medicinski karton${summarySuffix}.`;
+    }
+    return `Doktor ${doctorName} je ažurirao vaš medicinski karton${summarySuffix}.`;
+}
+
+function getMedicalRecordTitle(action) {
+    if (action === 'created') {
+        return 'Novi medicinski karton';
+    }
+    if (action === 'lab_result_added') {
+        return 'Novi laboratorijski rezultat';
+    }
+    return 'Ažuriranje kartona';
+}
+
 /**
- * Emituje ažuriranu medicinsku kartonu
+ * Emituje obaveštenje pacijentu o kreiranju ili izmeni medicinskog kartona.
  */
-function emitMedicalRecordUpdated(patientId, doctorId, recordDetails) {
-    if (io) {
-        io.emit('notification:medical-record-updated', {
-            patientId,
-            doctorId,
-            doctorName: recordDetails?.doctorName || '',
+function emitMedicalRecordUpdated(patientId, doctorId, recordDetails = {}, action = 'updated', options = {}) {
+    if (!io) {
+        return;
+    }
+
+    const resolvedPatientId = String(patientId || resolveId(recordDetails.patient) || recordDetails.patientId || '');
+    if (!resolvedPatientId) {
+        return;
+    }
+
+    const resolvedDoctorId = String(doctorId || resolveId(recordDetails.doctor) || recordDetails.doctorId || '');
+    const patientSocket = findSocketByUserId(resolvedPatientId);
+    const doctorName = resolveDoctorName(recordDetails);
+    const recordSummary = resolveRecordSummary(recordDetails, action, options);
+    const message = buildMedicalRecordMessage(action, doctorName, recordSummary);
+
+    if (patientSocket) {
+        io.to(patientSocket.id).emit('notification:medical-record-updated', {
+            action,
+            patientId: resolvedPatientId,
+            doctorId: resolvedDoctorId,
+            doctorName,
+            recordId: String(recordDetails._id || recordDetails.recordId || ''),
+            recordSummary,
             recordDetails,
-            message: `Doktor je ažurirao vašu medicinsku kartonu`,
+            title: getMedicalRecordTitle(action),
+            message,
             type: 'medical_record_updated',
             timestamp: new Date()
         });
+        console.log(`[SocketEmitter] notification:medical-record-updated (${action}) -> patient ${resolvedPatientId}`);
+    } else {
+        console.log(`[SocketEmitter] Pacijent ${resolvedPatientId} nije online za medical-record-updated (${action})`);
     }
 }
 

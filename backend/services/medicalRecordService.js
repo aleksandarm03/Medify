@@ -98,7 +98,9 @@ var addLabResult = async function(recordId, labResult) {
         recordId,
         { $push: { labResults: labResult } },
         { new: true }
-    );
+    ).populate("patient", "firstName lastName JMBG")
+     .populate("doctor", "firstName lastName specialization")
+     .populate("appointment");
 };
 
 var deleteMedicalRecord = async function(recordId) {

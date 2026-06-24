@@ -473,10 +473,25 @@ Osnovni tok:
 - layout prikazuje globalni toast
 - `/notifications` prikazuje listu obaveštenja
 
+Pokriveni real-time tokovi:
+
+- novi termin obaveštava doktora
+- promena statusa termina obaveštava doktora i pacijenta
+- kreiranje, izmena i laboratorijski rezultat medicinskog kartona obaveštavaju samo pripadajućeg pacijenta
+- kreiranje recepta, dodavanje leka, otkazivanje leka i promena statusa recepta obaveštavaju pacijenta
+- ciljane poruke pacijenta i video-call događaji se prikazuju kao notification toastovi
+- odobravanje i odbijanje korisnika šalju live obaveštenja pogođenom korisniku i ostalim online adminima
+- role-based i broadcast događaji se filtriraju na frontendu po ulozi primaoca
+
+Važna bezbednosna napomena: obaveštenja za medicinske kartone se ne emituju broadcast-om. Backend ih šalje ciljano pacijentu, a frontend dodatno proverava `patientId` pre nego što prikaže toast ili upiše obaveštenje u lokalni store.
+
 Relevantne implementacije:
 
 - `backend/socket/*`
 - `backend/routes/appointment.js`
+- `backend/routes/medicalRecord.js`
+- `backend/routes/prescription.js`
+- `backend/routes/admin.js`
 - `frontend/src/app/services/socket.service.ts`
 - `frontend/src/app/services/notification-store.service.ts`
 - `frontend/src/app/components/layout/*`

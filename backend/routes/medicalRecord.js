@@ -3,6 +3,7 @@ const passport = require("./config");
 const MedicalRecordService = require("../services/medicalRecordService");
 const UserModel = require("../models/user");
 const AppointmentModel = require("../models/appointment");
+const socketEmitter = require("../socket/socketEmitter");
 
 // Dohvatanje svih medicinskih kartona (samo admin)
 router.get("/all",
@@ -59,6 +60,13 @@ router.post("/",
                 doctor,
                 patient,
                 appointment
+            );
+
+            socketEmitter.emitMedicalRecordUpdated(
+                String(patient._id),
+                String(doctor._id),
+                medicalRecord,
+                "created"
             );
 
             return res.status(201).json(medicalRecord);
@@ -156,6 +164,14 @@ router.put("/:id",
             }
 
             const updatedRecord = await MedicalRecordService.updateMedicalRecord(req.params.id, req.body);
+
+            socketEmitter.emitMedicalRecordUpdated(
+                String(updatedRecord.patient?._id || updatedRecord.patient || ""),
+                String(updatedRecord.doctor?._id || updatedRecord.doctor || user._id),
+                updatedRecord,
+                "updated"
+            );
+
             return res.json(updatedRecord);
         } catch (error) {
             console.error("Update medical record error:", error);
@@ -195,6 +211,15 @@ router.post("/:id/lab-results",
             };
 
             const updatedRecord = await MedicalRecordService.addLabResult(req.params.id, labResult);
+
+            socketEmitter.emitMedicalRecordUpdated(
+                String(updatedRecord.patient?._id || updatedRecord.patient || ""),
+                String(updatedRecord.doctor?._id || updatedRecord.doctor || user._id),
+                updatedRecord,
+                "lab_result_added",
+                { testName }
+            );
+
             return res.json(updatedRecord);
         } catch (error) {
             console.error("Add lab result error:", error);

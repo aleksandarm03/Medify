@@ -317,6 +317,70 @@ router.post('/reject-user/:userId', async (req, res) => {
         
         await user.save();
 
+        const rejectorName = [req.user?.firstName, req.user?.lastName].filter(Boolean).join(' ') || 'Administrator';
+        const rejectedUserName = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'korisnika';
+        const rejectedUserLabel = user.role === 'doctor'
+            ? 'doktora'
+            : user.role === 'patient'
+                ? 'pacijenta'
+                : 'korisnika';
+        const reasonText = typeof reason === 'string' && reason.trim()
+            ? ` Razlog: ${reason.trim()}`
+            : '';
+        const userRejectMessage = `Vaš nalog je odbijen od strane administratora.${reasonText}`;
+        const adminRejectMessage = `${rejectorName} je odbio ${rejectedUserLabel} ${rejectedUserName}${reasonText}`;
+
+        socketEmitter.notifyUser(String(user._id), userRejectMessage, {
+            rejectedUserId: String(user._id),
+            rejectedUserName,
+            rejectedUserRole: user.role,
+            rejectedById: String(req.user._id),
+            rejectedByName: rejectorName,
+            reason: reason || '',
+            type: 'warning',
+            eventType: 'user-rejected'
+        }, 'warning');
+
+        const admins = await User.find({ role: 'admin', isActive: true }).select('_id');
+        const recipients = admins
+            .map(a => String(a._id))
+            .filter(id => id !== String(req.user._id));
+
+        if (recipients.length > 0) {
+            const notifications = recipients.map(recipientId => ({
+                recipient: recipientId,
+                sender: req.user._id,
+                message: adminRejectMessage,
+                data: {
+                    rejectedUserId: String(user._id),
+                    rejectedUserName,
+                    rejectedUserRole: user.role,
+                    rejectedById: String(req.user._id),
+                    rejectedByName: rejectorName,
+                    reason: reason || '',
+                    eventType: 'user-rejected'
+                },
+                type: 'admin_alert'
+            }));
+
+            try {
+                await Notification.insertMany(notifications);
+            } catch (notifErr) {
+                console.error('Greška pri čuvanju notifikacija za admine:', notifErr);
+            }
+        }
+
+        socketEmitter.notifyAllAdmins(adminRejectMessage, {
+            rejectedUserId: String(user._id),
+            rejectedUserName,
+            rejectedUserRole: user.role,
+            rejectedById: String(req.user._id),
+            rejectedByName: rejectorName,
+            reason: reason || '',
+            type: 'warning',
+            eventType: 'user-rejected'
+        }, String(req.user._id));
+
         res.json({ 
             message: 'Korisnik odbijen',
             user: {
