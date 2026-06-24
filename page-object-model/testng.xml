@@ -9,6 +9,8 @@
             <class name="pmf.imi.moodle.DoctorsPageTest"/>
             <class name="pmf.imi.moodle.AdminAppointmentsPageTest"/>
             <class name="pmf.imi.moodle.AdminDashboardPageTest"/>
+            <class name="pmf.imi.moodle.AdminMedicalRecordsPageTest"/>
+            <class name="pmf.imi.moodle.AdminPrescriptionsPageTest"/>
         </classes>
     </test>
 </suite>

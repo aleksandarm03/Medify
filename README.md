@@ -553,6 +553,8 @@ Ako `mvn` komanda nije dostupna, potrebno je instalirati Maven ili pokrenuti tes
 - `DoctorsPageTest`
 - `AdminAppointmentsPageTest`
 - `AdminDashboardPageTest`
+- `AdminMedicalRecordsPageTest`
+- `AdminPrescriptionsPageTest`
 
 Suite se izvršava sekvencijalno (`parallel="false"`) zato što testovi koriste isti lokalni frontend/backend i seed bazu. Sekvencijalno izvršavanje smanjuje rizik od konflikta oko sesije, test podataka i stanja browser-a.
 
@@ -649,6 +651,64 @@ Pokriće:
 
 Testovi namerno ne klikću `Odobri` i `Odbij` dugmad u dashboard-u, jer te akcije menjaju stanje korisnika. Umesto toga, fokus je na stabilnoj regresiji prikaza, agregiranih metrika i navigacije.
 
+### Admin medical records stranica
+
+Fajlovi:
+
+- komponenta: `frontend/src/app/components/admin/admin-medical-records/admin-medical-records.ts`
+- šablon: `frontend/src/app/components/admin/admin-medical-records/admin-medical-records.html`
+- page object: `page-object-model/src/main/java/pmf/imi/moodle/AdminMedicalRecordsPage.java`
+- testovi: `page-object-model/src/test/java/pmf/imi/moodle/AdminMedicalRecordsPageTest.java`
+
+Testovi se loguju kao admin korisnik i otvaraju `/admin/medical-records`.
+
+Pokriće:
+
+- heading `Svi medicinski kartoni`
+- potvrda admin URL-a `/admin/medical-records`
+- kolone tabele: `ID`, `Doktor`, `Pacijent`, `Diagnoza`, `Tretman`, `Napomene`, `Datum`
+- prikaz medicinskih kartona iz seed podataka
+- odsustvo error state-a kada API uspešno vrati podatke
+- odsustvo empty state-a kada postoje kartoni
+- struktura prvog reda tabele
+- skraćeni ID prikazan kroz prvih 8 karaktera
+- prikaz doktora i pacijenta kroz formatirane nazive
+- prikaz diagnoze, tretmana i napomena
+- pravilo skraćivanja tekstova kroz `truncateText`
+- format datuma u `sr-RS` obliku
+
+Ovaj test pokriva administratorski pregled kliničkih zapisa bez menjanja medicinskih podataka. Time ostaje regresiono stabilan, ali ipak potvrđuje da admin ruta, API `GET /medical-records/all`, formatiranje podataka i tabela rade zajedno.
+
+### Admin prescriptions stranica
+
+Fajlovi:
+
+- komponenta: `frontend/src/app/components/admin/admin-prescriptions/admin-prescriptions.ts`
+- šablon: `frontend/src/app/components/admin/admin-prescriptions/admin-prescriptions.html`
+- page object: `page-object-model/src/main/java/pmf/imi/moodle/AdminPrescriptionsPage.java`
+- testovi: `page-object-model/src/test/java/pmf/imi/moodle/AdminPrescriptionsPageTest.java`
+
+Testovi se loguju kao admin korisnik i otvaraju `/admin/prescriptions`.
+
+Pokriće:
+
+- heading `Svi recepti`
+- potvrda admin URL-a `/admin/prescriptions`
+- kolone tabele: `ID`, `Doktor`, `Pacijent`, `Lekovi`, `Doziranje`, `Trajanje`, `Datum`
+- prikaz recepata iz seed podataka
+- odsustvo error state-a kada API uspešno vrati podatke
+- odsustvo empty state-a kada postoje recepti
+- struktura prvog reda tabele
+- skraćeni ID prikazan kroz prvih 8 karaktera
+- prikaz doktora i pacijenta kroz formatirane nazive
+- prikaz naziva lekova kroz `formatMedicationNames`
+- prikaz doziranja kroz `formatMedicationDosages`
+- prikaz trajanja terapije kroz `formatMedicationDurations`
+- pravilo skraćivanja tekstova kroz `truncateText`
+- format datuma u `sr-RS` obliku
+
+Ovaj test pokriva administratorski pregled recepata bez menjanja terapijskih podataka. Time ostaje bezbedan za regresiono izvršavanje, a istovremeno potvrđuje da admin ruta, API `GET /prescriptions/all`, formatiranje liste lekova i tabela rade zajedno.
+
 ### Doctors regresija: odbijeni doktor
 
 Fajl:
@@ -693,6 +753,8 @@ POM testovi zajedno proveravaju:
 - da seed podaci stižu do UI-ja preko backend API-ja
 - da Angular komponente pravilno renderuju loading, tabelu, kartice, statistike i empty state
 - da status filteri menjaju prikaz bez reload-a stranice
+- da admin može da pregleda medicinske kartone kroz zaštićenu admin rutu
+- da admin može da pregleda recepte kroz zaštićenu admin rutu
 - da navigacioni linkovi vode na očekivane rute
 - da odbijeni doktor ne prolazi kroz UI pretragu
 
