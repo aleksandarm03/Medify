@@ -483,7 +483,7 @@ Pokriveni real-time tokovi:
 - odobravanje i odbijanje korisnika šalju live obaveštenja pogođenom korisniku i ostalim online adminima
 - role-based i broadcast događaji se filtriraju na frontendu po ulozi primaoca
 
-Važna bezbednosna napomena: obaveštenja za medicinske kartone se ne emituju broadcast-om. Backend ih šalje ciljano pacijentu, a frontend dodatno proverava `patientId` pre nego što prikaže toast ili upiše obaveštenje u lokalni store.
+
 
 Relevantne implementacije:
 
@@ -499,35 +499,11 @@ Relevantne implementacije:
 
 ## Testiranje
 
-Medify ima dva nivoa testiranja:
+Medify je testiran pomoću:
 
-- backend unit/regression testovi za poslovna pravila
 - Selenium Page Object Model UI regresioni suite
 
 ### Backend testovi
-
-Primer backend testa:
-
-```bash
-cd backend
-node --test tests/doctorEligibility.test.js
-```
-
-Pokretanje svih backend testova:
-
-```bash
-cd backend
-node --test tests/**/*.test.js
-```
-
-Najvažnije pravilo koje se testira:
-
-- doktor je bookable samo ako je `role = doctor`
-- doktor mora biti `isActive = true`
-- doktor mora biti `isApproved = true`
-- doktor mora imati `approvalStatus = approved`
-
-### Selenium POM testovi
 
 Lokacija:
 
@@ -565,7 +541,7 @@ mvn -Dtest=DoctorsPageTest#testRejectedDoctorIsNotVisibleInSearchResults test
 
 Ako `mvn` nije dostupan, testovi se mogu pokretati iz IDE-a preko TestNG run konfiguracije.
 
-### POM suite obuhvat
+### POM suite domen
 
 `testng.xml` trenutno uključuje:
 
